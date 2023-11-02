@@ -45,12 +45,13 @@ const config = {
           sidebarPath: './sidebars.js',
           breadcrumbs: true,
         },
-        blog: {
+        blog: false, // remove and uncomment the blog section to reenable
+        /* blog: {
           showReadingTime: true,
           blogTitle: "Blog",
           blogDescription: "Edward's blog, mostly about documentation and knowledge sharing.",
           postsPerPage: 'ALL',
-        },
+        }, */
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -76,7 +77,7 @@ const config = {
             position: 'left',
             label: 'Tutorial',
           },
-          {to: '/blog', label: 'Blog', position: 'left'},
+          //{to: '/blog', label: 'Blog', position: 'left'},
           {
             href: 'https://github.com/EdwardAngert/ea-dot-com',
             label: 'GitHub',
@@ -94,7 +95,7 @@ const config = {
         style: 'dark' ,
         links: [
           {
-            title: 'Docs and Blog',
+            title: 'Docs',
             items: [
               {
                 label: 'About Me',
@@ -104,10 +105,10 @@ const config = {
                 label: 'Resume',
                 to: '/about-me/resume/',
               },
-              {
+              /*{
               label: 'Blog',
               to: '/blog',
-              },
+              },*/
             ],
           },
           {
