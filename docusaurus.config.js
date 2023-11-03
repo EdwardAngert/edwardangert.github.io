@@ -3,6 +3,7 @@
 // (when paired with `@ts-check`).
 // There are various equivalent ways to declare your Docusaurus config.
 // See: https://docusaurus.io/docs/api/docusaurus-config
+// comment line
 
 import {themes as prismThemes} from 'prism-react-renderer';
 
@@ -16,7 +17,7 @@ const config = {
   url: 'https://edwardangert.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/edwardangert.github.io/',
+  baseUrl: '/',
   trailingSlash: false,
 
   // GitHub pages deployment config.
