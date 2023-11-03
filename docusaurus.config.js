@@ -13,17 +13,17 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://edwardangert.com',
+  url: 'https://edwardangert.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
-  trailingSlash: true,
+  trailingSlash: false,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'EdwardAngert', // Usually your GitHub org/user name.
-  projectName: 'ea-dot-com', // Usually your repo name.
-
+  projectName: 'edwardangert.github.io', // Usually your repo name.
+  deploymentBranch: 'main',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
 
@@ -72,15 +72,29 @@ const config = {
         },
         items: [
           {
-            type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
+            label: 'About me',
+            to: '/',
             position: 'left',
-            label: 'Tutorial',
+          },
+          {
+            label: 'Resume',
+            to: 'about-me/resume',
+            position: 'left',
+          },
+          {
+            label: 'Docs',
+            to: 'category/documentation',
+            position: 'left',
           },
           //{to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/EdwardAngert/ea-dot-com',
+            href: 'https://github.com/EdwardAngert/',
             label: 'GitHub',
+            position: 'right',
+          },
+          {
+            href: 'https://www.linkedin.com/in/edward-angert/',
+            label: 'LinkedIn',
             position: 'right',
           },
         ],

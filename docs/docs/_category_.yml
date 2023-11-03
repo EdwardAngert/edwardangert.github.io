@@ -1,0 +1,9 @@
+position: 2
+label: "Documentation"
+collapsible: true # make the category collapsible
+collapsed: false # keep the category open by default
+link:
+  type: generated-index
+  title: Documentation / Writing Samples
+customProps:
+  description: "Documentation and writing samples."
