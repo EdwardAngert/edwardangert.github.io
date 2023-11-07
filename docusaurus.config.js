@@ -45,6 +45,7 @@ const config = {
           routeBasePath: '/', // start from /docs
           sidebarPath: './sidebars.js',
           breadcrumbs: true,
+          editUrl: 'https://github.com/EdwardAngert/edwardangert.github.io/edit/main/',
         },
         blog: false, // remove and uncomment the blog section to reenable
         /* blog: {
