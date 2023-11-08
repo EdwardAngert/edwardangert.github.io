@@ -5,9 +5,8 @@ sidebar_position: 2
 
 ## Install Software Locally
 
-- SD Card Formatter
-  - Mac/Windows: https://www.sdcard.org/downloads/formatter/
-    - Install using [Homebrew](https://brew.sh/): `brew install --cask sdformatter`
+- [SD Card Formatter](https://www.sdcard.org/downloads/formatter/)
+  - Install using [Homebrew](https://brew.sh/): `brew install --cask sdformatter`
 - [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
   - Install using Homebrew: `brew install --cask raspberry-pi-imager`
 
@@ -23,6 +22,7 @@ This process erases everything on the SD card.
 
 Raspberry Pi Imager makes the SD card a bootable drive.
 
+1. Open Raspberry Pi Imager
 1. **Choose Device**: Raspberry Pi 4
 1. **Choose OS**: Raspberry Pi OS (64-bit)
 1. **Choose Storage** to select the SD card
@@ -32,7 +32,7 @@ In the **Use OS customisation?** popup that appears, click **EDIT SETTINGS**. If
 
 ![Raspberry Pi Imager OS Customisation window with all options checked in the General tab.](r-pi-imager-customisation.png)
 
-In the **GENERAL** tab:
+Make your selections in the **GENERAL** tab. Use your own easy-to-remember username and password:
 
 - **☑ Set hostname**: `pi-hole`.local
 - **☑ Set username and password**
@@ -55,7 +55,7 @@ Plug it in and give it a minute to load.
 
 ## Find the Pi's IP Address
 
-If you configured Wi-Fi and plugged the Pi in via Ethernet, your Pi will have two IP addresses. To make it easier to [enable network-wide blocking](#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+If you configured Wi-Fi and plugged the Pi in via Ethernet, your Pi will have two IP addresses. To make it easier to [enable network-wide blocking](network-level-blocking#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
 
 For me, I use a TP-Link Omada controller:
 
@@ -95,7 +95,7 @@ Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these s
 
    - **Choose An Interface**: `eth0` for Ethernet.
    - **Static IP Address**: `Yes` and enter the IP address you found in [Find the Pi's IP Address](#find-the-pis-ip-address).
-     - Unless you've made specific changes to the network, the gateway address should be the IP of the router or controller. In our case, that's `192.0.2.2.1`.
+     - Unless you've made specific changes to the network, the gateway address should be the IP of the router or controller. In this example, that's `192.0.2.1`.
    - **Upstream DNS Provider**: Select `Cloudflare` for now. This is a setting we'll change later, but we select [Cloudflare's DNS server](https://one.one.one.one/dns#explanation) now so that every DNS request from the Pi going forward will be routed through a trusted directory.
    - **Blocklists**: `Yes` to use the default list.
    - **Admin Web Interface**: `Yes` to install the Pi-hole web interface.
@@ -103,14 +103,12 @@ Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these s
    - **Enable Logging**: `Yes` to enable query logging. This helps diagnose issues like when Hulu or Disney+ won't load on your smart TV.
      - **Select a privacy mode**: `0` to show what site got blocked on which device. Consult the [official Pi-hole docs](https://docs.pi-hole.net/ftldns/privacylevels/) for more information about the privacy levels.
 
-1. Write down the temporary password!
+   The last screen lists the IP and a temporary password for the Pi-hole web interface. Since we'll change it in the next step, It's safe to ignore this.
 
-   The last screen lists the IP and a temporary password for the Pi-hole web interface. Write it down and change it in the next step.
-
-1. Change the temporary password. Change the `$examplePassword` in this example:
+1. Change the temporary password. Change the `examplePassword` in this example:
 
    ```zsh
-   pihole -a -p $examplePassword
+   pihole -a -p examplePassword
    ```
 
 1. Optional: Follow the steps in the official [Pi-hole documentation to configure unbound](https://docs.pi-hole.net/guides/dns/unbound/#configure-unbound).
