@@ -15,7 +15,7 @@ sudo /usr/local/sbin/pihole-updatelists
 
 ### Create a Script to Update the Pi-Hole and Lists Automatically
 
-Put the update commands into a script so that you can run it from Cron and assign it an alias. This gives you a central location from which to maintain the commands that run:
+Put the update commands into a script so that you can run it from cron and assign it an alias. This gives you a central location from which to maintain the commands that run:
 
 1. Create the script:
 
@@ -33,7 +33,7 @@ Put the update commands into a script so that you can run it from Cron and assig
    sudo /usr/local/sbin/pihole-updatelists
    ```
 
-1. Add a new Cron job that runs the script every Sunday morning at 03:00. Edit `/etc/crontab` to add this line:
+1. Add a new cron job that runs the script every Sunday morning at 03:00. Edit `/etc/crontab` to add this line:
 
    ```shell title="/etc/crontab"
    0  3    * * * 0 pi      ~/.pi-hole-update.sh
