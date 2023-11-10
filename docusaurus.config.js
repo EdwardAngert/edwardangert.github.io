@@ -5,6 +5,8 @@
 // See: https://docusaurus.io/docs/api/docusaurus-config
 // comment line
 
+require('dotenv').config()
+
 import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
@@ -12,6 +14,9 @@ const config = {
   title: 'Edward Angert',
   tagline: 'Documentation Team Lead / Technical Writer',
   favicon: 'img/favicon.ico',
+  customFields: {
+    GTM_ID: process.env.GTM_ID,
+  },
 
   // Set the production url of your site here
   url: 'https://edwardangert.com',
@@ -56,6 +61,10 @@ const config = {
         }, */
         theme: {
           customCss: './src/css/custom.css',
+        },
+        gtag: {
+          trackingID: process.env.GTM_ID,
+          anonymizeIP: true,
         },
       }),
     ],
