@@ -33,13 +33,15 @@ Put the update commands into a script so that you can run it from cron and assig
    sudo /usr/local/sbin/pihole-updatelists
    ```
 
+   If you're using Bash instead of Zsh, replace `#!/bin/zsh` with `#!/bin/sh`.
+
 1. Add a new cron job that runs the script every Sunday morning at 03:00. Edit `/etc/crontab` to add this line:
 
    ```shell title="/etc/crontab"
    0  3    * * * 0 pi      ~/.pi-hole-update.sh
    ```
 
-1. To run the updater script whenever you want, create an `update!` alias. Add this line to `~/.zshrc` (or `~/.bashrc` if you're using bash):
+1. To run the updater script whenever you want, create an `update!` alias. Add this line to `~/.zshrc` (or if you're using Bash, to `~/.bashrc`):
 
    ```zsh title="~/.zshrc"
    alias update!='. ~/.pi-hole-update.sh'

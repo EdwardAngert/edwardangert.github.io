@@ -66,6 +66,19 @@ For me, I use a TP-Link Omada controller:
 
 ## Install Pi-hole
 
+<details>
+
+  <summary>If you skipped to this section, expand this for things to look out for.</summary>
+
+  If you installed Pi-hole on an existing device or skipped to this section 
+
+  OS-specific things that might be different for your setup:
+    - Installed software like Git, curl, or zsh
+    - `apt` package manager. Your OS might use a different one.
+    - User accounts. The examples I use are `probablyedward` and `pi`
+
+</details>
+
 Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these steps with your Pi's username and local IP.
 
 1. Open your terminal app and SSH to the Pi:
@@ -103,7 +116,7 @@ Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these s
    - **Enable Logging**: `Yes` to enable query logging. This helps diagnose issues like when Hulu or Disney+ won't load on your smart TV.
      - **Select a privacy mode**: `0` to show what site got blocked on which device. Consult the [official Pi-hole docs](https://docs.pi-hole.net/ftldns/privacylevels/) for more information about the privacy levels.
 
-   The last screen lists the IP and a temporary password for the Pi-hole web interface. Since we'll change it in the next step, It's safe to ignore this.
+   The last screen lists the IP and a temporary password for the Pi-hole web interface. Since we'll change it in the next step, it's safe to ignore this.
 
 1. Change the temporary password. Change the `examplePassword` in this example:
 
