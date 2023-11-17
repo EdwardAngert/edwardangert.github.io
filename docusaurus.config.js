@@ -46,6 +46,7 @@ const config = {
           sidebarPath: './sidebars.js',
           breadcrumbs: true,
           editUrl: 'https://github.com/EdwardAngert/edwardangert.github.io/edit/main/',
+          showLastUpdateTime: true,
         },
         blog: false, // remove and uncomment the blog section to reenable
         /* blog: {
