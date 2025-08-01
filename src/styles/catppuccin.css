@@ -1,0 +1,231 @@
+/**
+ * Catppuccin Theme for Starlight
+ *
+ * Official Catppuccin colors for Latte (light) and Mocha (dark) flavors
+ * Applied to Starlight's CSS custom properties for consistent theming
+ *
+ * Colors sourced from: https://catppuccin.com/palette/
+ * Starlight variables documented at: https://starlight.astro.build/guides/css-and-tailwind/
+ */
+
+/*
+ * Dark mode colors (Catppuccin Mocha)
+ * Default theme - applied to :root
+ */
+:root {
+  /* Accent colors - used for links and highlighting */
+  --sl-color-accent-low: #313244;
+  /* surface0 - subtle accent background */
+  --sl-color-accent: #89b4fa;
+  /* blue - primary accent color */
+  --sl-color-accent-high: #b4befe;
+  /* lavender - high contrast accent */
+
+  /* Text colors */
+  --sl-color-white: #cdd6f4;
+  /* text - primary text color */
+  --sl-color-black: #1e1e2e;
+  /* base - background color */
+
+  /* Gray scale progression for UI elements */
+  --sl-color-gray-1: #313244;
+  /* surface0 - lightest gray */
+  --sl-color-gray-2: #45475a;
+  /* surface1 - light gray */
+  --sl-color-gray-3: #585b70;
+  /* surface2 - medium-light gray */
+  --sl-color-gray-4: #6c7086;
+  /* overlay0 - medium gray */
+  --sl-color-gray-5: #7f849c;
+  /* overlay1 - medium-dark gray */
+  --sl-color-gray-6: #9399b2;
+  /* overlay2 - dark gray */
+  --sl-color-gray-7: #bac2de;
+  /* subtext1 - darkest gray */
+
+  /* Additional semantic colors */
+  --sl-color-text: #cdd6f4;
+  /* text - main text color */
+  --sl-color-text-accent: #89b4fa;
+  /* blue - accent text color */
+}
+
+/*
+ * Light mode colors (Catppuccin Latte)
+ * Applied when data-theme="light" attribute is present
+ */
+:root[data-theme="light"] {
+  /* Accent colors - adapted for light theme */
+  --sl-color-accent-low: #dce0e8;
+  /* crust - subtle accent background */
+  --sl-color-accent: #1e66f5;
+  /* blue - primary accent color */
+  --sl-color-accent-high: #04a5e5;
+  /* sky - high contrast accent */
+
+  /* Text colors - inverted for light theme */
+  --sl-color-white: #4c4f69;
+  /* text - primary text color */
+  --sl-color-black: #eff1f5;
+  /* base - background color */
+
+  /* Gray scale progression - inverted and adapted */
+  --sl-color-gray-1: #e6e9ef;
+  /* mantle - lightest gray */
+  --sl-color-gray-2: #dce0e8;
+  /* crust - light gray */
+  --sl-color-gray-3: #ccd0da;
+  /* surface0 - medium-light gray */
+  --sl-color-gray-4: #bcc0cc;
+  /* surface1 - medium gray */
+  --sl-color-gray-5: #acb0be;
+  /* surface2 - medium-dark gray */
+  --sl-color-gray-6: #9ca0b0;
+  /* overlay0 - dark gray */
+  --sl-color-gray-7: #8c8fa1;
+  /* overlay1 - darkest gray */
+
+  /* Additional semantic colors for light theme */
+  --sl-color-text: #4c4f69;
+  /* text - main text color */
+  --sl-color-text-accent: #1e66f5;
+  /* blue - accent text color */
+}
+
+/*
+ * Enhanced styling for better Catppuccin integration
+ * These additional customizations improve the overall theme consistency
+ */
+
+/* Code block styling to match Catppuccin aesthetic */
+:root {
+  --sl-color-bg-code: var(--sl-color-gray-1);
+  --sl-color-code: var(--sl-color-accent);
+}
+
+/* Sidebar and navigation refinements */
+.sidebar {
+  background-color: var(--sl-color-gray-1);
+  border-color: var(--sl-color-gray-3);
+}
+
+/* Link hover states with Catppuccin colors */
+a:hover {
+  color: var(--sl-color-accent-high);
+  transition: color 0.2s ease;
+}
+
+/* Focus states for better accessibility */
+:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 2px;
+}
+
+/* Table styling with Catppuccin colors */
+table {
+  border-color: var(--sl-color-gray-3);
+}
+
+table th {
+  background-color: var(--sl-color-gray-1);
+  color: var(--sl-color-text);
+}
+
+table tr:nth-child(even) {
+  background-color: var(--sl-color-gray-1);
+}
+
+/* Blockquote styling */
+blockquote {
+  border-left: 4px solid var(--sl-color-accent);
+  background-color: var(--sl-color-gray-1);
+  color: var(--sl-color-text);
+}
+
+/* Alert/admonition boxes with Catppuccin colors */
+.starlight-aside {
+  border-color: var(--sl-color-accent);
+}
+
+.starlight-aside--note {
+  --sl-color-asides-border: #89b4fa;
+  /* blue */
+}
+
+.starlight-aside--tip {
+  --sl-color-asides-border: #a6e3a1;
+  /* green */
+}
+
+.starlight-aside--caution {
+  --sl-color-asides-border: #f9e2af;
+  /* yellow */
+}
+
+.starlight-aside--danger {
+  --sl-color-asides-border: #f38ba8;
+  /* red */
+}
+
+/*
+ * Light theme specific alert colors
+ */
+:root[data-theme="light"] .starlight-aside--note {
+  --sl-color-asides-border: #1e66f5;
+  /* blue */
+}
+
+:root[data-theme="light"] .starlight-aside--tip {
+  --sl-color-asides-border: #40a02b;
+  /* green */
+}
+
+:root[data-theme="light"] .starlight-aside--caution {
+  --sl-color-asides-border: #df8e1d;
+  /* yellow */
+}
+
+:root[data-theme="light"] .starlight-aside--danger {
+  --sl-color-asides-border: #d20f39;
+  /* red */
+}
+
+/* Search box styling */
+.search-box {
+  background-color: var(--sl-color-gray-1);
+  border-color: var(--sl-color-gray-3);
+}
+
+/* Button styling with Catppuccin accent */
+.sl-button {
+  background-color: var(--sl-color-accent);
+  border-color: var(--sl-color-accent);
+  color: var(--sl-color-black);
+}
+
+.sl-button:hover {
+  background-color: var(--sl-color-accent-high);
+  border-color: var(--sl-color-accent-high);
+}
+
+/* Footer styling */
+footer {
+  background-color: var(--sl-color-gray-1);
+  border-color: var(--sl-color-gray-3);
+}
+
+/*
+ * Smooth transitions for theme switching
+ * Provides polished user experience when switching between light/dark modes
+ */
+* {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Prevent transition flicker on page load */
+.no-transitions * {
+  transition: none !important;
+}
