@@ -1,0 +1,52 @@
+---
+title: "Add Block/Allowlists to the Pi-hole"
+sidebar_position: 3
+---
+
+The steps here use the pihole-updatelists script. The official [pihole-updatelists documentation](https://github.com/jacklul/pihole-updatelists#update-pi-holes-lists-from-remote-sources) includes information about other configuration options if you prefer to use Docker or would rather avoid piping to bash.
+
+:::tip Language is important
+This doc uses the words `whitelist` and `blacklist` to match the way the Pi-hole deals with allowlists and blocklists. So while descriptions of their actions here will be `allowlist` and `blocklist`, I'll use `whitelist` and `blacklist` when it matches text to edit.
+:::
+
+Configure the Pi-hole to use a script from [GitHub user jacklul](https://github.com/jacklul/pihole-updatelists#update-pi-holes-lists-from-remote-sources) to apply:
+
+- Blocklists from:
+  - [The Firebog](https://firebog.net/)
+  - [StevenBlack/hosts](https://github.com/StevenBlack/hosts)
+  - [mmotti/pihole-regex](https://github.com/mmotti/pihole-regex/)
+
+- Allowlists from:
+  - [anudeepND](https://github.com/anudeepND/whitelist)
+  - [mmotti/pihole-regex](https://github.com/mmotti/pihole-regex/)
+
+1. Download and run the pihole-updatelists script:
+
+   ```zsh
+   wget -O - https://raw.githubusercontent.com/jacklul/pihole-updatelists/master/install.sh | sudo bash
+   ```
+
+1. Edit the configuration file to match:
+
+   ```text title="/etc/pihole-updatelists.conf" showLineNumbers
+   ; Pi-hole's Lists Updater by Jack'lul
+   ; https://github.com/jacklul/pihole-updatelists
+   ; For a full list of available variables please see the readme.
+
+   ; Remote list URL containing list of adlists to import
+   ; URLs to single adlists are not supported here!
+   ADLISTS_URL="https://v.firebog.net/hosts/lists.php?type=tick https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling/hosts"
+
+   ; Remote list URL containing exact domains to whitelist
+   WHITELIST_URL="https://raw.githubusercontent.com/anudeepND/whitelist/master/domains/whitelist.txt https://raw.githubusercontent.com/mmotti/pihole-regex/master/whitelist.list"
+
+   ; Remote list URL containing regex rules for whitelisting
+   REGEX_WHITELIST_URL=""
+
+   ; Remote list URL containing exact domains to blacklist
+   ; This is specifically for handcrafted lists only, do not use regular blocklists here!
+   BLACKLIST_URL=""
+
+   ; Remote list URL containing regex rules for blacklisting
+   REGEX_BLACKLIST_URL="https://raw.githubusercontent.com/mmotti/pihole-regex/master/regex.list"
+   ```

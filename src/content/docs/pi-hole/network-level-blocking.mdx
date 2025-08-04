@@ -1,0 +1,57 @@
+---
+title: "Configure Updates and Network-Level Blocking"
+sidebar_position: 4
+---
+
+## Updates
+
+Update the Pi-hole's OS, software, and lists with:
+
+```zsh
+sudo apt update && sudo apt upgrade -y
+pihole -up -y
+sudo /usr/local/sbin/pihole-updatelists
+```
+
+### Create a Script to Update the Pi-Hole and Lists Automatically
+
+Put the update commands into a script so that you can run it from cron and assign it an alias. This gives you a central location from which to maintain the commands that run:
+
+1. Create the script:
+
+   ```zsh
+   touch ~/.pi-hole-update.sh
+   ```
+
+1. Edit the file to include:
+
+   ```zsh title="~/.pi-hole-update.sh" showLineNumbers
+   #!/bin/zsh
+
+   sudo apt update && sudo apt upgrade -y
+   pihole -up -y
+   sudo /usr/local/sbin/pihole-updatelists
+   ```
+
+   If you're using Bash instead of Zsh, replace `#!/bin/zsh` with `#!/bin/sh`.
+
+1. Add a new cron job that runs the script every Sunday morning at 03:00. Edit `/etc/crontab` to add this line:
+
+   ```shell title="/etc/crontab"
+   0  3    * * * 0 pi      ~/.pi-hole-update.sh
+   ```
+
+1. To run the updater script whenever you want, create an `update!` alias. Add this line to `~/.zshrc` (or if you're using Bash, to `~/.bashrc`):
+
+   ```zsh title="~/.zshrc"
+   alias update!='. ~/.pi-hole-update.sh'
+   ```
+
+## Configure the Omada Controller to Enable Network-Wide Blocking with Pi-Hole
+
+Configure the Omada controller and set the DNS server to use the Pi's IP address.
+
+1. Log in to the controller and click the site's name.
+1. Click the **Settings** cog then **Wired Networks** and click the edit icon for the network name that should use the Pi-hole.
+1. Next to **DHCP Server**, select **☑ Enable** to expand the DHCP options.
+1. Next to **DNS Server**, select **Manual** and enter the Pi-hole's IP address into the first box. In the second box, enter `1.1.1.1` to use Cloudflare's DNS as a backup.

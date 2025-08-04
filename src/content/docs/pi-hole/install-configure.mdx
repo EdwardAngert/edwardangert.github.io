@@ -1,0 +1,131 @@
+---
+title: "Set Up Raspberry OS and Install Pi-Hole"
+sidebar_position: 2
+---
+
+## Install Software Locally
+
+- [SD Card Formatter](https://www.sdcard.org/downloads/formatter/)
+  - Install using [Homebrew](https://brew.sh/): `brew install --cask sdformatter`
+- [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+  - Install using Homebrew: `brew install --cask raspberry-pi-imager`
+
+## Format the SD Card
+
+This process erases everything on the SD card.
+
+1. Insert a microSD card, then Open SD Card Formatter and choose the card from the **Select card** dropdown.
+1. Click **Format** to format the card.
+   - The default settings are fine: Quick format and no volume label.
+
+## Create the Pi OS Image on the SD Card
+
+Raspberry Pi Imager makes the SD card a bootable drive.
+
+1. Open Raspberry Pi Imager
+1. **Choose Device**: Raspberry Pi 4
+1. **Choose OS**: Raspberry Pi OS (64-bit)
+1. **Choose Storage** to select the SD card
+1. **Next**
+
+In the **Use OS customisation?** popup that appears, click **EDIT SETTINGS**. If the device you're using is connected to Wi-Fi, a prompt will show, asking if you'd like to use the Wi-Fi password from the system pre-filled in the Customisation screen. If you don't pre-fill it, you can still enter it on the next screen.
+
+![Raspberry Pi Imager OS Customisation window with all options checked in the General tab.](r-pi-imager-customisation.png)
+
+Make your selections in the **GENERAL** tab. Use your own easy-to-remember username and password:
+
+- **☑ Set hostname**: `pi-hole`.local
+- **☑ Set username and password**
+  - **☑ Username**: `probablyedward`
+  - **☑ Password**: `probablyhunter2`
+- **☑ Configure wireless LAN**
+  - Only if it's not going to be plugged in via Ethernet.
+- **Set locale settings**
+
+In the **SERVICES** tab:
+
+- **☑ Enable SSH** and **☑ Use password authentication**
+**Save**
+
+In the **OPTIONS** tab:
+
+- Uncheck **Enable telemetry**
+
+Plug it in and give it a minute to load.
+
+## Find the Pi's IP Address
+
+If you configured Wi-Fi and plugged the Pi in via Ethernet, your Pi will have two IP addresses. To make it easier to [enable network-wide blocking](network-level-blocking#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+
+For me, I use a TP-Link Omada controller:
+
+1. Log in and click the site's name.
+1. Click **Clients** then **Wired** to filter the table of connected clients.
+1. Click **pi-hole** in the **USERNAME** column to open the **Details** sidebar.
+1. Click **Config** and check **☑ Use Fixed IP Address**.
+
+## Install Pi-hole
+
+<details>
+
+  <summary>If you skipped to this section, expand this for things to look out for.</summary>
+
+  If you installed Pi-hole on an existing device or skipped to this section 
+
+  OS-specific things that might be different for your setup:
+    - Installed software like Git, curl, or zsh
+    - `apt` package manager. Your OS might use a different one.
+    - User accounts. The examples I use are `probablyedward` and `pi`
+
+</details>
+
+Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these steps with your Pi's username and local IP.
+
+1. Open your terminal app and SSH to the Pi:
+
+   ```zsh
+   ssh probablyedward@192.0.2.25
+   ```
+
+   Enter the password when prompted.
+
+1. Update the system and install dependencies:
+
+   ```zsh
+   sudo apt update && sudo apt upgrade -y
+   sudo apt install git php-cli php-sqlite3 php-intl php-curl unbound
+   ```
+
+   Enter the password when prompted. This is the point at which I also configure my command line interface (CLI) and editor, but that's outside the scope of this doc.
+
+1. Run the Pi-hole installation script:
+
+   ```zsh
+   curl -sSL https://install.pi-hole.net | bash
+   ```
+
+1. The script will prompt you with a number of warnings and options. When prompted select:
+
+   - **Choose An Interface**: `eth0` for Ethernet.
+   - **Static IP Address**: `Yes` and enter the IP address you found in [Find the Pi's IP Address](#find-the-pis-ip-address).
+     - Unless you've made specific changes to the network, the gateway address should be the IP of the router or controller. In this example, that's `192.0.2.1`.
+   - **Upstream DNS Provider**: Select `Cloudflare` for now. This is a setting we'll change later, but we select [Cloudflare's DNS server](https://one.one.one.one/dns#explanation) now so that every DNS request from the Pi going forward will be routed through a trusted directory.
+   - **Blocklists**: `Yes` to use the default list.
+   - **Admin Web Interface**: `Yes` to install the Pi-hole web interface.
+     - **Web Server**: `Yes` to install lightppd for the web interface.
+   - **Enable Logging**: `Yes` to enable query logging. This helps diagnose issues like when Hulu or Disney+ won't load on your smart TV.
+     - **Select a privacy mode**: `0` to show what site got blocked on which device. Consult the [official Pi-hole docs](https://docs.pi-hole.net/ftldns/privacylevels/) for more information about the privacy levels.
+
+   The last screen lists the IP and a temporary password for the Pi-hole web interface. Since we'll change it in the next step, it's safe to ignore this.
+
+1. Change the temporary password. Change the `examplePassword` in this example:
+
+   ```zsh
+   pihole -a -p examplePassword
+   ```
+
+1. Optional: Follow the steps in the official [Pi-hole documentation to configure unbound](https://docs.pi-hole.net/guides/dns/unbound/#configure-unbound).
+
+   This step is optional because the Pi-hole is already configured to use Cloudflare's DNS provider. Use unbound if you prefer a [recursive DNS server](https://docs.pi-hole.net/guides/dns/unbound/#what-is-a-recursive-dns-server).
+
+1. Log in to the Pi-hole web interface: [http://pi.hole/admin](http://pi.hole/admin)
