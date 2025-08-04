@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import catppuccin from '@catppuccin/starlight';
 
 // https://astro.build/config
 export default defineConfig({
@@ -21,7 +22,12 @@ export default defineConfig({
 					href: 'https://github.com/EdwardAngert',
 				},
 			],
-			customCss: ['./src/styles/catppuccin.css'],
+			plugins: [
+				catppuccin({
+					dark: { flavor: "mocha", accent: "sky" },
+					light: { flavor: "latte", accent: "sky" }
+				})
+			],
 			sidebar: [
 				{
 					label: 'About Me',

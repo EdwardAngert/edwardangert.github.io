@@ -11,6 +11,9 @@ importers:
       '@astrojs/starlight':
         specifier: ^0.35.2
         version: 0.35.2(astro@5.12.8(@types/node@24.1.0)(rollup@4.46.2)(typescript@5.9.2))
+      '@catppuccin/starlight':
+        specifier: ^1.0.1
+        version: 1.0.1(@astrojs/starlight@0.35.2(astro@5.12.8(@types/node@24.1.0)(rollup@4.46.2)(typescript@5.9.2)))(astro@5.12.8(@types/node@24.1.0)(rollup@4.46.2)(typescript@5.9.2))
       astro:
         specifier: ^5.6.1
         version: 5.12.8(@types/node@24.1.0)(rollup@4.46.2)(typescript@5.9.2)
@@ -74,6 +77,12 @@ packages:
 
   '@capsizecss/unpack@2.4.0':
     resolution: {integrity: sha512-GrSU71meACqcmIUxPYOJvGKF0yryjN/L1aCuE9DViCTJI7bfkjgYDPD1zbNDcINJwSSP6UaBZY9GAbYDO7re0Q==}
+
+  '@catppuccin/starlight@1.0.1':
+    resolution: {integrity: sha512-jBNMYSBkyFGrI0pJRDfOL26HyIuDIWrqfACxbvI4/xw0jLNColXjYw3i+HBeS2bC+UcJqJtRqsrcxqDb31TcBg==}
+    peerDependencies:
+      '@astrojs/starlight': '>=0.32'
+      astro: ^5.0.0
 
   '@ctrl/tinycolor@4.1.0':
     resolution: {integrity: sha512-WyOx8cJQ+FQus4Mm4uPIZA64gbk3Wxh0so5Lcii0aJifqwoVOlfFtorjLE0Hen4OYyHZMXDWqMmaQemBhgxFRQ==}
@@ -2034,6 +2043,11 @@ snapshots:
       fontkit: 2.0.4
     transitivePeerDependencies:
       - encoding
+
+  '@catppuccin/starlight@1.0.1(@astrojs/starlight@0.35.2(astro@5.12.8(@types/node@24.1.0)(rollup@4.46.2)(typescript@5.9.2)))(astro@5.12.8(@types/node@24.1.0)(rollup@4.46.2)(typescript@5.9.2))':
+    dependencies:
+      '@astrojs/starlight': 0.35.2(astro@5.12.8(@types/node@24.1.0)(rollup@4.46.2)(typescript@5.9.2))
+      astro: 5.12.8(@types/node@24.1.0)(rollup@4.46.2)(typescript@5.9.2)
 
   '@ctrl/tinycolor@4.1.0': {}
 
