@@ -10,6 +10,8 @@ next:
   label: Configure Updates and Network-Level Blocking
 ---
 
+import { Steps } from '@astrojs/starlight/components';
+
 The steps here use the pihole-updatelists script. The official [pihole-updatelists documentation](https://github.com/jacklul/pihole-updatelists#update-pi-holes-lists-from-remote-sources) includes information about other configuration options if you prefer to use Docker or would rather avoid piping to bash.
 
 :::note[Language is important]
@@ -27,6 +29,7 @@ Configure the Pi-hole to use a script from [GitHub user jacklul](https://github.
   - [anudeepND](https://github.com/anudeepND/whitelist)
   - [mmotti/pihole-regex](https://github.com/mmotti/pihole-regex/)
 
+<Steps>
 1. Download and run the pihole-updatelists script:
 
    ```zsh
@@ -57,3 +60,4 @@ Configure the Pi-hole to use a script from [GitHub user jacklul](https://github.
    ; Remote list URL containing regex rules for blacklisting
    REGEX_BLACKLIST_URL="https://raw.githubusercontent.com/mmotti/pihole-regex/master/regex.list"
    ```
+</Steps>
