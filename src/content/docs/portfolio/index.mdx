@@ -5,6 +5,7 @@ description: "Documentation samples across different organizations and project t
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
+import { StarlightIcon } from '@astrojs/starlight/types';
 
 Selected examples of technical writing and documentation work, organized by project type and approach.
 
@@ -13,21 +14,21 @@ Selected examples of technical writing and documentation work, organized by proj
 <CardGrid stagger>
 	<Card title="Contributor PR Workflow" icon="github">
 		**Pantheon Internal Guide**
-		
+
 		Created workflow documentation for technical writers collaborating with external contributors on GitHub PRs. Solved a recurring problem where writers needed to work on contributor branches but lacked clear steps.
-		
+
 		Approach: Documented the Git commands and GitHub workflow, then tested with team members to refine the process.
-		
+
 		[Internal Confluence Guide (PDF)](/pdfs/Edward-Angert-Pantheon-Confluence-work-on-a-contributor-PR-in-the-docs-repository.pdf)
 	</Card>
-	
-	<Card title="GitLab First Contribution" icon="open-book">
+
+	<Card title="GitLab First Contribution" icon="gitlab">
 		**GitLab Community Documentation**
-		
+
 		Overhauled the "Make a GitLab contribution" tutorial to reduce barriers for new contributors. The original process was intimidating and scattered across multiple pages.
-		
+
 		Approach: Reorganized into sequential steps, added new contribution methods (Web IDE, Gitpod, GDK-in-a-box), and tested each path.
-		
+
 		[Live Documentation](/docs/gitlab-first-contribution/) | [GitLab Docs](https://docs.gitlab.com/development/contributing/first_contribution)
 	</Card>
 </CardGrid>
@@ -35,23 +36,23 @@ Selected examples of technical writing and documentation work, organized by proj
 ## Technical Setup Guides
 
 <CardGrid stagger>
-	<Card title="WordPress Remote Database" icon="setting">
+	<Card title="WordPress Remote Database" icon="seti:db">
 		**Linode Customer Documentation**
-		
+
 		Developed comprehensive guide for configuring WordPress with remote databases. Started with a support engineer's outline, then researched, tested, and documented the complete process.
-		
+
 		Approach: Built test environment, documented each step, gathered feedback from docs team, refined based on customer questions.
-		
+
 		[Customer Guide (PDF)](/pdfs/Edward-Angert-Configure-WordPress-to-use-a-Remote-Database-Linode.pdf)
 	</Card>
-	
+
 	<Card title="Pi-hole Network Setup" icon="laptop">
 		**Personal Reference Documentation**
-		
+
 		Comprehensive guide covering Pi-hole installation, configuration, and network-wide ad blocking. Created after repeatedly setting this up due to hardware issues and helping others with the process.
-		
+
 		Approach: Documented each setup iteration, organized into logical sequence, included troubleshooting steps.
-		
+
 		[Installation Guide](/docs/pi-hole/)
 	</Card>
 </CardGrid>
@@ -61,11 +62,11 @@ Selected examples of technical writing and documentation work, organized by proj
 <CardGrid stagger>
 	<Card title="Multizone Failover Diagram" icon="puzzle">
 		**Pantheon Technical Documentation**
-		
+
 		Collaborated with design team to create visual representation of complex multizone failover architecture. Needed to explain technical concept that was difficult to understand from text alone.
-		
+
 		Approach: Created initial draft based on engineering feedback, worked with design team for final version, integrated into customer documentation.
-		
+
 		[Documentation Project](/docs/site-mz-failover-diagram/) | [Live Pantheon Docs](https://docs.pantheon.io/multizone-failover)
 	</Card>
 </CardGrid>
