@@ -1,0 +1,36 @@
+---
+export interface Props {
+  columns?: number;
+  gap?: string;
+}
+
+const { columns = 2, gap = '1.5rem' } = Astro.props;
+---
+
+<div class="column-list" style={`--columns: ${columns}; --gap: ${gap};`}>
+  <slot />
+</div>
+
+<style>
+  .column-list {
+    display: grid;
+    grid-template-columns: repeat(var(--columns, 2), 1fr);
+    gap: var(--gap, 1.5rem);
+  }
+  
+  .column-list :global(ul) {
+    margin: 0;
+    list-style-position: inside;
+  }
+  
+  .column-list :global(li) {
+    break-inside: avoid;
+    margin-bottom: 0.25rem;
+  }
+  
+  @media (max-width: 768px) {
+    .column-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
