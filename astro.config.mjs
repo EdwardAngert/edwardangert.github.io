@@ -17,6 +17,7 @@ export default defineConfig({
 		starlight({
 			title: 'Edward Angert',
 			tagline: 'Technical writer, team leader, relationship-builder',
+			customCss: ['./src/styles/tables.css'],
 			social: [
 				{
 					icon: 'linkedin',

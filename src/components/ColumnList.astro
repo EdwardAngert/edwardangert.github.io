@@ -4,7 +4,7 @@ export interface Props {
   gap?: string;
 }
 
-const { columns = 2, gap = '1.5rem' } = Astro.props;
+const { columns = 2, gap = "1.5rem" } = Astro.props;
 ---
 
 <div class="column-list" style={`--columns: ${columns}; --gap: ${gap};`}>
@@ -12,24 +12,40 @@ const { columns = 2, gap = '1.5rem' } = Astro.props;
 </div>
 
 <style>
-  .column-list {
+  .column-list :global(ul) {
     display: grid;
     grid-template-columns: repeat(var(--columns, 2), 1fr);
     gap: var(--gap, 1.5rem);
-  }
-  
-  .column-list :global(ul) {
     margin: 0;
-    list-style-position: inside;
+    list-style: none;
+    padding: 0;
   }
-  
-  .column-list :global(li) {
+
+  .column-list :global(> ul > li) {
     break-inside: avoid;
     margin-bottom: 0.25rem;
+    position: relative;
+    padding-left: 1rem;
   }
-  
+
+  .column-list :global(> ul > li):before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 1.5em;
+    line-height: 1;
+  }
+
+  .column-list :global(ul ul) {
+    display: block;
+    list-style-type: disc;
+    margin: 0.5rem 0 0 1rem;
+    padding-left: 1rem;
+  }
+
   @media (max-width: 768px) {
-    .column-list {
+    .column-list :global(ul) {
       grid-template-columns: 1fr;
     }
   }
