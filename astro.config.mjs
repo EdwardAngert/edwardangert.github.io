@@ -18,6 +18,7 @@ export default defineConfig({
 			title: 'Edward Angert',
 			tagline: 'Technical writer, team leader, relationship-builder',
 			customCss: ['./src/styles/tables.css'],
+			disable404Route: true,
 			social: [
 				{
 					icon: 'linkedin',
