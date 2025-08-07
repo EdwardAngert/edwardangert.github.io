@@ -23,9 +23,10 @@ const { columns = 2, gap = "1.5rem" } = Astro.props;
 
   .column-list :global(> ul > li) {
     break-inside: avoid;
-    margin-bottom: 0.25rem;
+    margin: 0;
+    padding: 0 0 0 1rem;
     position: relative;
-    padding-left: 1rem;
+    line-height: 1.4;
   }
 
   .column-list :global(> ul > li):before {
