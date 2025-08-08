@@ -1,0 +1,146 @@
+---
+export interface Props {
+  pathname: string;
+}
+
+const { pathname } = Astro.props;
+
+interface BreadcrumbItem {
+  label: string;
+  href: string;
+}
+
+function generateBreadcrumbs(path: string): BreadcrumbItem[] {
+  const breadcrumbs: BreadcrumbItem[] = [
+    { label: 'Home', href: '/' }
+  ];
+
+  // Remove leading/trailing slashes and split
+  const segments = path.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+  
+  let currentPath = '';
+  
+  for (const segment of segments) {
+    currentPath += `/${segment}`;
+    
+    // Create readable labels
+    let label = segment
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase());
+    
+    // Special cases for better labels
+    const labelMap: Record<string, string> = {
+      'docs': 'Documentation',
+      'about': 'About',
+      'portfolio': 'Portfolio',
+      'pi-hole': 'Pi-hole',
+      'resume': 'Resume',
+      'coder-quickstart': 'Coder Quickstart',
+      'gitlab-first-contribution': 'GitLab Contribution',
+      'linode-wp-remote-db': 'WordPress Remote DB',
+      'site-mz-failover-diagram': 'Site Architecture',
+      'contrib-pr': 'Contributor PR Workflow',
+      'install-configure': 'Installation',
+      'block-allow-lists': 'Block Lists',
+      'network-level-blocking': 'Network Blocking'
+    };
+    
+    if (labelMap[segment]) {
+      label = labelMap[segment];
+    }
+    
+    breadcrumbs.push({
+      label,
+      href: currentPath
+    });
+  }
+  
+  return breadcrumbs;
+}
+
+const breadcrumbs = generateBreadcrumbs(pathname);
+---
+
+{breadcrumbs.length > 1 && (
+  <nav aria-label="Breadcrumb" class="breadcrumbs">
+    <ol>
+      {breadcrumbs.map((item, index) => (
+        <li>
+          {index < breadcrumbs.length - 1 ? (
+            <>
+              <a href={item.href}>{item.label}</a>
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2"
+                aria-hidden="true"
+                class="separator"
+              >
+                <polyline points="9,18 15,12 9,6"/>
+              </svg>
+            </>
+          ) : (
+            <span aria-current="page">{item.label}</span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}
+
+<style>
+  .breadcrumbs {
+    margin: 1rem 0;
+    font-size: 0.875rem;
+  }
+  
+  .breadcrumbs ol {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .breadcrumbs li {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .breadcrumbs a {
+    color: var(--sl-color-gray-3);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .breadcrumbs a:hover {
+    color: var(--sl-color-text);
+    text-decoration: underline;
+  }
+  
+  .breadcrumbs span[aria-current="page"] {
+    color: var(--sl-color-text);
+    font-weight: 500;
+  }
+  
+  .separator {
+    color: var(--sl-color-gray-4);
+    flex-shrink: 0;
+  }
+  
+  @media (max-width: 768px) {
+    .breadcrumbs {
+      font-size: 0.8rem;
+    }
+    
+    .breadcrumbs ol {
+      gap: 0.125rem;
+    }
+  }
+</style>

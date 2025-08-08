@@ -19,6 +19,9 @@ export default defineConfig({
 			tagline: 'Technical writer, team leader, relationship-builder',
 			customCss: ['./src/styles/tables.css'],
 			disable404Route: true,
+			components: {
+				PageTitle: './src/components/PageTitle.astro',
+			},
 			social: [
 				{
 					icon: 'linkedin',
