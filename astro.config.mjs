@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import catppuccin from '@catppuccin/starlight';
+import umami from '@yeskunall/astro-umami';
 
 // https://astro.build/config
 export default defineConfig({
@@ -14,6 +15,9 @@ export default defineConfig({
 		'/docs/contrib-pr': '/portfolio/contrib-pr',
 	},
 	integrations: [
+		umami({
+			id: 'e8f90c1a-a069-4ea9-9c70-eab1d6309b1b',
+		}),
 		starlight({
 			title: 'Edward Angert',
 			tagline: 'Technical writer, team leader, relationship-builder',
