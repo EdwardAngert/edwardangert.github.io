@@ -20,6 +20,7 @@ export default defineConfig({
 		}),
 		starlight({
 			title: 'Edward Angert',
+			favicon: '/favicon.ico',
 			tagline: 'Technical writer, team leader, relationship-builder',
 			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css'],
 			disable404Route: true,
@@ -40,8 +41,8 @@ export default defineConfig({
 			],
 			plugins: [
 				catppuccin({
-					dark: { flavor: "mocha", accent: "sky" },
-					light: { flavor: "latte", accent: "sky" }
+					dark: { flavor: "mocha", accent: "mauve" },
+					light: { flavor: "latte", accent: "lavender" }
 				}),
 			],
 			sidebar: [
