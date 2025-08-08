@@ -1,14 +1,19 @@
-/* Styled tables for better accessibility and visual hierarchy */
+/* Styled tables with frosted glass effect */
 table {
   width: 100% !important;
   max-width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 1.5rem 0;
-  border-radius: 0.5rem;
+  border-radius: 12px;
   overflow: hidden;
-  border: 1px solid var(--sl-color-gray-5);
+  border: 1px solid color-mix(in srgb, var(--sl-color-gray-5) 30%, transparent);
   table-layout: auto;
   display: table !important;
+  background: color-mix(in srgb, var(--sl-color-bg) 70%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 th {

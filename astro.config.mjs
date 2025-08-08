@@ -17,7 +17,7 @@ export default defineConfig({
 		starlight({
 			title: 'Edward Angert',
 			tagline: 'Technical writer, team leader, relationship-builder',
-			customCss: ['./src/styles/tables.css'],
+			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css'],
 			disable404Route: true,
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
