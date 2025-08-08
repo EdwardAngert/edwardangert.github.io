@@ -41,7 +41,7 @@ export default defineConfig({
 				{
 					label: 'About',
 					items: [
-						{ label: 'Resume', link: 'about-me/resume/' },
+						{ label: 'Resume', link: 'about/resume/' },
 					],
 				},
 				{
