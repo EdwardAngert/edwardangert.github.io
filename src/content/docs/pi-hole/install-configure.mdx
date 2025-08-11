@@ -1,6 +1,6 @@
 ---
 slug: docs/pi-hole/install-configure
-title: "Set Up Raspberry OS and Install Pi-Hole"
+title: "Set Up Raspberry OS and Install Pi-hole"
 description: "Step-by-step guide to install Pi-hole on Raspberry Pi OS"
 prev:
   link: /docs/pi-hole/
@@ -99,7 +99,7 @@ Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these s
 <Steps>
 1. Open your terminal app and SSH to the Pi:
 
-   ```zsh
+   ```shell
    ssh probablyedward@192.0.2.25
    ```
 
@@ -107,7 +107,7 @@ Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these s
 
 1. Update the system and install dependencies:
 
-   ```zsh
+   ```shell
    sudo apt update && sudo apt upgrade -y
    sudo apt install git php-cli php-sqlite3 php-intl php-curl unbound
    ```
@@ -116,7 +116,7 @@ Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these s
 
 1. Run the Pi-hole installation script:
 
-   ```zsh
+   ```shell
    curl -sSL https://install.pi-hole.net | bash
    ```
 
@@ -136,7 +136,7 @@ Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these s
 
 1. Change the temporary password. Change the `examplePassword` in this example:
 
-   ```zsh
+   ```shell
    pihole -a -p examplePassword
    ```
 
