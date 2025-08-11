@@ -13,7 +13,7 @@ import { Steps } from '@astrojs/starlight/components';
 
 Update the Pi-hole's OS, software, and lists with:
 
-```zsh
+```shell
 sudo apt update && sudo apt upgrade -y
 pihole -up -y
 sudo /usr/local/sbin/pihole-updatelists
@@ -26,13 +26,13 @@ Put the update commands into a script so that you can run it from cron and assig
 <Steps>
 1. Create the script:
 
-   ```zsh
+   ```shell
    touch ~/.pi-hole-update.sh
    ```
 
 1. Edit the file to include:
 
-   ```zsh title="~/.pi-hole-update.sh" showLineNumbers
+   ```shell title="~/.pi-hole-update.sh" showLineNumbers
    #!/bin/zsh
 
    sudo apt update && sudo apt upgrade -y
@@ -50,7 +50,7 @@ Put the update commands into a script so that you can run it from cron and assig
 
 1. To run the updater script whenever you want, create an `update!` alias. Add this line to `~/.zshrc` (or if you're using Bash, to `~/.bashrc`):
 
-   ```zsh title="~/.zshrc"
+   ```shell title="~/.zshrc"
    alias update!='. ~/.pi-hole-update.sh'
    ```
 </Steps>
