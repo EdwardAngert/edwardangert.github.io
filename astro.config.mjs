@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import catppuccin from '@catppuccin/starlight';
 import umami from '@yeskunall/astro-umami';
+import starlightBlog from 'starlight-blog';
 
 // https://astro.build/config
 export default defineConfig({
@@ -43,6 +44,13 @@ export default defineConfig({
 				catppuccin({
 					dark: { flavor: "mocha", accent: "mauve" },
 					light: { flavor: "latte", accent: "lavender" }
+				}),
+				starlightBlog({
+					navigation: "header-start",
+					metrics: {
+    				readingTime: true,
+    				words: 'total',
+  				},
 				}),
 			],
 			sidebar: [
