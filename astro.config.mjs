@@ -26,6 +26,7 @@ export default defineConfig({
 			disable404Route: true,
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
+				Head: './src/components/Head.astro',
 			},
 			social: [
 				{
