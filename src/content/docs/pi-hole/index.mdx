@@ -10,7 +10,9 @@ next:
   label: Set Up Raspberry OS and Install Pi-hole
 ---
 
-Pi-hole is a network-level ad and malware blocker. Due to some hardware issues in the past, I've had to do this process a few times, collecting steps from around the internet each time. Rather than have to compile steps from a variety of different sources next time, the steps in this doc describe how I set up Pi-hole with:
+Pi-hole is a network-level ad and malware blocker.
+Due to some hardware issues in the past, I've had to do this process a few times, collecting steps from around the Internet each time.
+Rather than have to compile steps from a variety of different sources next time, the steps in this doc describe how I set up Pi-hole with:
 
 - Raspberry Pi 4
 - Unbound recursive DNS with Cloudflare DNS for fallback
@@ -18,9 +20,11 @@ Pi-hole is a network-level ad and malware blocker. Due to some hardware issues i
 - A cron job and script to automate maintenance
 - Local Omada router and controller
 
-The steps in this doc include a fresh install of Raspberry Pi OS to host the Pi-hole. If you already have a device with a Debian-based operating system, skip to [Install Pi-hole](pi-hole/install-configure#install-pi-hole).
+The steps in this doc include a fresh install of Raspberry Pi OS to host the Pi-hole.
+If you already have a device with a Debian-based operating system, skip to [Install Pi-hole](#install-pi-hole).
 
-This doc is made to be a copy-and-paste solution for my set of preferences and hardware. Visit [the official Pi-hole documentation](https://docs.pi-hole.net/) for other use-cases and details.
+This doc is made to be a copy-and-paste solution for my set of preferences and hardware.
+Visit [the official Pi-hole documentation](https://docs.pi-hole.net/) for other use cases and details.
 
 ## Prerequisites
 
