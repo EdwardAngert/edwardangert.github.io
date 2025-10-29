@@ -21,12 +21,16 @@ import { Steps } from '@astrojs/starlight/components';
 
 ## Format the SD Card
 
+:::caution
 This process erases everything on the SD card.
+:::
 
 <Steps>
+
 1. Insert a microSD card, then Open SD Card Formatter and choose the card from the **Select card** dropdown.
-1. Click **Format** to format the card.
+1. Select **Format** to format the card.
    - The default settings are fine: Quick format and no volume label.
+
 </Steps>
 
 ## Create the Pi OS Image on the SD Card
@@ -34,49 +38,60 @@ This process erases everything on the SD card.
 Raspberry Pi Imager makes the SD card a bootable drive.
 
 <Steps>
+
 1. Open Raspberry Pi Imager
 1. **Choose Device**: Raspberry Pi 4
 1. **Choose OS**: Raspberry Pi OS (64-bit)
 1. **Choose Storage** to select the SD card
 1. **Next**
+
 </Steps>
 
-In the **Use OS customisation?** popup that appears, click **EDIT SETTINGS**. If the device you're using is connected to Wi-Fi, a prompt will show, asking if you'd like to use the Wi-Fi password from the system pre-filled in the Customisation screen. If you don't pre-fill it, you can still enter it on the next screen.
+### Configure Raspberry Pi Imager Settings
 
-![Raspberry Pi Imager OS Customisation window with all options checked in the General tab.](@img/r-pi-imager-customisation.png)
+<Steps>
 
-Make your selections in the **GENERAL** tab. Use your own easy-to-remember username and password:
+1. In the **Use OS customisation?** popup that appears, select **EDIT SETTINGS**. If the device you're using is connected to Wi-Fi, a prompt will ask if you'd like to use the Wi-Fi password from the system pre-filled in the Customisation screen. If you don't pre-fill it, you can still enter it on the next screen.
 
-- **☑ Set hostname**: `pi-hole`.local
-- **☑ Set username and password**
-  - **☑ Username**: `probablyedward`
-  - **☑ Password**: `probablyhunter2`
-- **☑ Configure wireless LAN**
-  - Only if it's not going to be plugged in via Ethernet.
-- **Set locale settings**
+   ![Raspberry Pi Imager OS Customisation window with all options checked in the General tab.](@img/r-pi-imager-customisation.png)
 
-In the **SERVICES** tab:
+1. In the **GENERAL** tab, make your selections. Use your own easy-to-remember username and password:
 
-- **☑ Enable SSH** and **☑ Use password authentication**
-**Save**
+   - **☑ Set hostname**: `pi-hole`.local
+   - **☑ Set username and password**
+     - **☑ Username**: `probablyedward`
+     - **☑ Password**: `probablyhunter2`
+   - **☑ Configure wireless LAN** (only if you're not using Ethernet)
+   - **Set locale settings**
 
-In the **OPTIONS** tab:
+1. In the **SERVICES** tab:
 
-- Uncheck **Enable telemetry**
+   - **☑ Enable SSH** and **☑ Use password authentication**
 
-Plug it in and give it a minute to load.
+1. In the **OPTIONS** tab:
+
+   - Uncheck **Enable telemetry**
+
+1. Select **Save**
+
+1. Plug it in and give it a minute to load.
+
+</Steps>
 
 ## Find the Pi's IP Address
 
-If you configured Wi-Fi and plugged the Pi in via Ethernet, your Pi will have two IP addresses. To make it easier to [enable network-wide blocking](network-level-blocking#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+If you configured Wi-Fi and plugged the Pi in via Ethernet, your Pi will have two IP addresses.
+To make it easier to [enable network-wide blocking](#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
 
 For me, I use a TP-Link Omada controller:
 
 <Steps>
-1. Log in and click the site's name.
-1. Click **Clients** then **Wired** to filter the table of connected clients.
-1. Click **pi-hole** in the **USERNAME** column to open the **Details** sidebar.
-1. Click **Config** and check **☑ Use Fixed IP Address**.
+
+1. Log in and select the site's name.
+1. Select **Clients** then **Wired** to filter the table of connected clients.
+1. Select **pi-hole** in the **USERNAME** column to open the **Details** sidebar.
+1. Select **Config** and check **☑ Use Fixed IP Address**.
+
 </Steps>
 
 ## Install Pi-hole
@@ -97,6 +112,7 @@ For me, I use a TP-Link Omada controller:
 Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these steps with your Pi's username and local IP.
 
 <Steps>
+
 1. Open your terminal app and SSH to the Pi:
 
    ```shell
@@ -144,5 +160,6 @@ Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these s
 
    This step is optional because the Pi-hole is already configured to use Cloudflare's DNS provider. Use unbound if you prefer a [recursive DNS server](https://docs.pi-hole.net/guides/dns/unbound/#what-is-a-recursive-dns-server).
 
-1. Log in to the Pi-hole web interface: [http://pi.hole/admin](http://pi.hole/admin)
+1. Log in to the Pi-hole web interface: [http://pi.hole/admin](http://pi.hole/admin).
+
 </Steps>
