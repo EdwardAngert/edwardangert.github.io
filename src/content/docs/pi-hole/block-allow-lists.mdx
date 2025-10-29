@@ -30,7 +30,8 @@ Configure the Pi-hole to use a script from [GitHub user jacklul](https://github.
   - [mmotti/pihole-regex](https://github.com/mmotti/pihole-regex/)
 
 <Steps>
-1. Download and run the pihole-updatelists script:
+
+1. Download and run the `pihole-updatelists` script:
 
    ```shell
    wget -O - https://raw.githubusercontent.com/jacklul/pihole-updatelists/master/install.sh | sudo bash
@@ -60,4 +61,5 @@ Configure the Pi-hole to use a script from [GitHub user jacklul](https://github.
    ; Remote list URL containing regex rules for blacklisting
    REGEX_BLACKLIST_URL="https://raw.githubusercontent.com/mmotti/pihole-regex/master/regex.list"
    ```
+
 </Steps>

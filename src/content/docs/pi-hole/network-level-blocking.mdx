@@ -9,8 +9,6 @@ prev:
 
 import { Steps } from '@astrojs/starlight/components';
 
-## Updates
-
 Update the Pi-hole's OS, software, and lists with:
 
 ```shell
@@ -24,6 +22,7 @@ sudo /usr/local/sbin/pihole-updatelists
 Put the update commands into a script so that you can run it from cron and assign it an alias. This gives you a central location from which to maintain the commands that run:
 
 <Steps>
+
 1. Create the script:
 
    ```shell
@@ -53,15 +52,18 @@ Put the update commands into a script so that you can run it from cron and assig
    ```shell title="~/.zshrc"
    alias update!='. ~/.pi-hole-update.sh'
    ```
+
 </Steps>
 
-## Configure the Omada Controller to Enable Network-Wide Blocking with Pi-Hole
+### Configure the Omada Controller to Enable Network-Wide Blocking with Pi-Hole
 
 Configure the Omada controller and set the DNS server to use the Pi's IP address.
 
 <Steps>
-1. Log in to the controller and click the site's name.
-1. Click the **Settings** cog then **Wired Networks** and click the edit icon for the network name that should use the Pi-hole.
+
+1. Log in to the controller and select the site's name.
+1. Select the **Settings** cog then **Wired Networks** and select the edit icon for the network name that should use the Pi-hole.
 1. Next to **DHCP Server**, select **☑ Enable** to expand the DHCP options.
 1. Next to **DNS Server**, select **Manual** and enter the Pi-hole's IP address into the first box. In the second box, enter `1.1.1.1` to use Cloudflare's DNS as a backup.
+
 </Steps>
