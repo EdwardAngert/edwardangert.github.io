@@ -8,17 +8,23 @@ category: "GitLab Community Documentation"
 externalLink: "https://docs.gitlab.com/development/contributing/first_contribution/"
 ---
 
-Contributor Success at GitLab found that first-time contributors had trouble with the long and intimidating process that
+import { Steps } from '@astrojs/starlight/components';
+
+The Contributor Success team at GitLab found that first-time contributors had trouble with the long and intimidating process that
 getting started entailed.
 
 After some discussion with the team to assess the pain points and desired outcomes, I edited the documentation in parts:
-first to clarify and reorganize steps, highlighting a more consistent path; then to separate the single page into
-multiple so that the user can follow a more cohesive workflow.
+first to clarify and reorganize steps, highlighting a more consistent path, then to separate the single page into
+multiple so users can follow a more cohesive workflow.
 
 [Tutorial: Make a GitLab contribution](https://docs.gitlab.com/ee/development/contributing/first_contribution/index.html)
 
 Merge Requests:
 
+<Steps>
+
 1. Tested and reorganized steps: [!142561](https://gitlab.com/gitlab-org/gitlab/-/merge_requests/142561/diffs?pin=678b0a97df43bcba1578a48f960a7e76e95111dc#diff-content-678b0a97df43bcba1578a48f960a7e76e95111dc)
 1. Separated the long single page into a multi-page workflow: [!142742](https://gitlab.com/gitlab-org/gitlab/-/merge_requests/142742/diffs)
 1. Replaced clunky GitLab Development Kit (GDK) installation with pre-configured virtual machine, "GDK-in-a-box": [!144251](https://gitlab.com/gitlab-org/gitlab/-/merge_requests/144251/diffs)
+
+</Steps>
