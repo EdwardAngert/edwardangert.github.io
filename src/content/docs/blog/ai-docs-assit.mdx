@@ -1,0 +1,90 @@
+---
+slug: blog/ai-docs-assist
+title: AI is coming for my job. Maybe to my job.
+date: 2025-12-12
+excerpt:
+      "We all--humans and AI--need good documentation."
+---
+
+While I was working on a pull request for a new [Coder](https://coder.com) feature, there were a few times that Claude Code offered my own documentation or comment on a PR to answer questions I had.
+
+It was a guess I made in a PR about the way a feature might work, and when I asked Claude Code to verify, it referred to the documentation.
+My documentation.
+
+My job has always been to empower users to get stuff done smoothly and on their own.
+
+Now my audience includes AI.
+
+If humans and AI both rely on good documentation, how do I develop documentation and an information architecture that help both?
+
+## How I Use AI
+
+I use Claude and Claude Code both at home and at work.
+On my phone, my chats with AI probably look a lot like most peoples':
+
+- Is this poison ivy?
+- Which of these water bottles fit in my car's cup holder?
+- What's this broken part of our toilet called?
+- Is this rash poison ivy?
+
+Claude Code might look a little different:
+
+- Help me turn my settings into dotfiles.
+- I have a Docusaurus site hosted through GitHub Pages. Let's develop a plan to migrate it to Astro with Starlight.
+- When I ask you to help me work on documentation, remember the following...
+- Help me make a [Claude Code plugin](https://github.com/EdwardAngert/documentation-agent-skill/) that helps you follow my standards for documentation.
+
+For me, the great promise of AI is that it can make sense of piles of information that would take me hours to untangle and map out.
+
+The current hype seems centered around how AI can take over tasks like research, software development, and documentation.
+
+If AI has all the information, can it write the documentation for me?
+
+## AI Can Document Things; Humans Are Better at Writing Documentation
+
+For a good example of this, explore [DeepWiki](https://deepwiki.com), which "provides up-to-date documentation you can talk to, for every repo in the world."
+It gives a comprehensive breakdown of a repository, but you won't get concept, guides, steps, and examples.
+Right now, AI is excellent at documenting what exists in the way that it exists, but not as good at thinking about what a user will need.
+
+When I write documentation, I take all the information I have from my own notes, from product managers, and the several threads from Slack in which someone said `@Edward ☝️`.
+I parse it all, following threads and connecting the dots.
+
+With AI, I paste all the information into a window, tell it what we're working on and direct the outline of documentation and examples.
+Claude lays out a plan, and if I'm using Claude Code, we dig deeper into the codebase or Git branch for the context I need.
+
+Context, relationships, and information synthesis all help technical writers make better documentation.
+Usually we get that from subject matter experts (SME), by exploring codebases, or by being in every Slack channel and engineering standup ever.
+
+If my AI tool has access to all of these, shouldn't it be able to write the documentation itself?
+
+It tries.
+
+It can make a great outline, but it seems to have trouble navigating what [kind of technical documentation to write](https://idratherbewriting.com/blog/what-is-diataxis-documentation-framework).
+
+AI is missing--at least for now--that magical blend of curiosity and empathy that helps technical writers anticipate their audience's needs.
+It's good at parsing content that is there, and it tries to imitate [abductive reasoning](https://en.wikipedia.org/wiki/Abductive_reasoning) as best as it can.
+Maybe that's why it "hallucinates" technical content - it's trying to guess, very much like I would, and it can get to the right answer, but it needs to be babysat, coaxed, coached, and led.
+
+But while AI agents aren't great at writing technical documentation (yet), they are a great aid.
+
+Maybe aide is more appropriate.
+Claude Code is my SME, my always-at-hand assistant, my [rubber duck](https://en.wikipedia.org/wiki/Rubber_duck_debugging), and regex expert.
+
+## How It Started / How It's Going
+
+I'm sure there will be advancements that feel threatening, and there will be companies that try to eschew a documentation and education function to "have someone else do it," as there always are.
+
+AI agents are becoming our technical analogues and companions, and the same way that some engineering teams are, technical writers will find ways that they augment and accelerate our work; not supplant us.
+
+What if we can use this to make things better?
+
+At Coder, as part of a larger effort to help other teams implement AI into their workflows, I created a [knowledgebase](https://github.com/coder/shared-docs-kb) that everyone could use to find answers and contribute documentation.
+This was before I learned about [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro).
+
+I want to make it easy for subject matter experts to share their knowledge, and for people who need it to find it.
+
+Right now, I'm working on developing an [MCP for an open source project that converts weather and climate datasets](https://github.com/EdwardAngert/reformatters-knowledge-base).
+As always, my goal is to develop a repeatable strategy.
+You can follow that repository to see how it goes.
+
+That's Documentation, and once I get it working, I'm looking forward to hearing about how you implement the concept, whether you learn it here or through a chat with your favorite AI.
