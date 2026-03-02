@@ -1,0 +1,455 @@
+---
+slug: docs/pi-hole/troubleshooting
+title: "Common Pi-hole Issues and How to Fix Them"
+description: "Troubleshooting guide for Pi-hole v6: fix installation issues, DNS failures, broken streaming services, blocklist errors, and Tailscale configuration. Includes a verification checklist."
+summary: "Pi-hole v6 troubleshooting reference. Covers enabling and disabling FTL debug logging. Installation issues: SSH host key mismatch after SD card rebuild; port 53 conflict when unbound grabs the port before FTL (includes the exact FTL log error string to look for); 403 on the web interface caused by lighttpd left over from a v5 install (FTL silently falls back to port 8080; pihole-FTL --config webserver.port shows the actual port in use); Gravity failing immediately after install because FTL isn't fully ready (fix: wait 30 seconds and re-run pihole -g); max concurrent DNS queries (150) caused by a DNS loop or a misbehaving client; intermittent DNS with unbound fixed by refreshing root hints with unbound-anchor; FTL database growth causing a boot-time crash with CRIT realloc_shm; NTP warnings that are cosmetic if timedatectl shows the system clock is synced. Blocklist and allowlist issues: step-by-step broken service diagnosis (disable Pi-hole temporarily, check query log, allowlist blocked domain); custom regex rules via Domains > Regex filter; bare domain names accidentally added to Lists instead of Domains; lists returning 0 domains because they need the -adblock variant (spam-tlds.txt vs spam-tlds-adblock.txt); detecting archived list sources (anudeepND archived August 2025) and renamed URL paths (1Hosts renamed Pro to Xtra in 2025). Tailscale issues: queries not in log fixed with dns.listeningMode ALL; DNS not filtering fixed by enabling Override local DNS in the Tailscale admin console; exit node not routing traffic (check IP forwarding with sysctl and admin console approval); SSH dropping when exit node is active fixed by enabling Allow Local Network Access on the client."
+category: "Personal Reference Documentation"
+prev:
+  link: /docs/pi-hole/maintenance/
+  label: Pi-hole Maintenance and Advanced Configuration
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+## Enable/Disable Debug Logging
+
+The Pi-hole debug tool turns on verbose logging flags when run.
+You can leave it on while you troubleshoot and turn it off when you're done:
+
+```shell title="From the Pi"
+sudo pihole-FTL --config debug.all true
+sudo systemctl restart pihole-FTL
+```
+
+Change `true` to `false` when you're done troubleshooting.
+
+## Pi-hole Installation
+
+### SSH host key mismatch after rebuild
+
+**Symptom:** `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED` when SSHing to the Pi.
+
+**Cause:** You reformatted the SD card and reinstalled, or changed the IP address, but your computer still has the old SSH host key cached.
+
+**Fix:**
+
+```shell title="From your device"
+ssh-keygen -R pi-hole.local
+ssh pi-admin@pi-hole.local
+```
+
+### Port 53 conflict between Pi-hole and unbound
+
+**Symptom:** Pi-hole installs successfully, the web interface works, but DNS resolution fails on your network. The dashboard may show "DNS server failure."
+
+**Cause:** Both Pi-hole (via dnsmasq) and unbound are trying to listen on port 53.
+This happens if unbound was installed with its default configuration before Pi-hole.
+
+**Check:**
+
+```shell title="From the Pi"
+sudo journalctl -u pihole-FTL | grep "port 53"
+```
+
+Look for: `dnsmasq: failed to create listening socket for port 53: Address in use`
+
+**Fix:** Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](./pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
+
+```shell title="From the Pi"
+sudo systemctl restart unbound
+sudo systemctl restart pihole-FTL
+```
+
+### Pi-hole web interface shows 403 Forbidden or won't load
+
+**Symptom:** `https://pi-hole.local/admin` returns 403 Forbidden or the page won't connect.
+
+**Most common cause:** lighttpd (the v5-era web server) is installed and running, occupying port 80.
+Pi-hole v6 has its own embedded web server - if lighttpd grabs port 80 first, FTL falls back to port 8080 silently.
+
+**Check:**
+
+```shell title="From the Pi"
+sudo systemctl status lighttpd
+```
+
+**Fix:**
+
+```shell title="From the Pi"
+sudo systemctl stop lighttpd
+sudo systemctl disable lighttpd
+sudo systemctl restart pihole-FTL
+```
+
+**Check what port FTL is actually using:**
+
+```shell title="From the Pi"
+pihole-FTL --config webserver.port
+```
+
+If it shows `8080`, try `http://pi-hole.local:8080/admin` as a temporary workaround.
+
+**Secondary cause:** FTL is not running at all.
+
+```shell title="From the Pi"
+sudo systemctl status pihole-FTL
+sudo journalctl -u pihole-FTL -n 50
+```
+
+The most common reason on a fresh install is a port 53 conflict - see above.
+
+### Gravity fails to update
+
+**Symptom:** Running `pihole -g` exits with "DNS resolution is currently unavailable"
+or "list download failed: no cached list available."
+
+**Cause:** `/etc/resolv.conf` points to `127.0.0.1` (Pi-hole itself).
+If FTL isn't fully ready when Gravity runs - for example, immediately after install
+before the first restart - the DNS lookup for list URLs fails.
+
+**Fix:** Wait 30 seconds after install completes, confirm FTL is running, then re-run:
+
+```shell title="From the Pi"
+sudo systemctl status pihole-FTL
+pihole -g
+```
+
+If Gravity still fails, verify outbound connectivity:
+
+```shell title="From the Pi"
+dig raw.githubusercontent.com @1.1.1.1
+curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.txt
+```
+
+**Note:** The web interface Gravity button can silently fail in some FTL versions.
+If the dashboard shows an error but `pihole -g` from the terminal succeeds, use the CLI.
+
+### Maximum number of concurrent DNS queries reached
+
+**Symptom:** DNS becomes unresponsive. The FTL log shows:
+`Maximum number of concurrent DNS queries reached (max: 150)`
+
+**Most common cause:** A DNS loop - Pi-hole is forwarding queries to itself.
+Check **Settings** > **DNS** and confirm the upstream servers are not `127.0.0.1`
+or the Pi's own LAN IP.
+
+**Check:**
+
+1. Watch live queries.
+   Look for a single source IP flooding requests:
+
+   ```shell title="From the Pi"
+   pihole -t
+   ```
+
+   Press <kbd>CTRL+C</kbd> to stop.
+
+1. Test if the upstream is reachable:
+
+   ```shell title="From the Pi"
+   dig google.com @1.1.1.1
+   ```
+
+**Fix:** In **Settings** > **All Settings** > **DNS**, raise `dns.maxConcurrent` to `300` or `500`.
+Treat this as a symptom fix.
+Find the root cause (DNS loop or misbehaving client) separately.
+
+### Intermittent DNS failures with unbound
+
+**Symptom:** DNS works, then randomly stops for minutes several times a day.
+Restarting FTL or unbound temporarily fixes it.
+Switching to Cloudflare upstream eliminates the problem.
+
+**Cause:** Unbound periodically fails to respond within FTL's timeout.
+This can happen when unbound needs to re-validate DNSSEC chains or when its root hint cache is stale.
+
+**Check:** Test unbound independently while Pi-hole is failing:
+
+```shell title="From the Pi"
+dig google.com @127.0.0.1 -p 5335
+```
+
+If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
+
+**Fix - refresh root hints:**
+
+```shell title="From the Pi"
+sudo unbound-anchor -a /var/lib/unbound/root.key
+sudo systemctl restart unbound
+```
+
+**Fix - check unbound logs:**
+
+```shell title="From the Pi"
+sudo journalctl -u unbound -n 100
+```
+
+Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
+
+### FTL database grows too large and FTL fails to start
+
+**Symptom (weeks or months after setup):** After a reboot, Pi-hole never comes back online.
+`systemctl status pihole-FTL` shows failed.
+
+The journal shows:
+`CRIT: realloc_shm(): Failed to resize "FTL-queries": No space left on device`
+
+**Cause:** Pi-hole v6 stores every DNS query for 91 days by default.
+Pi-hole v5 has a default of 365 days.
+If you have Pi-hole v5 or upgraded from it, check your `maxDBdays` setting.
+
+**Quick fix (loses query history):**
+
+```shell title="From the Pi"
+sudo systemctl stop pihole-FTL
+sudo rm /etc/pihole/pihole-FTL.db
+sudo systemctl start pihole-FTL
+```
+
+**Prevention:** Verify your retention setting in `/etc/pihole/pihole.toml`:
+
+```toml title="/etc/pihole/pihole.toml"
+[database]
+maxDBdays = 91
+```
+
+Lower this further if disk space is a concern.
+
+Refer to the [example pihole.toml](./maintenance/#reference-full-piholetoml) in the maintenance section for a full `pihole.toml` reference.
+
+### NTP warnings in the Pi-hole dashboard
+
+**Symptom:** Dashboard shows "No valid NTP replies received" or "Standard deviation of time offset is too large, rejecting synchronization."
+
+**Cause:** Pi-hole v6 has its own NTP client that runs alongside the OS time sync (`systemd-timesyncd`).
+Occasionally an NTP pool server times out.
+
+**Check:** Verify the system clock is correct:
+
+```shell title="From the Pi"
+timedatectl status
+```
+
+If `System clock synchronized: yes` and the time is correct, the warning is cosmetic.
+
+**Optional fix:** Disable Pi-hole's NTP client since the OS handles time sync:
+
+```shell title="From the Pi"
+sudo pihole-FTL --config ntp.sync.active false
+sudo systemctl restart pihole-FTL
+```
+
+## Blocklists and Allowlists
+
+### Troubleshoot a Broken Service
+
+#### Step 1: Check if Pi-hole is the problem
+
+<Steps>
+
+1. In the Pi-hole web interface, go to **Disable** and choose a duration (5 minutes is usually enough).
+1. Try the broken service again.
+1. If it works with Pi-hole disabled, Pi-hole is blocking something the service needs.
+   Continue to find the blocked domain.
+
+</Steps>
+
+If it's still broken with Pi-hole disabled, the problem is elsewhere.
+
+#### Step 2: Find the blocked domain
+
+<Steps>
+
+1. Re-enable Pi-hole.
+1. In the Pi-hole web interface, go to **Query Log**.
+1. On the device where the service is broken, try to use it again.
+1. In the query log, filter by the device's IP address or name.
+1. Look for domains with a **Blocked** status that appeared when you tried the service.
+
+</Steps>
+
+#### Step 3: Allowlist the domain
+
+<Steps>
+
+1. In the Query Log, select the blocked domain.
+1. Select **Allow** to add it to your allowlist.
+1. Try the service again.
+
+</Steps>
+
+You may need to repeat this.
+Some services check multiple domains sequentially, so you might need to allowlist several before the service works.
+
+#### Step 4: If you can't find the domain
+
+1. In the query log, search for part of the service name (for example, `disney`).
+1. If nothing appears, look for blocked requests to CDN or analytics domains that coincide with your attempts to use the service.
+1. As a last resort: disable Pi-hole, use the service, then check the log for all domains the service contacted.
+   These are candidates for your allowlist.
+
+#### When allowlisting isn't enough
+
+Some services can't be fixed by allowlisting because ads and content come from the same domains.
+Hulu's ad-supported tier and YouTube video ads are the main examples.
+Options in those cases:
+
+- Upgrade to ad-free tiers
+- Accept that DNS-level blocking has limits for those specific services
+- Use a browser extension for web-based viewing
+
+### Custom Filtering Rules
+
+Pi-hole v6 supports regex rules for both blocking and allowlisting.
+Add them via CLI or in the web interface under **Domains** > **Regex filter**.
+
+These rules run against every queried domain in real time, so keep the list reasonably short and test after adding.
+Regex rules can cause false positives that don't show up until something breaks.
+
+### Fix List Health Issues
+
+#### Gravity shows "Invalid protocol" errors for domain names
+
+**Symptom:** Running `pihole -g` shows errors like:
+
+```shellsession
+[✗] Status: Invalid protocol specified. Ignoring list.
+    Ensure your URL starts with a valid protocol like http:// , https:// or file:// .
+[✗] Status: geolocation.onetrust.com ()
+```
+
+**Cause:** Individual domain names were added to **Lists** instead of **Domains** > **Allowlist**.
+Pi-hole's Gravity system downloads list files (usually `.txt`) from URLs.
+It can't process bare domain names as list entries.
+
+**Fix:** In the web interface, go to **Lists** and delete any entries that are bare domain names (not URLs starting with `https://`).
+Then re-add those domains via CLI or under **Domains** > **Allowlist**:
+
+```shell title="From the Pi"
+pihole allowlist geolocation.onetrust.com registerdisney.go.com
+```
+
+Gravity still runs successfully - blocked domain counts are unaffected.
+The errored entries are simply ignored.
+
+#### A list shows 0 domains after `pihole -g`
+
+Check the format. Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
+Wildcard TLD rules (`||*.tld^`) and AdGuard-specific modifiers (`$denyallow=`) are common culprits.
+
+Look for a Pi-hole-specific variant of the list.
+HaGeZi provides separate `-adblock` versions for exactly this reason - the plain `spam-tlds.txt` is one example where the default file parses 0 domains.
+
+#### A list hasn't updated in a long time
+
+Run `pihole -g` and check the output.
+If a list shows "No changes detected" for weeks, visit the source repo and check whether it's still maintained.
+Blocklist projects get archived - [anudeepND/whitelist](https://github.com/anudeepND/whitelist) was archived in August 2025, for example.
+If a source goes dark, replace it. [OISD Big](https://oisd.nl/) is a good general-purpose fallback, and [The Firebog](https://firebog.net/) still curates a list of actively maintained sources.
+
+#### A list URL returns a 404
+
+Projects rename tiers and reorganize files.
+For example, 1Hosts renamed `Pro` to `Xtra` in 2025, breaking old URLs.
+If a URL 404s, check the project's README for current links before assuming the project is dead.
+
+## Tailscale
+
+### DNS queries aren't showing in the Pi-hole query log
+
+If you've configured Tailscale to use your Pi-hole as a nameserver but queries from remote devices aren't appearing in the query log and nothing is getting blocked, Pi-hole is rejecting the queries.
+By default, Pi-hole only accepts DNS queries from the local subnet.
+
+Run the following on the Pi:
+
+```shell title="From the Pi"
+sudo pihole-FTL --config dns.listeningMode ALL
+sudo systemctl restart pihole-FTL
+```
+
+See [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](./tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) for the full setup.
+
+### Pi-hole web interface loads but DNS isn't filtering
+
+Confirm **Override local DNS** is enabled in the Tailscale admin DNS settings.
+If it's off, devices use their own local resolver, not Pi-hole.
+
+Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it should be the `100.x.x.x` address, not the Pi's LAN IP.
+
+### Exit node connected but traffic isn't routing through the Pi
+
+1. Confirm IP forwarding is active:
+
+   ```shell title="From the Pi"
+   sysctl net.ipv4.ip_forward
+   ```
+
+   It should return `net.ipv4.ip_forward = 1`.
+
+   - If it returns `0`, re-run the sysctl commands and verify the file was written:
+
+      ```shell title="From the Pi"
+      cat /etc/sysctl.d/99-tailscale.conf
+      ```
+
+1. Confirm the exit node is approved in the Tailscale admin console.
+   Unapproved exit nodes don't route traffic even if the client selects them.
+
+### SSH into the Pi from anywhere on your tailnet
+
+SSH to the Pi using either its Tailscale IP or its machine name.
+Both work as long as the client device is connected to Tailscale, with or without the exit node active:
+
+```shell title="From the client device"
+ssh user@100.x.x.x
+# or
+ssh user@pi-hole
+```
+
+If SSH stops working when you enable the exit node, enable **Allow Local Network Access** in the Tailscale app on the client device.
+"Local network access" means local to your client device.
+Without it, all traffic including the SSH connection routes through the exit node, which creates a loop back to the Pi itself.
+
+### SSH works over Tailscale but the Pi-hole web interface doesn't load
+
+1. Confirm the `tailscale0` UFW rule is in place:
+
+   ```shell title="From the Pi"
+   sudo ufw status verbose | grep tailscale
+   ```
+
+   It should show `Anywhere on tailscale0 ALLOW IN Anywhere`.
+
+1. If it's missing, run:
+
+   ```shell title="From the Pi"
+   sudo ufw allow in on tailscale0 comment 'Tailscale'
+   ```
+
+## Verify Pi-hole Is Working
+
+After you complete the Pi-hole setup:
+
+1. Check the dashboard:
+   - Total queries should be increasing as devices make DNS requests.
+   A non-zero "Queries Blocked" percentage confirms blocking is active.
+   Blocking percentage varies by household - update this with your own numbers after a week of use.
+
+1. Test blocking:
+   - On a device using Pi-hole as its DNS server, go to:
+
+     ```text
+     http://doubleclick.net
+     ```
+
+     You should see a connection error or blank page.
+
+1. Test allowlisting:
+   - Make sure normal browsing works.
+   Try loading a few common sites and use your smart TV or devices to stream media.
+   If anything breaks, check the Query Log for blocked domains and allowlist as needed.
+
+1. Check all devices:
+   - Pi-hole only works for devices using it as their DNS server.
+   If you configured it in your router's DHCP settings, devices need to renew their DHCP lease to pick up the new DNS server.
+   You can force this by disconnecting and reconnecting Wi-Fi, or restarting the device.

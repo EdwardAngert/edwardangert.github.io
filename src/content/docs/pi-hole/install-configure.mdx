@@ -1,23 +1,35 @@
 ---
 slug: docs/pi-hole/install-configure
-title: "Set Up Raspberry OS and Install Pi-hole"
-description: "Step-by-step guide to install Pi-hole on Raspberry Pi OS"
+title: "Set Up Raspberry Pi OS"
+description: "How to set up Raspberry Pi OS for Pi-hole v6: flash the SD card, harden with UFW and Fail2Ban, and set a static IP."
+summary: "Raspberry Pi OS setup guide for Pi-hole v6. Covers formatting the SD card with SD Card Formatter, flashing Raspberry Pi OS (64-bit, Bookworm) with Raspberry Pi Imager, and first SSH via mDNS hostname (pi-hole.local). Includes a rebuild note: Pi-hole v6 requires Debian 11 or later. Covers finding the Pi's IP via mDNS, nmap subnet scan, or router DHCP client list. Includes dedicated steps for TP-Link Omada controller users to locate the Pi and assign a fixed IP in the controller. Covers removing the passwordless sudo file that Raspberry Pi Imager creates, setting up UFW with a Pi-hole app profile (ports 53/tcp, 53/udp, 80/tcp, 443/tcp), configuring Fail2Ban with banaction=ufw to keep all firewall rules in one place, and setting a static IP via nmcli using a shell variable for the connection name."
+category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/
   label: Pi-hole Overview
 next:
-  link: /docs/pi-hole/block-allow-lists/
-  label: Add Block/Allowlists
+  link: /docs/pi-hole/pihole-install/
+  label: Install Pi-hole v6
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Install Software Locally
 
+The tools below are linked to their official download pages.
+
+macOS users can install tools both using [Homebrew](https://brew.sh/).
+Windows and Linux users can download installers directly from each link.
+
 - [SD Card Formatter](https://www.sdcard.org/downloads/formatter/)
-  - Install using [Homebrew](https://brew.sh/): `brew install --cask sdformatter`
 - [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
-  - Install using Homebrew: `brew install --cask raspberry-pi-imager`
+
+For macOS users with Homebrew:
+
+```shell title="From your Mac"
+brew install sdformatter raspberry-pi-imager
+```
 
 ## Format the SD Card
 
@@ -27,140 +39,368 @@ This process erases everything on the SD card.
 
 <Steps>
 
-1. Insert a microSD card, then Open SD Card Formatter and choose the card from the **Select card** dropdown.
+1. Insert a microSD card, then open SD Card Formatter and choose the card from the **Select card** dropdown.
 1. Select **Format** to format the card.
    - The default settings are fine: Quick format and no volume label.
+1. Exit SD Card Formatter and leave the SD card inserted.
 
 </Steps>
 
 ## Create the Pi OS Image on the SD Card
 
 Raspberry Pi Imager makes the SD card a bootable drive.
+After you set up the SD card, you'll install it in the Raspberry Pi as its primary drive.
 
 <Steps>
 
-1. Open Raspberry Pi Imager
-1. **Choose Device**: Raspberry Pi 4
-1. **Choose OS**: Raspberry Pi OS (64-bit)
-1. **Choose Storage** to select the SD card
-1. **Next**
-
-</Steps>
-
-### Configure Raspberry Pi Imager Settings
-
-<Steps>
-
-1. In the **Use OS customisation?** popup that appears, select **EDIT SETTINGS**. If the device you're using is connected to Wi-Fi, a prompt will ask if you'd like to use the Wi-Fi password from the system pre-filled in the Customisation screen. If you don't pre-fill it, you can still enter it on the next screen.
-
-   ![Raspberry Pi Imager OS Customisation window with all options checked in the General tab.](@img/r-pi-imager-customisation.png)
-
-1. In the **GENERAL** tab, make your selections. Use your own easy-to-remember username and password:
-
-   - **☑ Set hostname**: `pi-hole`.local
-   - **☑ Set username and password**
-     - **☑ Username**: `probablyedward`
-     - **☑ Password**: `probablyhunter2`
-   - **☑ Configure wireless LAN** (only if you're not using Ethernet)
-   - **Set locale settings**
-
-1. In the **SERVICES** tab:
-
-   - **☑ Enable SSH** and **☑ Use password authentication**
-
-1. In the **OPTIONS** tab:
-
-   - Uncheck **Enable telemetry**
-
-1. Select **Save**
-
+1. Open Raspberry Pi Imager.
+1. **Select your Raspberry Pi Device**: Raspberry Pi 4.
+1. **Choose operating system**: Raspberry Pi OS (64-bit).
+1. **Select your storage device**: Select the SD card.
+1. **Customisation: Choose hostname**: `pi-hole`.
+1. **Customisation: Localisation**: Select your location and time zone.
+   - My selections:
+     - Capital city: `Washington, D.C. (United States)`
+     - Time zone: `America/New_York`
+     - Keyboard layout: `us`
+1. **Customisation: Choose username**: Create a user account.
+   - The examples in this guide use the username `pi-admin`.
+1. **Customisation: Choose Wi-Fi** to configure the wireless network connection.
+   - Select **Next** if you will connect using Ethernet.
+1. **Customisation: SSH authentication**: Enable SSH and select **Use password authentication**.
+   - Optionally, [use public key authentication](https://www.raspberrypi.com/documentation/computers/remote-access.html#configure-ssh-without-a-password) for more secure access.
+1. **Write image**: select **Write**.
+1. In the popup, review the warning, then select **I understand, erase and write** to continue.
 1. When the write completes, remove the SD card from your computer and insert it into the Raspberry Pi.
-Plug in the Pi and give it a few minutes to load.
+1. Plug in the Pi and give it a few minutes to boot.
 
 </Steps>
 
-## Find the Pi's IP Address
+<details>
+<summary>Rebuilds and Upgrades: Confirm Your Linux Version</summary>
 
-If you configured Wi-Fi and plugged the Pi in via Ethernet, your Pi will have two IP addresses.
-To make it easier to [enable network-wide blocking](/docs/pi-hole/network-level-blocking/#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+Pi-hole v6 requires Debian 11 (Bullseye) or later.
 
-For me, I use a TP-Link Omada controller:
+If you're on an existing Pi, use `cat /etc/os-release | grep PRETTY_NAME` to confirm the release version before you continue:
+
+```shellsession title="From the Pi"
+pi-admin@pi-hole:~ $ cat /etc/os-release | grep PRETTY_NAME
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+```
+
+</details>
+
+## Configure Raspberry Pi OS
+
+<Steps>
+
+1. Find the Pi's IP Address:
+
+   <Tabs>
+   <TabItem label="Mac/Linux">
+   ```shell title="From your device"
+   ping -c 3 pi-hole.local
+   ```
+   </TabItem>
+
+   <TabItem label="Windows">
+   ```shell title="From your device"
+   ping -n 3 pi-hole.local
+   ```
+
+   Windows users: If `pi-hole.local` doesn't resolve when you try to SSH, try the `arp` command:
+
+   ```shell title="From your device"
+   arp -a
+   ```
+
+   Look for a recently added entry and try to SSH to it in the next step.
+   Or search your router's documentation for something like "DHCP client list" to help find the Pi on your network.
+   </TabItem>
+   </Tabs>
+
+   <details>
+   <summary>Other ways to find the Pi's IP</summary>
+
+     - **Check your router**
+       - Look for a page that says "DHCP clients" or "connected devices".
+     - **Scan the network**
+       - Use `nmap -sn 192.168.1.0/24` (adjust the subnet for your network, `192.168.1.0` in this example).
+   </details>
+
+1. SSH into the Pi from your local terminal:
+
+   ```shell title="From your device"
+   ssh pi-admin@pi-hole.local
+   ```
+
+   You can also use the IP you find in Step 1 instead of `pi-hole.local`.
+
+1. Enter the password you set in Raspberry Pi Imager when prompted.
+
+1. If you configured Wi-Fi and also plugged the Pi in via Ethernet, your Pi will have two IP addresses.
+
+   To make it easier to [enable network-wide blocking](./network-level-blocking/#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+
+   Confirm the Ethernet IP address from inside the SSH session on the Pi:
+
+   ```shell title="From the Pi"
+   ip addr show eth0
+   ```
+
+</Steps>
+
+#### TP-Link Omada-specific steps to find and fix the Pi's IP
+
+<details>
+<summary>Find the Pi and set a fixed IP on a TP-Link Omada controller</summary>
 
 <Steps>
 
 1. Log in and select the site's name.
 1. Select **Clients** then **Wired** to filter the table of connected clients.
-1. Select **pi-hole** in the **USERNAME** column to open the **Details** sidebar.
-1. Select **Config** and check **☑ Use Fixed IP Address**.
+1. Select **pi-hole** in the **Client Name** column to open the **Details** sidebar.
+1. Select **Manage Client** > **Config** and check **Enable** next to **Use Fixed IP Address**.
+1. Select **Save**.
+
+   You should still follow the steps in the [Set a Static IP](#set-a-static-ip-address) section when you get there.
 
 </Steps>
 
-## Install Pi-hole
-
-<details>
-
-  <summary>If you skipped to this section, expand this for things to look out for.</summary>
-
-  If you installed Pi-hole on an existing device or skipped to this section
-
-  OS-specific things that might be different for your setup:
-    - Installed software like Git, curl, or zsh
-    - `apt` package manager. Your OS might use a different one.
-    - User accounts. The examples I use are `probablyedward` and `pi`
+![Set fixed IP in Omada controller](./screenshots/omada-fixed-ip-address.png)
 
 </details>
 
-Replace the username, `probablyedward`, and example IP, `192.0.2.25`, in these steps with your Pi's username and local IP.
+### Require a Password for sudo Commands
+
+The non-root user that Raspberry Pi Imager created can run `sudo` commands without a password.
+
+Raspberry Pi Imager creates a configuration file to enforce passwordless `sudo`.
+Remove the file so that sudo commands require authentication.
 
 <Steps>
 
-1. Open your terminal app and SSH to the Pi:
+1. Remove the configuration file:
 
-   ```shell
-   ssh probablyedward@192.0.2.25
+   ```shell title="From the Pi"
+   sudo rm /etc/sudoers.d/010_pi-nopasswd
    ```
 
-   Enter the password when prompted.
-
-1. Update the system and install dependencies:
+1. Log out of the SSH session, then log back in:
 
    ```shell
-   sudo apt update && sudo apt upgrade -y
-   sudo apt install git php-cli php-sqlite3 php-intl php-curl unbound
+   exit
+   ssh pi-admin@pi-hole.local
    ```
-
-   Enter the password when prompted. This is the point at which I also configure my command line interface (CLI) and editor, but that's outside the scope of this doc.
-
-1. Run the Pi-hole installation script:
-
-   ```shell
-   curl -sSL https://install.pi-hole.net | bash
-   ```
-
-1. The script will prompt you with a number of warnings and options. When prompted select:
-
-   - **Choose An Interface**: `eth0` for Ethernet.
-   - **Static IP Address**: `Yes` and enter the IP address you found in [Find the Pi's IP Address](#find-the-pis-ip-address).
-     - Unless you've made specific changes to the network, the gateway address should be the IP of the router or controller. In this example, that's `192.0.2.1`.
-   - **Upstream DNS Provider**: Select `Cloudflare` for now. This is a setting we'll change later, but we select [Cloudflare's DNS server](https://one.one.one.one/dns#explanation) now so that every DNS request from the Pi going forward will be routed through a trusted directory.
-   - **Blocklists**: `Yes` to use the default list.
-   - **Admin Web Interface**: `Yes` to install the Pi-hole web interface.
-     - **Web Server**: `Yes` to install lightppd for the web interface.
-   - **Enable Logging**: `Yes` to enable query logging. This helps diagnose issues like when Hulu or Disney+ won't load on your smart TV.
-     - **Select a privacy mode**: `0` to show what site got blocked on which device. Consult the [official Pi-hole docs](https://docs.pi-hole.net/ftldns/privacylevels/) for more information about the privacy levels.
-
-   The last screen lists the IP and a temporary password for the Pi-hole web interface. Since we'll change it in the next step, it's safe to ignore this.
-
-1. Change the temporary password. Change the `examplePassword` in this example:
-
-   ```shell
-   pihole -a -p examplePassword
-   ```
-
-1. Optional: Follow the steps in the official [Pi-hole documentation to configure unbound](https://docs.pi-hole.net/guides/dns/unbound/#configure-unbound).
-
-   This step is optional because the Pi-hole is already configured to use Cloudflare's DNS provider. Use unbound if you prefer a [recursive DNS server](https://docs.pi-hole.net/guides/dns/unbound/#what-is-a-recursive-dns-server).
-
-1. Log in to the Pi-hole web interface: [http://pi.hole/admin](http://pi.hole/admin).
 
 </Steps>
+
+### Set Up a Firewall on Your Pi With UFW
+
+UFW (Uncomplicated Firewall) restricts which ports are accessible on the Pi.
+Pi-hole requires ports for DNS and the web interface.
+SSH is allowed for remote administration.
+
+<Steps>
+
+1. Install UFW:
+
+   ```shell title="From the Pi"
+   sudo apt install ufw
+   ```
+
+1. Allow SSH immediately to avoid getting locked out later:
+
+   ```shell title="From the Pi"
+   sudo ufw allow OpenSSH
+   ```
+
+1. Set the defaults for incoming and outgoing connections:
+
+   ```shell title="From the Pi"
+   sudo ufw default deny incoming
+   sudo ufw default allow outgoing
+   ```
+
+1. Add the following to `/etc/ufw/applications.d/pihole` to group the required ports into a single app profile rule.
+   Remember to use `sudo` to edit files throughout this guide:
+
+   ```ini title="/etc/ufw/applications.d/pihole"
+   [Pi-hole]
+   title=Pi-hole
+   description=Pi-hole DNS and Web Interface
+   ports=53/tcp|53/udp|80/tcp|443/tcp
+   ```
+
+   If you don't have a preferred terminal-based text editor, you can use `sudo nano /etc/ufw/applications.d/pihole`.
+   That will create the file and open the nano editor so you can add the rule.
+
+   To save and exit nano: <kbd>CTRL+X</kbd>, then <kbd>Y</kbd>, then <kbd>Enter</kbd>.
+
+1. Allow the profile:
+
+   ```shell title="From the Pi"
+   sudo ufw allow Pi-hole
+   ```
+
+1. Enable UFW with the new configuration:
+
+   ```shell title="From the Pi"
+   sudo ufw enable
+   ```
+
+1. Verify the rules are active:
+
+   ```shell title="From the Pi"
+   sudo ufw status
+   ```
+
+</Steps>
+
+<details>
+<summary>If you plan to use Pi-hole as a DHCP server</summary>
+
+Pi-hole as a DHCP server is not covered in this guide, but this seems to be an issue people encounter.
+
+If you plan to use Pi-hole as a DHCP server, add another `ufw allow`:
+
+```shell title="From the Pi"
+sudo ufw allow 67/udp comment 'DHCP'
+```
+
+</details>
+
+### Protect SSH with Fail2Ban
+
+Fail2Ban automatically bans IPs that fail too many login attempts.
+This helps minimize the risk of brute-force attacks.
+
+<Steps>
+
+1. Install Fail2Ban:
+
+   ```shell title="From the Pi"
+   sudo apt install fail2ban
+   ```
+
+1. Create `/etc/fail2ban/jail.local`:
+
+   ```ini title="/etc/fail2ban/jail.local"
+   [sshd]
+   enabled = true
+   banaction = ufw
+   maxretry = 4
+   bantime = 1h
+   findtime = 10m
+   ```
+
+   `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables (an alternative way to manage network access to the Pi) rules directly, keeping all firewall rules in one place.
+
+   Remember to use `sudo` to edit the file (`sudo nano /etc/fail2ban/jail.local` if you're new to this).
+
+1. Enable and start Fail2Ban:
+
+   ```shell title="From the Pi"
+   sudo systemctl enable --now fail2ban
+   ```
+
+1. Verify the SSH jail is active:
+
+   ```shell title="From the Pi"
+   sudo fail2ban-client status sshd
+   ```
+
+   You should see the jail listed as active with 0 currently banned IPs on a fresh install.
+
+</Steps>
+
+### Set a Static IP Address
+
+Pi-hole needs a stable IP address.
+If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the Internet.
+
+These steps use `nmcli` to lock the IP.
+They set the Ethernet connection name as a temporary shell variable.
+The variable is cleared when you exit the session.
+
+<Steps>
+
+1. Set the static IP, gateway, and DNS.
+
+   This example is intentionally set to fail if you don't adjust `YOUR-PI-IP` and `YOUR-GATEWAY-IP`.
+   This way you're less likely to get locked out if you don't change the example first:
+
+   ```shell title="From the Pi"
+   CON=$(nmcli -t -f NAME,DEVICE con show | grep eth0 | cut -d: -f1) && \
+   echo $CON && \
+   sudo nmcli con mod "$CON" \
+     ipv4.addresses YOUR-PI-IP/24 \
+     ipv4.gateway YOUR-GATEWAY-IP \
+     ipv4.dns "1.1.1.1" \
+     ipv4.method manual
+   ```
+
+   <details>
+   <summary>Help with this step</summary>
+
+   - This setting uses the shell variable `CON` to make it easier to copy and paste the command consistently.
+     The first line finds the device's name, and sets it as the variable.
+     `echo $CON` on the second line displays it in the terminal for your information.
+   - Replace `YOUR-PI-IP` with the Pi's IP you found in [step 1 of Configure Raspberry Pi OS](#configure-raspberry-pi-os).
+   - Replace `YOUR-GATEWAY-IP` with your router's IP (or your gateway if you already know it).
+
+   For more about these settings, see the
+   [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
+   </details>
+
+   - If you do get locked out, you'll need to access the Pi directly.
+     Then run this same command in the terminal with the correct IPs.
+
+1. Apply the changes:
+
+   ```shell title="From the Pi"
+   sudo nmcli con up "$CON"
+   ```
+
+1. If you changed the IP address, your SSH session will drop.
+
+   Still in the terminal, but on your local machine, remove the old cached keys and reconnect at the new IP:
+
+   ```shell title="From your device"
+   ssh-keygen -R YOUR-OLD-PI-IP
+   ssh pi-admin@YOUR-PI-IP
+   ```
+
+   Accept the new host key when prompted.
+
+1. Verify the settings persisted on the Pi:
+
+   ```shell title="From the Pi"
+   ip addr show eth0
+   ```
+
+   Confirm your static IP is listed.
+
+1. Reboot the Pi:
+
+   ```shell title="From the Pi"
+   sudo reboot now
+   ```
+
+   Wait a few minutes before you SSH back in.
+
+</Steps>
+
+## Checkpoint
+
+At this point you have a hardened Raspberry Pi OS ready for Pi-hole.
+
+Before you continue, confirm the following:
+
+- SSH access works: `ssh pi-admin@pi-hole.local`.
+- UFW is active with Pi-hole rules: `sudo ufw status`.
+- Fail2Ban is protecting SSH: `sudo fail2ban-client status sshd`.
+- The Pi has a static IP that won't change on reboot.
+- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#pi-hole-installation).
+
+The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.

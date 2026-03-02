@@ -1,0 +1,248 @@
+---
+slug: docs/pi-hole/maintenance
+title: "Pi-hole Maintenance and Advanced Configuration"
+description: "How to update Pi-hole, back up your configuration with Teleporter, edit pihole.toml for advanced settings, and offload the FTL database to a USB drive to extend SD card lifespan."
+summary: "Maintenance reference for Pi-hole v6. Covers the update workflow (pihole -up for software, pihole -g for Gravity blocklist refresh) and using Teleporter (Settings > Teleporter) to export and restore full configuration including blocklists, allowlists, groups, and DNS settings. Covers editing pihole.toml directly for advanced DNS configuration, with examples for switching upstream DNS and a full pihole.toml from a working setup (comments stripped, changed values marked). Covers moving the FTL database (pihole-FTL.db) and log to a USB drive to reduce SD card write wear: finding the device with lsblk, getting UUID with blkid, auto-mounting via fstab, updating the [files] section of pihole.toml to point to the new paths, and setting database retention with maxDBdays."
+category: "Personal Reference Documentation"
+prev:
+  link: /docs/pi-hole/tailscale/
+  label: VPN with Tailscale
+next:
+  link: /docs/pi-hole/troubleshooting/
+  label: Common Pi-hole Issues and How to Fix Them
+---
+
+import { Steps, Code } from '@astrojs/starlight/components';
+import piholeToml from './pihole.toml.example?raw';
+
+After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, or to [use a USB drive to store logs](#offload-logs-to-a-usb-drive).
+
+All of these sections are optional.
+
+## Update Pi-hole
+
+Update the Pi-hole software and refresh the Gravity database with updated lists.
+
+Run these whenever Pi-hole releases a new version, or after adding or changing blocklists.
+
+```shell title="From the Pi"
+sudo pihole -up
+pihole -g
+```
+
+## Back Up Your Configuration
+
+Pi-hole's Teleporter exports your full configuration: blocklists, allowlists, custom domains, regex rules, DNS settings, and DHCP config.
+
+<Steps>
+
+1. In the Pi-hole web interface, go to **Settings** > **Teleporter**.
+1. Select **Export** to download a backup file.
+
+</Steps>
+
+To restore after a rebuild or SD card failure, use the **Import** option on the same page and select the backup file.
+
+Re-export after making significant changes to lists or settings.
+Store the backup file somewhere other than the Pi, such as on your local computer, a NAS, or cloud storage.
+
+## Advanced Pi-hole Configuration with pihole.toml
+
+If you need to configure Pi-hole's DNS behavior outside the web interface, edit `/etc/pihole/pihole.toml` directly.
+
+After editing, restart the FTL service to apply changes:
+
+```shell title="From the Pi"
+sudo systemctl restart pihole-FTL
+```
+
+`pihole-FTL` is the core Pi-hole system service.
+It needs to be restarted when you make core configuration changes.
+
+:::note[Back up the file before making changes.]
+Editing `pihole.toml` directly can break Pi-hole if you introduce syntax errors.
+
+```shell title="From the Pi"
+sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
+```
+:::
+
+### Example: change upstream DNS
+
+In the `[dns]` section of `pihole.toml`:
+
+```toml title="pihole.toml"
+[dns]
+upstreams = ["127.0.0.1#5335", "1.1.1.1"]  # unbound on localhost, Cloudflare backup
+```
+
+Or for Cloudflare directly:
+
+```toml title="pihole.toml"
+[dns]
+upstreams = ["1.1.1.1", "1.0.0.1"]
+```
+
+### Reference: full pihole.toml
+
+This is the full `pihole.toml` from my setup, with comments stripped and the password hash redacted.
+Values marked `### CHANGED` were modified from the Pi-hole default.
+
+<details>
+<summary>pihole.toml (v6.5, comments stripped)</summary>
+
+<Code code={piholeToml} lang="toml" />
+
+</details>
+
+## Offload Logs to a USB Drive
+
+The Pi-hole FTL database (`pihole-FTL.db`) grows continuously and can wear out an SD card over months.
+Move the database and log file to a USB drive to protect the SD card and extend its life.
+
+### What you need
+
+- A USB flash drive
+- The Pi running with Pi-hole installed
+
+### Mount the USB drive
+
+<Steps>
+
+1. Plug in the USB drive and find its device name:
+
+   ```shell title="From the Pi"
+   lsblk
+   ```
+
+   Look for a `/dev/` that wasn't there before, such as `/dev/sda` with a partition at `/dev/sda1`.
+
+1. Get the partition's UUID:
+
+   ```shell title="From the Pi"
+   sudo blkid /dev/sda1
+   ```
+
+   Copy the UUID value from the output.
+
+1. Create a mount point:
+
+   ```shell title="From the Pi"
+   sudo mkdir -p /mnt/pihole-logs
+   ```
+
+1. Add an entry to `/etc/fstab` to auto-mount on boot.
+   Open the file and add this line at the bottom, replacing `YOUR-UUID` with the UUID you copied:
+
+   ```ini title="/etc/fstab"
+   UUID=YOUR-UUID  /mnt/pihole-logs  ext4  defaults,noatime  0  2
+   ```
+
+   Note that this example uses `ext4`.
+   If your USB drive is formatted as exFAT or NTFS instead of ext4, change the filesystem type accordingly.
+
+   <details>
+   <summary>If you need to format the drive first</summary>
+
+   This will delete everything on the drive:
+
+   ```shell title="From the Pi"
+   sudo mkfs.ext4 /dev/sda1
+   ```
+
+   </details>
+
+1. Mount everything in fstab:
+
+   ```shell title="From the Pi"
+   sudo mount -a
+   ```
+
+   If this returns an error, double-check the UUID and filesystem type in `/etc/fstab`.
+
+1. Set ownership so Pi-hole's FTL process can write to the drive:
+
+   ```shell title="From the Pi"
+   sudo chown pihole:pihole /mnt/pihole-logs
+   ```
+
+</Steps>
+
+### Point Pi-hole to the USB drive
+
+<Steps>
+
+1. Back up the current `pihole.toml`:
+
+   ```shell title="From the Pi"
+   sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
+   ```
+
+1. Move the existing database to the USB drive (so you don't lose query history):
+
+   ```shell title="From the Pi"
+   sudo systemctl stop pihole-FTL
+   sudo mv /etc/pihole/pihole-FTL.db /mnt/pihole-logs/
+   sudo mv /var/log/pihole/pihole.log /mnt/pihole-logs/ 2>/dev/null || true
+   ```
+
+1. Edit `/etc/pihole/pihole.toml` to update the file paths.
+   Find the `[files]` section and set:
+
+   ```toml title="pihole.toml"
+   [files]
+   database = "/mnt/pihole-logs/pihole-FTL.db"
+   log = "/mnt/pihole-logs/pihole.log"
+   ```
+
+   If there is no `[files]` section, add it at the end of the file.
+
+1. Start FTL and verify it comes up cleanly:
+
+   ```shell
+   sudo systemctl start pihole-FTL
+   sudo systemctl status pihole-FTL
+   ```
+
+1. Confirm the database is on the USB drive and growing:
+
+   ```shell title="From the Pi"
+   ls -lh /mnt/pihole-logs/
+   ```
+
+1. Reboot the Pi:
+
+   ```shell title="From the Pi"
+   sudo reboot now
+   ```
+
+1. Verify that the USB drive mounts and Pi-hole starts correctly:
+
+   ```shell title="From the Pi"
+   lsblk
+   systemctl status pihole-FTL
+   ```
+
+   The FTL service won't start if it can't find the database file.
+   DNS queries from all network devices will fail until the mount is fixed.
+
+</Steps>
+
+### Optional: Set Pi-hole database retention
+
+By default, Pi-hole keeps 91 days of query history.
+
+If you want to change the database size:
+
+1. Set a the number of days to keep the database in `pihole.toml`:
+
+   ```toml title="pihole.toml"
+   [database]
+   maxDBdays = 180
+   ```
+
+1. Restart FTL after changing this:
+
+   ```shell title="From the Pi"
+   sudo systemctl restart pihole-FTL
+   ```
