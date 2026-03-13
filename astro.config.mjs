@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight';
 import catppuccin from '@catppuccin/starlight';
 import starlightBlog from 'starlight-blog';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
+import starlightFullViewMode from 'starlight-fullview-mode'
 
 // https://astro.build/config
 export default defineConfig({
@@ -66,6 +67,7 @@ export default defineConfig({
 						words: 'total',
 					},
 				}),
+				starlightFullViewMode({})
 			],
 			sidebar: [
 				{
