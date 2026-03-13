@@ -3,7 +3,6 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import catppuccin from '@catppuccin/starlight';
 import starlightBlog from 'starlight-blog';
-import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import starlightFullViewMode from 'starlight-fullview-mode'
 
 // https://astro.build/config
@@ -42,19 +41,6 @@ export default defineConfig({
 					href: 'https://github.com/EdwardAngert',
 				},
 			],
-			expressiveCode: {
-				plugins: [pluginLineNumbers()],
-				defaultProps: {
-					// Disable line numbers by default
-					showLineNumbers: false,
-					// But enable line numbers for certain languages
-					overridesByLang: {
-						'text,toml,yaml': {
-							showLineNumbers: true,
-						},
-					},
-				},
-			},
 			plugins: [
 				catppuccin({
 					dark: { flavor: "mocha", accent: "mauve" },
