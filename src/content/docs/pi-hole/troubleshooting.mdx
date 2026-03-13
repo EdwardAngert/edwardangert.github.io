@@ -245,20 +245,20 @@ sudo systemctl restart pihole-FTL
 
 #### Step 1: Check if Pi-hole is the problem
 
-<Steps>
+{/* <Steps> */}
 
 1. In the Pi-hole web interface, go to **Disable** and choose a duration (5 minutes is usually enough).
 1. Try the broken service again.
 1. If it works with Pi-hole disabled, Pi-hole is blocking something the service needs.
    Continue to find the blocked domain.
 
-</Steps>
+{/* </Steps> */}
 
 If it's still broken with Pi-hole disabled, the problem is elsewhere.
 
 #### Step 2: Find the blocked domain
 
-<Steps>
+{/* <Steps> */}
 
 1. Re-enable Pi-hole.
 1. In the Pi-hole web interface, go to **Query Log**.
@@ -266,17 +266,17 @@ If it's still broken with Pi-hole disabled, the problem is elsewhere.
 1. In the query log, filter by the device's IP address or name.
 1. Look for domains with a **Blocked** status that appeared when you tried the service.
 
-</Steps>
+{/* </Steps> */}
 
 #### Step 3: Allowlist the domain
 
-<Steps>
+{/* <Steps> */}
 
 1. In the Query Log, select the blocked domain.
 1. Select **Allow** to add it to your allowlist.
 1. Try the service again.
 
-</Steps>
+{/* </Steps> */}
 
 You may need to repeat this.
 Some services check multiple domains sequentially, so you might need to allowlist several before the service works.
@@ -438,7 +438,7 @@ After you complete the Pi-hole setup:
 1. Test blocking:
    - On a device using Pi-hole as its DNS server, go to:
 
-     ```text
+     ```url
      http://doubleclick.net
      ```
 

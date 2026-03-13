@@ -40,7 +40,7 @@ Look for **DHCP**, **LAN**, or **DNS** settings.
 
 ![Omada controller DNS server settings](./screenshots/omada-dns-server-settings.png)
 
-<Steps>
+{/* <Steps> */}
 
 1. Log in to the Omada controller and select the site's name.
 1. In the sidebar, under **Configuration**, select **Network Config** > **LAN**.
@@ -51,7 +51,7 @@ Look for **DHCP**, **LAN**, or **DNS** settings.
 1. In the second box, enter `1.1.1.1` to use Cloudflare as a backup DNS server.
 1. Select **Next** to save and apply the settings.
 
-</Steps>
+{/* </Steps> */}
 
 After you save the settings, devices need to renew their DHCP lease to pick up the new DNS server.
 This happens automatically when the lease expires (typically within 24 hours, depending on your router), or immediately if you disconnect and reconnect Wi-Fi, or restart the device.
@@ -67,6 +67,8 @@ Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server y
 - **Google Chromecast and Google Home** hardcode `8.8.8.8`.
 - **Samsung Smart TVs** may use `8.8.8.8` for some services even when a different DNS is assigned.
 - **Android and iOS** support encrypted DNS (DNS-over-HTTPS or DNS-over-TLS), which can send queries directly to Google or Cloudflare, bypassing Pi-hole completely.
+
+{/* <Steps> */}
 
 1. To force traffic from these devices through the Pi-hole, add NAT rules that intercept all outbound DNS on port 53.
 
@@ -94,6 +96,8 @@ Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server y
    ```
 
    You should see two rules with `DNAT` and `to:YOUR-PI-IP` — one for `udp dpt:domain` and one for `tcp dpt:domain`.
+
+{/* </Steps> */}
 
 To verify a specific device is now routing through Pi-hole, check the query log at `https://pi-hole.local/admin/queries` and filter by that device's IP.
 You should see its DNS requests appearing there.

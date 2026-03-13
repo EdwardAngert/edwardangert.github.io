@@ -87,7 +87,7 @@ HaGeZi already includes these as upstream sources.
 They can create duplicate entries without providing additional coverage.
 Pi-hole deduplicates during Gravity updates so it won't break anything, but it's unnecessary weight.
 
-<Steps>
+{/* <Steps> */}
 
 1. Choose one core HaGeZi list:
 
@@ -159,13 +159,13 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
      https://blocklistproject.github.io/Lists/phishing.txt
      ```
 
-</Steps>
+{/* </Steps> */}
 
 ## Add Blocklists to Pi-hole
 
 To add a list:
 
-<Steps>
+{/* <Steps> */}
 
 1. Log in to the Pi-hole web interface at `https://pi-hole.local/admin`.
 1. Go to **Lists**.
@@ -178,7 +178,7 @@ To add a list:
 
    Gravity also runs automatically on a weekly schedule.
 
-</Steps>
+{/* </Steps> */}
 
 ## Add Allowlists and Domains to Pi-hole
 
@@ -194,7 +194,7 @@ There are two ways to allowlist in Pi-hole v6:
 The HaGeZi Referral Allowlist is a maintained collection of domains that blocklists commonly block but that services legitimately need.
 Adding it as a subscription prevents a large category of false positives before they happen.
 
-<Steps>
+{/* <Steps> */}
 
 1. In the Pi-hole web interface, go to **Lists**.
 1. Paste the allowlist:
@@ -212,7 +212,7 @@ Adding it as a subscription prevents a large category of false positives before 
 
    Gravity also runs automatically on a weekly schedule.
 
-</Steps>
+{/* </Steps> */}
 
 ### Add an Individual Domain to the Allowlist
 
@@ -340,7 +340,7 @@ A device can be added to multiple groups at the same time and will follow the co
 
 Useful for a device where blocking breaks functionality and you can't or would rather not troubleshoot it (smart TVs, streaming sticks, Paramount+, Roku).
 
-<Steps>
+{/* <Steps> */}
 
 1. Find the device's IP address in **Tools** > **Network** or based on its traffic in the **Query Log**.
 
@@ -353,7 +353,7 @@ Useful for a device where blocking breaks functionality and you can't or would r
 
 1. Select **Add**.
 
-</Steps>
+{/* </Steps> */}
 
 The device now resolves DNS without any filtering.
 All other devices are unaffected.
@@ -363,7 +363,7 @@ All other devices are unaffected.
 Apply extra blocklists on top of the normal ones without affecting the rest of the network.
 This can be useful for a child's device or a school-issued laptop.
 
-<Steps>
+{/* <Steps> */}
 
 1. Confirm that the device's network traffic isn't being routed through a VPN.
 
@@ -399,7 +399,7 @@ This can be useful for a child's device or a school-issued laptop.
 
 1. Select **Add**.
 
-</Steps>
+{/* </Steps> */}
 
 The device is now blocked by everything in `Default` as well as the extra lists.
 Other devices that are not in the new group are unaffected.

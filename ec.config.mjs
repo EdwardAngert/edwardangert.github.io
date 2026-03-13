@@ -12,7 +12,7 @@ export default {
 				showLineNumbers: true,
 			},
 			// Wrap long lines for shell and text
-			'shell,url': {
+			'shell,text,url': {
 				wrap: true,
 			},
 		},
