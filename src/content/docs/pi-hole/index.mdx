@@ -13,6 +13,7 @@ next:
 Pi-hole is a DNS-based ad blocker for your whole network.
 
 A basic way to understand it is:
+
 When a device on your network tries to access something from the Internet, it checks in with the Pi-hole first.
 The Pi-hole checks the address of what the device is looking for against a list you've configured the Pi-hole with, and if that resource isn't on the list, it allows the device to connect to it.
 
@@ -25,26 +26,27 @@ This guide is a collection of my notes, organized into documentation to help oth
 
 The steps in this guide document how I set up Pi-hole v6 with:
 
-- Raspberry Pi 4 running Raspberry Pi OS (Bookworm)
+- Raspberry Pi running Raspberry Pi OS (Bookworm)
 - UFW firewall
 - [HaGeZi tiered blocklists](https://github.com/hagezi/dns-blocklists) with supplementary category lists
 - Allowlists for streaming and smart TV platforms
 - Omada controller DHCP configured for network-wide blocking
-- Teleporter backup for configuration export/restore
 - Optional:
+  - Teleporter backup for configuration export/restoration
   - [Unbound](https://docs.pi-hole.net/guides/dns/unbound/) recursive DNS with Cloudflare as fallback
   - [Netdata](https://www.netdata.cloud/) system and Pi-hole monitoring
   - [Tailscale](https://tailscale.com/) for remote admin access and to make the Pi-hole act as a personal VPN
   - More restrictive [groups for specific devices](./block-allow-lists#block-youtube-and-social-media-for-a-specific-device)
 
-This doc is a copy-and-paste solution for my specific hardware and preferences.
-Visit [the official Pi-hole documentation](https://docs.pi-hole.net/) for other use cases and details.
+Visit [the official Pi-hole documentation](https://docs.pi-hole.net/) for more use cases and details.
 
 This guide is written for Pi-hole v6.
+It's meant to be an opinionated copy-and-paste solution that a relative novice can follow from beginning to end or use as a reference.
+
 If you have Pi-hole v5 installed, many of the concepts remain the same in v6.
 You can still access the [older version of this guide on GitHub](https://github.com/EdwardAngert/edwardangert.github.io/blob/551b9d08bb444c42ed2b56dcbc928105984da7bd/src/content/docs/pi-hole/index.mdx).
 
-If you identify any errors or areas for improvement, please [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new).
+If you identify any errors or areas for improvement, please [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new) or select **Edit page** at the bottom of any page to suggest a change.
 
 ## Prerequisites
 
@@ -66,7 +68,7 @@ Pi-hole is great at blocking domains like these.
 
 A few limitations to consider before you start:
 
-Pi-hole works at the DNS level.
+Pi-hole works at the DNS level ([DNS Reddit ELI5](https://www.reddit.com/r/explainlikeimfive/comments/fx4sgy/eli5_what_is_dns/fms3kk2/)).
 It sees (and can log) the domain name but not the URL or content.
 That means it can't distinguish between types of content on the same domain.
 Something like `youtube.com` is either blocked entirely or not at all because Pi-hole can't tell the difference between kids content and anything else.
