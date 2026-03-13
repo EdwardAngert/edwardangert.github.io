@@ -2,8 +2,9 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import catppuccin from '@catppuccin/starlight';
-import umami from '@yeskunall/astro-umami';
 import starlightBlog from 'starlight-blog';
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
+import starlightFullViewMode from 'starlight-fullview-mode'
 
 // https://astro.build/config
 export default defineConfig({
@@ -16,9 +17,6 @@ export default defineConfig({
 		'/docs/contrib-pr': '/portfolio/contrib-pr',
 	},
 	integrations: [
-		umami({
-			id: 'e8f90c1a-a069-4ea9-9c70-eab1d6309b1b',
-		}),
 		starlight({
 			title: 'Edward Angert',
 			favicon: '/favicon.ico',
@@ -28,6 +26,9 @@ export default defineConfig({
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
 				Head: './src/components/Head.astro',
+			},
+			editLink: {
+				baseUrl: 'https://github.com/EdwardAngert/edwardangert.github.io/edit/main/',
 			},
 			social: [
 				{
@@ -41,6 +42,19 @@ export default defineConfig({
 					href: 'https://github.com/EdwardAngert',
 				},
 			],
+			expressiveCode: {
+				plugins: [pluginLineNumbers()],
+				defaultProps: {
+					// Disable line numbers by default
+					showLineNumbers: false,
+					// But enable line numbers for certain languages
+					overridesByLang: {
+						'text,toml,yaml': {
+							showLineNumbers: true,
+						},
+					},
+				},
+			},
 			plugins: [
 				catppuccin({
 					dark: { flavor: "mocha", accent: "mauve" },
@@ -49,10 +63,11 @@ export default defineConfig({
 				starlightBlog({
 					navigation: "header-start",
 					metrics: {
-    				readingTime: true,
-    				words: 'total',
-  				},
+						readingTime: true,
+						words: 'total',
+					},
 				}),
+				starlightFullViewMode({})
 			],
 			sidebar: [
 				{
