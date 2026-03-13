@@ -75,7 +75,7 @@ Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server y
 
    Replace `YOUR-PI-IP` with your Pi-hole's actual IP:
 
-   ```shell title="From the Pi"
+   ```shell "YOUR-PI-IP" title="From the Pi"
    sudo iptables -t nat -A PREROUTING -i eth0 -p udp --dport 53 -j DNAT --to YOUR-PI-IP
    sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 53 -j DNAT --to YOUR-PI-IP
    ```

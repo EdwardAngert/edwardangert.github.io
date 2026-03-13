@@ -330,7 +330,7 @@ The variable is cleared when you exit the session.
    This example is intentionally set to fail if you don't adjust `YOUR-PI-IP` and `YOUR-GATEWAY-IP`.
    This way you're less likely to get locked out if you don't change the example first:
 
-   ```shell title="From the Pi"
+   ```shell "YOUR-PI-IP" "YOUR-GATEWAY-IP" title="From the Pi"
    CON=$(nmcli -t -f NAME,DEVICE con show | grep eth0 | cut -d: -f1) && \
    echo $CON && \
    sudo nmcli con mod "$CON" \
@@ -366,7 +366,7 @@ The variable is cleared when you exit the session.
 
    Still in the terminal, but on your local machine, remove the old cached keys and reconnect at the new IP:
 
-   ```shell title="From your device"
+   ```shell "YOUR-OLD-PI-IP" "YOUR-PI-IP" title="From your device"
    ssh-keygen -R YOUR-OLD-PI-IP
    ssh pi-admin@YOUR-PI-IP
    ```
