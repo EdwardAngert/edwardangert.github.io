@@ -8,11 +8,11 @@ export default {
 		showLineNumbers: false,
 		overridesByLang: {
 			// Enable line numbers for certain languages
-			'text,toml,yaml': {
+			'ini,text,toml,yaml': {
 				showLineNumbers: true,
 			},
 			// Wrap long lines for shell and text
-			'shell,url': {
+			'shell,text,url': {
 				wrap: true,
 			},
 		},

@@ -28,32 +28,32 @@ const { title, href, class: className } = Astro.props;
     font-size: 1.25rem;
     font-weight: 600;
   }
-  
+
   .glass-card p {
     margin-bottom: 0.75rem;
     color: var(--sl-color-gray-2);
     line-height: 1.6;
   }
-  
+
   .glass-card p:last-child {
     margin-bottom: 0;
   }
-  
+
   /* Link styling for clickable cards */
   a.glass-card {
     text-decoration: none;
     color: inherit;
     display: block;
   }
-  
+
   a.glass-card:hover h3 {
     color: var(--sl-color-accent);
     transition: color 0.2s ease;
   }
-  
+
   /* Add a subtle arrow for link cards */
   a.glass-card::after {
-    content: "→";
+    content: ">";
     position: absolute;
     top: 1.5rem;
     right: 1.5rem;
@@ -62,11 +62,11 @@ const { title, href, class: className } = Astro.props;
     color: var(--sl-color-accent);
     font-weight: bold;
   }
-  
+
   a.glass-card {
     position: relative;
   }
-  
+
   a.glass-card:hover::after {
     opacity: 1;
   }

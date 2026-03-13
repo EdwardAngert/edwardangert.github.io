@@ -1,0 +1,172 @@
+---
+slug: docs/pi-hole/tailscale
+title: "Use Pi-hole as a VPN to Block Ads On the Go with Tailscale"
+description: "How to use Tailscale with Pi-hole for remote ad blocking on any device, secure SSH access without port forwarding, and an optional exit node for a private VPN."
+summary: "Guide to using Tailscale with Pi-hole v6 for remote ad blocking and admin access without port forwarding. Explains why Tailscale (WireGuard-based, requires device authentication) is safer than exposing SSH and the Pi-hole web interface to the public internet. Covers installing Tailscale on the Pi, disabling key expiry in the admin console, allowing all Tailscale traffic through UFW with a single rule on the tailscale0 interface, and configuring Pi-hole to accept DNS queries from outside the local subnet using pihole-FTL --config dns.listeningMode ALL (the step most guides miss). Optional: advertising the Pi as a Tailscale exit node to route all traffic through the home network (requires IP forwarding via sysctl, tailscale set --advertise-exit-node, and admin console approval), with per-device enable/disable steps for macOS, Windows, iOS, Android, and Linux."
+category: "Personal Reference Documentation"
+prev:
+  link: /docs/pi-hole/network-level-blocking/
+  label: Enable Network-Wide DNS Blocking with Pi-hole
+next:
+  link: /docs/pi-hole/maintenance/
+  label: Pi-hole Maintenance and Advanced Configuration
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+[Tailscale](https://tailscale.com/) lets you securely reach your Pi-hole from anywhere without opening ports on your router.
+
+This page covers two features:
+
+- **Remote access**
+  - SSH into the Pi and open the Pi-hole web interface from any device on your tailnet.
+- **Exit node for a private, ad-blocking VPN** (optional)
+  - Route all of a device's traffic through your home Pi, so you get Pi-hole ad blocking even when away from home.
+
+## Why Tailscale Instead of Port Forwarding
+
+Tailscale creates an encrypted peer-to-peer network called a "tailnet" between your devices using WireGuard.
+The Pi is only available to devices logged in to your Tailscale network.
+
+The alternative to Tailscale is port forwarding: opening SSH (port 22) and the Pi-hole web interface (ports 80/443) on your router so they're reachable from the internet.
+This works, but exposes those ports to the public internet and increases the risk of brute force attacks.
+
+## Prerequisites
+
+- A [Tailscale account](https://tailscale.com/) (free)
+- Pi-hole installed and working
+- [UFW active](./install-configure/#set-up-a-firewall-on-your-pi-with-ufw)
+
+## Install Tailscale and Connect
+
+{/* <Steps> */}
+
+1. Install Tailscale on the Pi:
+
+   ```shell title="From the Pi"
+   curl -fsSL https://tailscale.com/install.sh | sh
+   ```
+
+1. Connect the Pi to your tailnet:
+
+   ```shell title="From the Pi"
+   sudo tailscale up
+   ```
+
+   This displays an authentication URL.
+   Open it in a browser and log in to your Tailscale account to authorize the Pi.
+
+1. Disable key expiration for the Pi in the [Tailscale admin console](https://login.tailscale.com/admin/machines).
+   Find the Pi in the machine list, select the **...** menu, and select **Disable key expiry**.
+
+   By default, Tailscale authentication keys expire after 180 days.
+   When a key expires, the device loses tailnet access until you re-authenticate.
+
+   You can learn more about key expiry in the [Tailscale docs](https://tailscale.com/docs/features/access-control/key-expiry).
+
+1. Note the Pi's Tailscale IP, you can copy it from the machine list or from the Tailscale app.
+
+1. Allow all Tailscale traffic through UFW:
+
+   ```shell
+   sudo ufw allow in on tailscale0 comment 'Tailscale'
+   ```
+
+   This single rule covers SSH, the Pi-hole web interface, and anything else you access through the tailnet.
+
+1. [Install Tailscale](https://tailscale.com/download) on your laptop, phone, or tablet, and add it to your tailnet.
+
+1. Verify remote access.
+
+   From another device on your tailnet (phone, laptop), SSH to the Pi's Tailscale IP and open `https://100.x.x.x/admin` in a browser.
+
+{/* </Steps> */}
+
+## Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet
+
+By default, Tailscale uses its own DNS resolver.
+Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on every connected device wherever it is.
+
+{/* <Steps> */}
+
+1. Allow Pi-hole to accept DNS queries from devices connected to the tailnet:
+
+   ```shell title="From the Pi"
+   sudo pihole-FTL --config dns.listeningMode ALL
+   sudo systemctl restart pihole-FTL
+   ```
+
+1. In the [Tailscale admin console](https://login.tailscale.com/admin/dns), go to **DNS**.
+1. Under **Nameservers**, select **Add nameserver** > **Custom**.
+1. Enter the Pi's Tailscale IP (the `100.x.x.x` address from the previous section).
+1. Add a second nameserver: select **Add nameserver** > **Custom** again and enter `1.1.1.1`.
+   This keeps DNS working on your tailnet if the Pi goes offline.
+1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
+1. Select **Save**.
+
+{/* </Steps> */}
+
+DNS queries from any device on your tailnet now go to your Pi-hole, regardless of where you are.
+
+Traffic from devices on your tailnet will show the device's Tailscale IP in the query log under **Client**.
+
+## Optional: Use the Pi as an Exit Node for a Private VPN
+
+An exit node routes all of a device's traffic through the Pi, not just DNS.
+Your phone or laptop appears to be on your home network when away.
+
+This is useful for accessing local resources or creating another layer of privacy while traveling.
+
+### Enable the exit node on the Pi
+
+{/* <Steps> */}
+
+1. Enable IP forwarding.
+   This is required for the Pi to route packets on behalf of other devices:
+
+   ```shell title="From the Pi"
+   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
+   ```
+
+1. Advertise the Pi as an exit node:
+
+   ```shell title="From the Pi"
+   sudo tailscale set --advertise-exit-node
+   sudo tailscale up
+   ```
+
+1. In the [Tailscale admin console](https://login.tailscale.com/admin/machines), find the Pi in your machine list.
+   Select **Edit route settings** and enable **Use as exit node**.
+
+   Tailscale requires explicit admin console approval.
+
+{/* </Steps> */}
+
+### Enable the exit node on your devices
+
+Advertising an exit node doesn't automatically route traffic through it.
+
+Each client enables its own exit node options.
+
+- **macOS / Windows:**
+  - Open the Tailscale menu bar app > **Exit Node** > select your Pi by name.
+
+- **iOS / Android:**
+  - Open the Tailscale app > select your tailnet name > **Use exit node** > select the Pi.
+
+- **Linux:**
+  - Run on the client device (not the Pi), using the `100.x.x.x` Tailscale IP from above:
+
+    ```shell title="From the client device"
+    sudo tailscale up --exit-node=100.x.x.x
+    ```
+
+To stop using the exit node, select **None** in the app, or run the following from the client (not the Pi):
+
+```shell title="From the client device"
+sudo tailscale up --exit-node=
+```
+
+If you run into issues, see [Tailscale troubleshooting](./troubleshooting/#tailscale).

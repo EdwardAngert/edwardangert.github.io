@@ -77,13 +77,17 @@ export default defineConfig({
 					label: 'Documentation',
 					items: [
 						{
-							label: 'Pi-hole Guide',
+							label: 'Set Up Pi-hole v6',
 							collapsed: true,
 							items: [
 								{ label: 'Overview', link: '/docs/pi-hole/' },
-								{ label: 'Installation', link: '/docs/pi-hole/install-configure/' },
-								{ label: 'Block Lists', link: '/docs/pi-hole/block-allow-lists/' },
+								{ label: 'OS Setup', link: '/docs/pi-hole/install-configure/' },
+								{ label: 'Install Pi-hole', link: '/docs/pi-hole/pihole-install/' },
+								{ label: 'Block and Allow Lists', link: '/docs/pi-hole/block-allow-lists/' },
 								{ label: 'Network Blocking', link: '/docs/pi-hole/network-level-blocking/' },
+								{ label: 'VPN with Tailscale', link: '/docs/pi-hole/tailscale/' },
+								{ label: 'Maintenance', link: '/docs/pi-hole/maintenance/' },
+								{ label: 'Troubleshooting', link: '/docs/pi-hole/troubleshooting/' },
 							],
 						},
 					],
