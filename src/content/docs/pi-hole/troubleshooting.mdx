@@ -2,7 +2,7 @@
 slug: docs/pi-hole/troubleshooting
 title: "Common Pi-hole Issues and How to Fix Them"
 description: "Troubleshooting guide for Pi-hole v6: fix installation issues, DNS failures, broken streaming services, blocklist errors, and Tailscale configuration. Includes a verification checklist."
-summary: "Pi-hole v6 troubleshooting reference. Covers enabling and disabling FTL debug logging. Installation issues: SSH host key mismatch after SD card rebuild; port 53 conflict when unbound grabs the port before FTL (includes the exact FTL log error string to look for); 403 on the web interface caused by lighttpd left over from a v5 install (FTL silently falls back to port 8080; pihole-FTL --config webserver.port shows the actual port in use); Gravity failing immediately after install because FTL isn't fully ready (fix: wait 30 seconds and re-run pihole -g); max concurrent DNS queries (150) caused by a DNS loop or a misbehaving client; intermittent DNS with unbound fixed by refreshing root hints with unbound-anchor; FTL database growth causing a boot-time crash with CRIT realloc_shm; NTP warnings that are cosmetic if timedatectl shows the system clock is synced. Blocklist and allowlist issues: step-by-step broken service diagnosis (disable Pi-hole temporarily, check query log, allowlist blocked domain); custom regex rules via Domains > Regex filter; bare domain names accidentally added to Lists instead of Domains; lists returning 0 domains because they need the -adblock variant (spam-tlds.txt vs spam-tlds-adblock.txt); detecting archived list sources (anudeepND archived August 2025) and renamed URL paths (1Hosts renamed Pro to Xtra in 2025). Tailscale issues: queries not in log fixed with dns.listeningMode ALL; DNS not filtering fixed by enabling Override local DNS in the Tailscale admin console; exit node not routing traffic (check IP forwarding with sysctl and admin console approval); SSH dropping when exit node is active fixed by enabling Allow Local Network Access on the client."
+summary: "Pi-hole v6 troubleshooting reference. Covers enabling and disabling FTL debug logging. Installation issues: SSH host key mismatch after SD card rebuild; port 53 conflict when unbound grabs the port before FTL (includes the exact FTL log error string to look for); 403 on the web interface caused by lighttpd left over from a v5 install (FTL silently falls back to port 8080; pihole-FTL --config webserver.port shows the actual port in use); Gravity failing immediately after install because FTL isn't fully ready (fix: wait 30 seconds and re-run sudo pihole -g); max concurrent DNS queries (150) caused by a DNS loop or a misbehaving client; intermittent DNS with unbound fixed by refreshing root hints with unbound-anchor; FTL database growth causing a boot-time crash with CRIT realloc_shm; NTP warnings that are cosmetic if timedatectl shows the system clock is synced. Blocklist and allowlist issues: step-by-step broken service diagnosis (disable Pi-hole temporarily, check query log, allowlist blocked domain); custom regex rules via Domains > Regex filter; bare domain names accidentally added to Lists instead of Domains; lists returning 0 domains because they need the -adblock variant (spam-tlds.txt vs spam-tlds-adblock.txt); detecting archived list sources (anudeepND archived August 2025) and renamed URL paths (1Hosts renamed Pro to Xtra in 2025). Tailscale issues: queries not in log fixed with dns.listeningMode ALL; DNS not filtering fixed by enabling Override local DNS in the Tailscale admin console; exit node not routing traffic (check IP forwarding with sysctl and admin console approval); SSH dropping when exit node is active fixed by enabling Allow Local Network Access on the client."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/maintenance/
@@ -100,7 +100,7 @@ The most common reason on a fresh install is a port 53 conflict - see above.
 
 ### Gravity fails to update
 
-**Symptom:** Running `pihole -g` exits with "DNS resolution is currently unavailable"
+**Symptom:** Running `sudo pihole -g` exits with "DNS resolution is currently unavailable"
 or "list download failed: no cached list available."
 
 **Cause:** `/etc/resolv.conf` points to `127.0.0.1` (Pi-hole itself).
@@ -122,7 +122,7 @@ curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.t
 ```
 
 **Note:** The web interface Gravity button can silently fail in some FTL versions.
-If the dashboard shows an error but `pihole -g` from the terminal succeeds, use the CLI.
+If the dashboard shows an error but `sudo pihole -g` from the terminal succeeds, use the CLI.
 
 ### Maximum number of concurrent DNS queries reached
 
@@ -310,9 +310,9 @@ Regex rules can cause false positives that don't show up until something breaks.
 
 #### Gravity shows "Invalid protocol" errors for domain names
 
-**Symptom:** Running `pihole -g` shows errors like:
+**Symptom:**: `sudo pihole -g` shows errors like:
 
-```shellsession
+```shellsession title="From the Pi"
 [✗] Status: Invalid protocol specified. Ignoring list.
     Ensure your URL starts with a valid protocol like http:// , https:// or file:// .
 [✗] Status: geolocation.onetrust.com ()
@@ -332,7 +332,7 @@ pihole allowlist geolocation.onetrust.com registerdisney.go.com
 Gravity still runs successfully - blocked domain counts are unaffected.
 The errored entries are simply ignored.
 
-#### A list shows 0 domains after `pihole -g`
+#### A list shows 0 domains after `sudo pihole -g`
 
 Check the format. Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
 Wildcard TLD rules (`||*.tld^`) and AdGuard-specific modifiers (`$denyallow=`) are common culprits.
@@ -342,10 +342,11 @@ HaGeZi provides separate `-adblock` versions for exactly this reason - the plain
 
 #### A list hasn't updated in a long time
 
-Run `pihole -g` and check the output.
+Run `sudo pihole -g` and check the output.
 If a list shows "No changes detected" for weeks, visit the source repo and check whether it's still maintained.
 Blocklist projects get archived - [anudeepND/whitelist](https://github.com/anudeepND/whitelist) was archived in August 2025, for example.
-If a source goes dark, replace it. [OISD Big](https://oisd.nl/) is a good general-purpose fallback, and [The Firebog](https://firebog.net/) still curates a list of actively maintained sources.
+If a source goes dark, replace it.
+[OISD Big](https://oisd.nl/) is a good general-purpose fallback, and [The Firebog](https://firebog.net/) still curates a list of actively maintained sources.
 
 #### A list URL returns a 404
 
