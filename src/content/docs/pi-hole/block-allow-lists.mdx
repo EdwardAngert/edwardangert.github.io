@@ -173,7 +173,7 @@ To add a list:
 1. After you add all the lists, update the Pi-hole's list settings (what it calls "Gravity") in **Tools** > **Update Gravity** to apply them, or use the CLI:
 
    ```shell title="From the Pi"
-   pihole -g
+   sudo pihole -g
    ```
 
    Gravity also runs automatically on a weekly schedule.
@@ -207,7 +207,7 @@ Adding it as a subscription prevents a large category of false positives before 
 1. After you add all the lists, update Gravity in **Tools** > **Update Gravity** to apply them, or use the CLI:
 
    ```shell title="From the Pi"
-   pihole -g
+   sudo pihole -g
    ```
 
    Gravity also runs automatically on a weekly schedule.
@@ -236,7 +236,7 @@ You can use the Pi-hole dashboard to add multiple domains one at a time through 
 The CLI allows you to add multiple domains in the same command.
 For each service in the sections below, you can copy the domains from the table into the dashboard, or run the `pihole allowlist` command.
 
-Run the command for the services you use, then run `pihole -g` to apply the changes.
+Run the command for the services you use, then run `sudo pihole -g` to apply the changes.
 
 Note that domains can change.
 Streaming services update their CDN and analytics infrastructure regularly.
@@ -414,7 +414,7 @@ If the router assigns IPs dynamically, assign a static DHCP lease for that devic
 
 Pi-hole is now blocking ads across your network with a curated list configuration:
 
-- Gravity shows a domain count in the dashboard (run `pihole -g` if it's empty)
+- Gravity shows a domain count in the dashboard (run `sudo pihole -g` if it's empty)
 - Streaming services load without issues, or you've identified which devices need a bypass group
 - Any problem devices are in a skip group, and any restricted devices are in a group with extra lists
 - If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#blocklists-and-allowlists).
