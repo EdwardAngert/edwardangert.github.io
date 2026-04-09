@@ -27,7 +27,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
 
 </details>
 
-{/* <Steps> */}
+<Steps>
 
 1. SSH to the Pi:
 
@@ -80,7 +80,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
 
    If you don't see the option to proceed, refresh the page.
 
-{/* </Steps> */}
+</Steps>
 
 ## Optional: Configure Unbound as Recursive DNS
 
@@ -91,7 +91,7 @@ This means no single upstream provider sees all your DNS queries.
 Pi-hole works well with Cloudflare.
 Add unbound if you prefer the additional privacy of recursive resolution.
 
-{/* <Steps> */}
+<Steps>
 
 1. Install unbound, then immediately stop it so that you can set your own configuration:
 
@@ -167,7 +167,7 @@ Add unbound if you prefer the additional privacy of recursive resolution.
    You should see a `NOERROR` status.
    The first query may be slow as unbound builds its cache.
 
-{/* </Steps> */}
+</Steps>
 
 :::caution["port 53: Address in use"]
 If you install unbound and don't stop it right away, it will self-assign port 53 and conflict with the Pi-hole.
@@ -191,7 +191,7 @@ It shows query rate, cache hits, blocked domains, and FTL status alongside syste
 The Pi-hole web interface already shows DNS stats.
 Add Netdata if you want system-level metrics alongside your Pi-hole data.
 
-{/* <Steps> */}
+<Steps>
 
 1. Install Netdata:
 
@@ -238,7 +238,7 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
 
    The **Fail2Ban** section will appear in the dashboard showing currently banned IPs and active failures for each jail.
 
-{/* </Steps> */}
+</Steps>
 
 ## Checkpoint
 

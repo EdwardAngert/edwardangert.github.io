@@ -39,7 +39,7 @@ This works, but exposes those ports to the public internet and increases the ris
 
 ## Install Tailscale and Connect
 
-{/* <Steps> */}
+<Steps>
 
 1. Install Tailscale on the Pi:
 
@@ -80,14 +80,14 @@ This works, but exposes those ports to the public internet and increases the ris
 
    From another device on your tailnet (phone, laptop), SSH to the Pi's Tailscale IP and open `https://100.x.x.x/admin` in a browser.
 
-{/* </Steps> */}
+</Steps>
 
 ## Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet
 
 By default, Tailscale uses its own DNS resolver.
 Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on every connected device wherever it is.
 
-{/* <Steps> */}
+<Steps>
 
 1. Allow Pi-hole to accept DNS queries from devices connected to the tailnet:
 
@@ -104,7 +104,7 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
 1. Select **Save**.
 
-{/* </Steps> */}
+</Steps>
 
 DNS queries from any device on your tailnet now go to your Pi-hole, regardless of where you are.
 
@@ -119,7 +119,7 @@ This is useful for accessing local resources or creating another layer of privac
 
 ### Enable the exit node on the Pi
 
-{/* <Steps> */}
+<Steps>
 
 1. Enable IP forwarding.
    This is required for the Pi to route packets on behalf of other devices:
@@ -142,7 +142,7 @@ This is useful for accessing local resources or creating another layer of privac
 
    Tailscale requires explicit admin console approval.
 
-{/* </Steps> */}
+</Steps>
 
 ### Enable the exit node on your devices
 

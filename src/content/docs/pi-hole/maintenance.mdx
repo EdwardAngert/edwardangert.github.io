@@ -34,12 +34,12 @@ sudo pihole -g
 
 Pi-hole's Teleporter exports your full configuration: blocklists, allowlists, custom domains, regex rules, DNS settings, and DHCP config.
 
-{/* <Steps> */}
+<Steps>
 
 1. In the Pi-hole web interface, go to **Settings** > **Teleporter**.
 1. Select **Export** to download a backup file.
 
-{/* </Steps> */}
+</Steps>
 
 To restore after a rebuild or SD card failure, use the **Import** option on the same page and select the backup file.
 
@@ -107,7 +107,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
 ### Mount the USB drive
 
-{/* <Steps> */}
+<Steps>
 
 1. Plug in the USB drive and find its device name:
 
@@ -166,11 +166,11 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    sudo chown pihole:pihole /mnt/pihole-logs
    ```
 
-{/* </Steps> */}
+</Steps>
 
 ### Point Pi-hole to the USB drive
 
-{/* <Steps> */}
+<Steps>
 
 1. Back up the current `pihole.toml`:
 
@@ -226,13 +226,15 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    The FTL service won't start if it can't find the database file.
    DNS queries from all network devices will fail until the mount is fixed.
 
-{/* </Steps> */}
+</Steps>
 
 ### Optional: Set Pi-hole database retention
 
 By default, Pi-hole keeps 91 days of query history.
 
 If you want to change the database size:
+
+<Steps>
 
 1. Set a the number of days to keep the database in `pihole.toml`:
 
@@ -246,3 +248,5 @@ If you want to change the database size:
    ```shell title="From the Pi"
    sudo systemctl restart pihole-FTL
    ```
+
+</Steps>
