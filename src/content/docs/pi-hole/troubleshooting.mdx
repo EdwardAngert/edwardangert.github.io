@@ -27,11 +27,11 @@ Change `true` to `false` when you're done troubleshooting.
 
 ### SSH host key mismatch after rebuild
 
-**Symptom:** `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED` when SSHing to the Pi.
+**Symptom**: `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED` when SSHing to the Pi.
 
-**Cause:** You reformatted the SD card and reinstalled, or changed the IP address, but your computer still has the old SSH host key cached.
+**Cause**: You reformatted the SD card and reinstalled, or changed the IP address, but your computer still has the old SSH host key cached.
 
-**Fix:**
+**Fix**:
 
 ```shell title="From your device"
 ssh-keygen -R pi-hole.local
@@ -40,12 +40,12 @@ ssh pi-admin@pi-hole.local
 
 ### Port 53 conflict between Pi-hole and unbound
 
-**Symptom:** Pi-hole installs successfully, the web interface works, but DNS resolution fails on your network. The dashboard may show "DNS server failure."
+**Symptom**: Pi-hole installs successfully, the web interface works, but DNS resolution fails on your network. The dashboard may show "DNS server failure."
 
-**Cause:** Both Pi-hole (via dnsmasq) and unbound are trying to listen on port 53.
+**Cause**: Both Pi-hole (via dnsmasq) and unbound are trying to listen on port 53.
 This happens if unbound was installed with its default configuration before Pi-hole.
 
-**Check:**
+**Check**:
 
 ```shell title="From the Pi"
 sudo journalctl -u pihole-FTL | grep "port 53"
@@ -53,7 +53,7 @@ sudo journalctl -u pihole-FTL | grep "port 53"
 
 Look for: `dnsmasq: failed to create listening socket for port 53: Address in use`
 
-**Fix:** Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](./pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
+**Fix**: Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](./pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
 
 ```shell title="From the Pi"
 sudo systemctl restart unbound
@@ -62,18 +62,18 @@ sudo systemctl restart pihole-FTL
 
 ### Pi-hole web interface shows 403 Forbidden or won't load
 
-**Symptom:** `https://pi-hole.local/admin` returns 403 Forbidden or the page won't connect.
+**Symptom**: `https://pi-hole.local/admin` returns 403 Forbidden or the page won't connect.
 
-**Most common cause:** lighttpd (the v5-era web server) is installed and running, occupying port 80.
+**Most common cause**: lighttpd (the v5-era web server) is installed and running, occupying port 80.
 Pi-hole v6 has its own embedded web server - if lighttpd grabs port 80 first, FTL falls back to port 8080 silently.
 
-**Check:**
+**Check**:
 
 ```shell title="From the Pi"
 sudo systemctl status lighttpd
 ```
 
-**Fix:**
+**Fix**:
 
 ```shell title="From the Pi"
 sudo systemctl stop lighttpd
@@ -81,7 +81,7 @@ sudo systemctl disable lighttpd
 sudo systemctl restart pihole-FTL
 ```
 
-**Check what port FTL is actually using:**
+**Check what port FTL is actually using**:
 
 ```shell title="From the Pi"
 pihole-FTL --config webserver.port
@@ -89,7 +89,7 @@ pihole-FTL --config webserver.port
 
 If it shows `8080`, try `http://pi-hole.local:8080/admin` as a temporary workaround.
 
-**Secondary cause:** FTL is not running at all.
+**Secondary cause**: FTL is not running at all.
 
 ```shell title="From the Pi"
 sudo systemctl status pihole-FTL
@@ -100,14 +100,14 @@ The most common reason on a fresh install is a port 53 conflict - see above.
 
 ### Gravity fails to update
 
-**Symptom:** Running `sudo pihole -g` exits with "DNS resolution is currently unavailable"
+**Symptom**: Running `sudo pihole -g` exits with "DNS resolution is currently unavailable"
 or "list download failed: no cached list available."
 
-**Cause:** `/etc/resolv.conf` points to `127.0.0.1` (Pi-hole itself).
+**Cause**: `/etc/resolv.conf` points to `127.0.0.1` (Pi-hole itself).
 If FTL isn't fully ready when Gravity runs - for example, immediately after install
 before the first restart - the DNS lookup for list URLs fails.
 
-**Fix:** Wait 30 seconds after install completes, confirm FTL is running, then re-run:
+**Fix**: Wait 30 seconds after install completes, confirm FTL is running, then re-run:
 
 ```shell title="From the Pi"
 sudo systemctl status pihole-FTL
@@ -121,19 +121,19 @@ dig raw.githubusercontent.com @1.1.1.1
 curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.txt
 ```
 
-**Note:** The web interface Gravity button can silently fail in some FTL versions.
+**Note**: The web interface Gravity button can silently fail in some FTL versions.
 If the dashboard shows an error but `sudo pihole -g` from the terminal succeeds, use the CLI.
 
 ### Maximum number of concurrent DNS queries reached
 
-**Symptom:** DNS becomes unresponsive. The FTL log shows:
+**Symptom**: DNS becomes unresponsive. The FTL log shows:
 `Maximum number of concurrent DNS queries reached (max: 150)`
 
-**Most common cause:** A DNS loop - Pi-hole is forwarding queries to itself.
+**Most common cause**: A DNS loop - Pi-hole is forwarding queries to itself.
 Check **Settings** > **DNS** and confirm the upstream servers are not `127.0.0.1`
 or the Pi's own LAN IP.
 
-**Check:**
+**Check**:
 
 <Steps>
 
@@ -154,20 +154,20 @@ or the Pi's own LAN IP.
 
 </Steps>
 
-**Fix:** In **Settings** > **All Settings** > **DNS**, raise `dns.maxConcurrent` to `300` or `500`.
+**Fix**: In **Settings** > **All Settings** > **DNS**, raise `dns.maxConcurrent` to `300` or `500`.
 Treat this as a symptom fix.
 Find the root cause (DNS loop or misbehaving client) separately.
 
 ### Intermittent DNS failures with unbound
 
-**Symptom:** DNS works, then randomly stops for minutes several times a day.
+**Symptom**: DNS works, then randomly stops for minutes several times a day.
 Restarting FTL or unbound temporarily fixes it.
 Switching to Cloudflare upstream eliminates the problem.
 
-**Cause:** Unbound periodically fails to respond within FTL's timeout.
+**Cause**: Unbound periodically fails to respond within FTL's timeout.
 This can happen when unbound needs to re-validate DNSSEC chains or when its root hint cache is stale.
 
-**Check:** Test unbound independently while Pi-hole is failing:
+**Check**: Test unbound independently while Pi-hole is failing:
 
 ```shell title="From the Pi"
 dig google.com @127.0.0.1 -p 5335
@@ -175,14 +175,14 @@ dig google.com @127.0.0.1 -p 5335
 
 If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
 
-**Fix - refresh root hints:**
+**Fix - refresh root hints**:
 
 ```shell title="From the Pi"
 sudo unbound-anchor -a /var/lib/unbound/root.key
 sudo systemctl restart unbound
 ```
 
-**Fix - check unbound logs:**
+**Fix - check unbound logs**:
 
 ```shell title="From the Pi"
 sudo journalctl -u unbound -n 100
@@ -192,17 +192,17 @@ Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
 
 ### FTL database grows too large and FTL fails to start
 
-**Symptom (weeks or months after setup):** After a reboot, Pi-hole never comes back online.
+**Symptom (weeks or months after setup)**: After a reboot, Pi-hole never comes back online.
 `systemctl status pihole-FTL` shows failed.
 
 The journal shows:
 `CRIT: realloc_shm(): Failed to resize "FTL-queries": No space left on device`
 
-**Cause:** Pi-hole v6 stores every DNS query for 91 days by default.
+**Cause**: Pi-hole v6 stores every DNS query for 91 days by default.
 Pi-hole v5 has a default of 365 days.
 If you have Pi-hole v5 or upgraded from it, check your `maxDBdays` setting.
 
-**Quick fix (loses query history):**
+**Quick fix (loses query history)**:
 
 ```shell title="From the Pi"
 sudo systemctl stop pihole-FTL
@@ -210,7 +210,7 @@ sudo rm /etc/pihole/pihole-FTL.db
 sudo systemctl start pihole-FTL
 ```
 
-**Prevention:** Verify your retention setting in `/etc/pihole/pihole.toml`:
+**Prevention**: Verify your retention setting in `/etc/pihole/pihole.toml`:
 
 ```toml title="/etc/pihole/pihole.toml"
 [database]
@@ -223,12 +223,12 @@ Refer to the [example pihole.toml](./maintenance/#reference-full-piholetoml) in 
 
 ### NTP warnings in the Pi-hole dashboard
 
-**Symptom:** Dashboard shows "No valid NTP replies received" or "Standard deviation of time offset is too large, rejecting synchronization."
+**Symptom**: Dashboard shows "No valid NTP replies received" or "Standard deviation of time offset is too large, rejecting synchronization."
 
-**Cause:** Pi-hole v6 has its own NTP client that runs alongside the OS time sync (`systemd-timesyncd`).
+**Cause**: Pi-hole v6 has its own NTP client that runs alongside the OS time sync (`systemd-timesyncd`).
 Occasionally an NTP pool server times out.
 
-**Check:** Verify the system clock is correct:
+**Check**: Verify the system clock is correct:
 
 ```shell title="From the Pi"
 timedatectl status
@@ -236,7 +236,7 @@ timedatectl status
 
 If `System clock synchronized: yes` and the time is correct, the warning is cosmetic.
 
-**Optional fix:** Disable Pi-hole's NTP client since the OS handles time sync:
+**Optional fix**: Disable Pi-hole's NTP client since the OS handles time sync:
 
 ```shell title="From the Pi"
 sudo pihole-FTL --config ntp.sync.active false
@@ -318,7 +318,7 @@ Regex rules can cause false positives that don't show up until something breaks.
 
 #### Gravity shows "Invalid protocol" errors for domain names
 
-**Symptom:**: `sudo pihole -g` shows errors like:
+**Symptom**: `sudo pihole -g` shows errors like:
 
 ```shellsession title="From the Pi"
 [✗] Status: Invalid protocol specified. Ignoring list.
@@ -326,11 +326,11 @@ Regex rules can cause false positives that don't show up until something breaks.
 [✗] Status: geolocation.onetrust.com ()
 ```
 
-**Cause:** Individual domain names were added to **Lists** instead of **Domains** > **Allowlist**.
+**Cause**: Individual domain names were added to **Lists** instead of **Domains** > **Allowlist**.
 Pi-hole's Gravity system downloads list files (usually `.txt`) from URLs.
 It can't process bare domain names as list entries.
 
-**Fix:** In the web interface, go to **Lists** and delete any entries that are bare domain names (not URLs starting with `https://`).
+**Fix**: In the web interface, go to **Lists** and delete any entries that are bare domain names (not URLs starting with `https://`).
 Then re-add those domains via CLI or under **Domains** > **Allowlist**:
 
 ```shell title="From the Pi"
