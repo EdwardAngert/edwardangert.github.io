@@ -135,6 +135,8 @@ or the Pi's own LAN IP.
 
 **Check:**
 
+<Steps>
+
 1. Watch live queries.
    Look for a single source IP flooding requests:
 
@@ -149,6 +151,8 @@ or the Pi's own LAN IP.
    ```shell title="From the Pi"
    dig google.com @1.1.1.1
    ```
+
+</Steps>
 
 **Fix:** In **Settings** > **All Settings** > **DNS**, raise `dns.maxConcurrent` to `300` or `500`.
 Treat this as a symptom fix.
@@ -245,20 +249,20 @@ sudo systemctl restart pihole-FTL
 
 #### Step 1: Check if Pi-hole is the problem
 
-{/* <Steps> */}
+<Steps>
 
 1. In the Pi-hole web interface, go to **Disable** and choose a duration (5 minutes is usually enough).
 1. Try the broken service again.
 1. If it works with Pi-hole disabled, Pi-hole is blocking something the service needs.
    Continue to find the blocked domain.
 
-{/* </Steps> */}
+</Steps>
 
 If it's still broken with Pi-hole disabled, the problem is elsewhere.
 
 #### Step 2: Find the blocked domain
 
-{/* <Steps> */}
+<Steps>
 
 1. Re-enable Pi-hole.
 1. In the Pi-hole web interface, go to **Query Log**.
@@ -266,27 +270,31 @@ If it's still broken with Pi-hole disabled, the problem is elsewhere.
 1. In the query log, filter by the device's IP address or name.
 1. Look for domains with a **Blocked** status that appeared when you tried the service.
 
-{/* </Steps> */}
+</Steps>
 
 #### Step 3: Allowlist the domain
 
-{/* <Steps> */}
+<Steps>
 
 1. In the Query Log, select the blocked domain.
 1. Select **Allow** to add it to your allowlist.
 1. Try the service again.
 
-{/* </Steps> */}
+</Steps>
 
 You may need to repeat this.
 Some services check multiple domains sequentially, so you might need to allowlist several before the service works.
 
 #### Step 4: If you can't find the domain
 
+<Steps>
+
 1. In the query log, search for part of the service name (for example, `disney`).
 1. If nothing appears, look for blocked requests to CDN or analytics domains that coincide with your attempts to use the service.
 1. As a last resort: disable Pi-hole, use the service, then check the log for all domains the service contacted.
    These are candidates for your allowlist.
+
+</Steps>
 
 #### When allowlisting isn't enough
 
@@ -379,6 +387,8 @@ Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it sh
 
 ### Exit node connected but traffic isn't routing through the Pi
 
+<Steps>
+
 1. Confirm IP forwarding is active:
 
    ```shell title="From the Pi"
@@ -395,6 +405,8 @@ Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it sh
 
 1. Confirm the exit node is approved in the Tailscale admin console.
    Unapproved exit nodes don't route traffic even if the client selects them.
+
+</Steps>
 
 ### SSH into the Pi from anywhere on your tailnet
 
@@ -413,6 +425,8 @@ Without it, all traffic including the SSH connection routes through the exit nod
 
 ### SSH works over Tailscale but the Pi-hole web interface doesn't load
 
+<Steps>
+
 1. Confirm the `tailscale0` UFW rule is in place:
 
    ```shell title="From the Pi"
@@ -427,9 +441,13 @@ Without it, all traffic including the SSH connection routes through the exit nod
    sudo ufw allow in on tailscale0 comment 'Tailscale'
    ```
 
+</Steps>
+
 ## Verify Pi-hole Is Working
 
 After you complete the Pi-hole setup:
+
+<Steps>
 
 1. Check the dashboard:
    - Total queries should be increasing as devices make DNS requests.
@@ -454,3 +472,5 @@ After you complete the Pi-hole setup:
    - Pi-hole only works for devices using it as their DNS server.
    If you configured it in your router's DHCP settings, devices need to renew their DHCP lease to pick up the new DNS server.
    You can force this by disconnecting and reconnecting Wi-Fi, or restarting the device.
+
+</Steps>

@@ -37,21 +37,21 @@ brew install sdformatter raspberry-pi-imager
 This process erases everything on the SD card.
 :::
 
-{/* <Steps> */}
+<Steps>
 
 1. Insert a microSD card, then open SD Card Formatter and choose the card from the **Select card** dropdown.
 1. Select **Format** to format the card.
    - The default settings are fine: Quick format and no volume label.
 1. Exit SD Card Formatter and leave the SD card inserted.
 
-{/* </Steps> */}
+</Steps>
 
 ## Create the Pi OS Image on the SD Card
 
 Raspberry Pi Imager makes the SD card a bootable drive.
 After you set up the SD card, you'll install it in the Raspberry Pi as its primary drive.
 
-{/* <Steps> */}
+<Steps>
 
 1. Open Raspberry Pi Imager.
 1. **Select your Raspberry Pi Device**: Raspberry Pi 4.
@@ -74,7 +74,7 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 1. When the write completes, remove the SD card from your computer and insert it into the Raspberry Pi.
 1. Plug in the Pi and give it a few minutes to boot.
 
-{/* </Steps> */}
+</Steps>
 
 <details>
 <summary>Rebuilds and Upgrades: Confirm Your Linux Version</summary>
@@ -92,7 +92,7 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 ## Configure Raspberry Pi OS
 
-{/* <Steps> */}
+<Steps>
 
 1. Find the Pi's IP Address:
 
@@ -148,14 +148,14 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
    ip addr show eth0
    ```
 
-{/* </Steps> */}
+</Steps>
 
 #### TP-Link Omada-specific steps to find and fix the Pi's IP
 
 <details>
 <summary>Find the Pi and set a fixed IP on a TP-Link Omada controller</summary>
 
-{/* <Steps> */}
+<Steps>
 
 1. Log in and select the site's name.
 1. Select **Clients** then **Wired** to filter the table of connected clients.
@@ -165,7 +165,7 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
    You should still follow the steps in the [Set a Static IP](#set-a-static-ip-address) section when you get there.
 
-{/* </Steps> */}
+</Steps>
 
 ![Set fixed IP in Omada controller](./screenshots/omada-fixed-ip-address.png)
 
@@ -178,7 +178,7 @@ The non-root user that Raspberry Pi Imager created can run `sudo` commands witho
 Raspberry Pi Imager creates a configuration file to enforce passwordless `sudo`.
 Remove the file so that sudo commands require authentication.
 
-{/* <Steps> */}
+<Steps>
 
 1. Remove the configuration file:
 
@@ -193,7 +193,7 @@ Remove the file so that sudo commands require authentication.
    ssh pi-admin@pi-hole.local
    ```
 
-{/* </Steps> */}
+</Steps>
 
 ### Set Up a Firewall on Your Pi With UFW
 
@@ -201,7 +201,7 @@ UFW (Uncomplicated Firewall) restricts which ports are accessible on the Pi.
 Pi-hole requires ports for DNS and the web interface.
 SSH is allowed for remote administration.
 
-{/* <Steps> */}
+<Steps>
 
 1. Install UFW:
 
@@ -255,7 +255,7 @@ SSH is allowed for remote administration.
    sudo ufw status
    ```
 
-{/* </Steps> */}
+</Steps>
 
 <details>
 <summary>If you plan to use Pi-hole as a DHCP server</summary>
@@ -275,7 +275,7 @@ sudo ufw allow 67/udp comment 'DHCP'
 Fail2Ban automatically bans IPs that fail too many login attempts.
 This helps minimize the risk of brute-force attacks.
 
-{/* <Steps> */}
+<Steps>
 
 1. Install Fail2Ban:
 
@@ -312,7 +312,7 @@ This helps minimize the risk of brute-force attacks.
 
    You should see the jail listed as active with 0 currently banned IPs on a fresh install.
 
-{/* </Steps> */}
+</Steps>
 
 ### Set a Static IP Address
 
@@ -323,7 +323,7 @@ These steps use `nmcli` to lock the IP.
 They set the Ethernet connection name as a temporary shell variable.
 The variable is cleared when you exit the session.
 
-{/* <Steps> */}
+<Steps>
 
 1. Set the static IP, gateway, and DNS.
 
@@ -389,7 +389,7 @@ The variable is cleared when you exit the session.
 
    Wait a few minutes before you SSH back in.
 
-{/* </Steps> */}
+</Steps>
 
 ## Checkpoint
 
