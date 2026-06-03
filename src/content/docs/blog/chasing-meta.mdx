@@ -1,0 +1,177 @@
+---
+slug: blog/chasing-meta
+title: "Chasing the Meta: Fundamentals, Hype, and Progress"
+date: 2026-06-02
+excerpt:
+      "AI tooling changes by the week. The fundamentals don't. On a broken MCP, jiu-jitsu meta, and why the basics outlast every shiny new thing."
+---
+
+In the early 1900s, New York City built elevated train lines over its major avenues.
+Like in Chicago and Boston, they were called the "Els."
+
+They were the future of urban transit, steel and steam carrying passengers above the crowded streets.
+
+By the 1930s, the city was tearing them down as blights, building subways to replace them.
+While they were perfecting one system, they were already making it obsolete with the next.
+
+Companies were competing to become the standard and building conflicting infrastructure while trying to outpace regulation.
+
+Every ~~time~~ week there's something new in the AI hype cycle I'm reminded of the Els.
+
+One day, maybe soon, AI will be a part of everyone's workflow in ways we don't even question, and many of these think pieces will age about as well as my college-era LiveJournal posts.
+
+This isn't a post about AI.
+Not really.
+
+It's about what we care about and work towards, and how we can explore and incorporate the latest and greatest while still maintaining focus on our core values and mission.
+
+This is a familiar pattern.
+
+## Hype-loop Pattern
+
+Some developer friends use an IDE they have a love-hate relationship with.
+The developers behind it start building features that seem genuinely useful, then abandon them for the next shiny feature before they're finished.
+
+I've been using open-source software for decades and I've worked at startups.
+When they explained this, I understood immediately.
+
+That's the feeling I'm starting to get about certain AI features and maybe MCP.
+It's not that it's being abandoned, not even that it doesn't do what it promises.
+It's that it's being built mid-flight toward an airport that's already being replaced.
+
+We've seen this before.
+In open source, projects announce features in the `README` that won't ship for years.
+Then the project gets abandoned, or absorbed, or the feature ships differently than promised.
+
+Technical writers know this so deeply, it's nearly canon: never document something as `coming soon`.
+
+Or as the ([Google developer documentation style guide](https://developers.google.com/style/future)) says:
+
+> Avoid documenting future features or products, even in innocuous ways.
+
+Sometimes we spend two weeks documenting a feature that gets abandoned before release.
+We stay resourceful, take notes, learn from the chase, and know when to pivot.
+And we keep receipts.
+
+AI is speedrunning technology concepts from the last three decades and companies are changing their names around it.
+Everyone works for "an AI company" now.
+
+## The Land Before Protocol
+
+At Coder, I asked Claude Code to help document the way the Coder codebase handles networking, something that relies on a number of different parts of the codebase.
+
+Claude kept insisting it didn't need the help:
+
+- "Just link me to the docs."
+- "I can analyze the codebase directly."
+- "Point me to the repository."
+
+I answered: "You're in the repo right now."
+
+And like my five-year-old, it responded "oh yeah, I forgot" with the same confidence that it was right to begin with.
+
+I created a new Git repository, started Claude Code, gave it access to the Coder repo, and took it feature-by-feature:
+
+> Let's take this directory-by-directory and feature-by-feature.
+> Learn about the way networking is handled as a concept, by which files, and what aspects of it users can modify. Create a file called `networking.md` with detailed notes for yourself. Whenever you learn something new about networking, update the file.
+
+This became [shared-docs-kb](https://github.com/coder/shared-docs-kb), a knowledge sidecar of notes, context, and architectural patterns.
+
+The idea was to give Claude Code structured context about the codebase so it could help with documentation work instead of making things up as it went along.
+I was trying to minimize the amount of information it needed to keep in context and teach it new skills that would make it a contributor's buddy.
+
+With MCP and skills, what I started as a manual sidecar had become a protocol, and skills helped keep Claude focused.
+
+I was trying to solve a problem with the tools I had: AI needs structured context to be useful for documentation work.
+
+Meanwhile, Claude's context window keeps expanding and its native tools keep improving.
+
+The ground keeps shifting while I'm building the bridge.
+
+## So I tried an MCP
+
+My goal is to make it easier for developers on open source and small tools to draft useful documentation.
+
+I built an [MCP server](https://github.com/EdwardAngert/reformatters-knowledge-base) for [reformatters](https://github.com/dynamical-org/reformatters), a Python framework for converting weather datasets.
+It's not meant to replace technical writers or documentation functions, but it should get people started.
+
+In my [last post](./ai-docs-assist/), I was optimistic about it.
+
+Here's what actually happened:
+
+- **Railway deployment wouldn't bind to the right IP.** Crash loops. But that was almost beside the point.
+- **Claude Desktop only supports local stdio connections.** I built an HTTP/SSE server for a client that can't use HTTP. The Railway deployment was solving the wrong problem from the start.
+- **The dataset tools had circular dependencies.** They required the main reformatters package to be installed, which defeated the purpose of a separate knowledge repo.
+- **Search tools returned nothing even when the content was right there.** Tool registration worked. Retrieval didn't.
+
+The MCP server runs.
+The tools are registered.
+Claude thinks the knowledge base has [good content](https://github.com/EdwardAngert/reformatters-knowledge-base/tree/main/knowledge).
+But the architecture was mismatched from the start: I built a remote-first HTTP server for clients that only work locally over stdio.
+
+I had Claude Code verify the branch and document its findings.
+Its conclusion: MCP remote access isn't mature enough for team-wide use.
+MCP requires infrastructure I don't have the capacity (or desire) to maintain.
+
+Claude Code eventually reached the [Write the Docs](https://www.writethedocs.org/)-ready conclusion I've been arguing for, "we don't need another repository, we just need better documentation."
+
+I used to write documentation.
+I still do, but I used to too.
+
+## BJJ Core Mechanics
+
+The style of Brazilian jiu-jitsu has changed since it started getting popular in the US in the early 2000s.
+
+Back then, though the tagline was about smaller practitioners beating stronger opponents, in practice, there was still a focus on heavy pressure.
+The "gentle art" was a little brutish.
+
+Through the years, the way people "played" evolved, with new techniques catching people off guard and being used to win competitions, then catching on in gyms throughout the world.
+
+That strategy, called "the meta," becomes the new cool thing for a while, then people get good at countering or defending it, and it usually subsides or gives way to the next thing.
+
+You're not meant to abandon your entire game to chase only after the cool new thing.
+
+Often, though the specific technique fizzles, some component remains and helps shape the new meta.
+
+Berimbolos, x-guard, heel hook entries.
+They were all surprising at first, and now they're just part of the system.
+
+As a featherweight who's highly proficient at pulling bottom side-control, the buggy choke was a gift.
+The problem is, pressure can still beat a buggy choke, and the real gift is reapplying the head-and-arm concept in other unexpected ways.
+
+It's fun to chase the meta, as long as you keep your "why" close at heart (and protect your neck).
+
+Knee cuts, pressure passes, just standing up.
+They never left, and they still work.
+
+It's not that the techniques are necessarily fundamental, but that some concepts are.
+
+## Fundamental Concepts
+
+MCP and skills might actually stick around, but I think they're techniques that will get supplanted by more adaptive contexts and maybe a way to micro-train our tools.
+Things that would work out of the box.
+
+The spiritual core of technical writing hasn't changed much: know your audience.
+
+Human readers are always the audience.
+That's the same whether they're accessing the content directly or through an AI tool.
+
+That which was best practice before is still best practice now.
+Write things down, put them somewhere people can find them.
+
+Make documentation a practice, and wherever you are in your practice, remember to keep practicing.
+Write things down even if they're not perfect.
+Show them off even before you think they're ready.
+Make it accessible.
+
+I try to write accessible documentation, but who is accessibility for?
+
+There are [business cases for digital accessibility](https://www.w3.org/WAI/business-case/).
+When you write documentation with accessibility in mind, screen readers can navigate it, search engines can index it, and AI tools can parse and summarize it.
+The same practices that serve a person using a screen reader serve an LLM trying to extract meaning or translate content.
+
+When you make things more accessible, like a [curb cut](https://en.wikipedia.org/wiki/Curb_cut_effect), it helps people even outside the original intention.
+That's not a coincidence, it's fundamentals.
+
+So go ahead, experiment with AI, build that MCP, try a buggy choke, and chase the meta.
+Just remember why.
