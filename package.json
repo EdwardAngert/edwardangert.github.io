@@ -17,10 +17,5 @@
     "sharp": "^0.34.5",
     "starlight-blog": "^0.26.1",
     "starlight-fullview-mode": "^0.2.6"
-  },
-  "pnpm": {
-    "overrides": {
-      "@expressive-code/core": "0.41.7"
-    }
   }
 }
