@@ -15,6 +15,7 @@ export default defineConfig({
 		'/docs/site-mz-failover-diagram': '/portfolio/site-mz-failover-diagram',
 		'/docs/contrib-pr': '/portfolio/contrib-pr',
 	},
+	markdown: { gfm: true },
 	integrations: [
 		starlight({
 			title: 'Edward Angert',
