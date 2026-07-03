@@ -1,6 +1,7 @@
 ---
 import type { Props } from '@astrojs/starlight/props';
 import StarlightHead from '@astrojs/starlight/components/Head.astro';
+import PostHog from './posthog.astro';
 ---
 
 <StarlightHead {...Astro.props}>
@@ -25,3 +26,6 @@ import StarlightHead from '@astrojs/starlight/components/Head.astro';
 
   gtag('config', 'G-0CL1DB35WT');
 </script>
+
+<!-- PostHog -->
+<PostHog />
