@@ -10,6 +10,5 @@ minimumReleaseAgeExclude:
   - expressive-code@0.43.1
   - rehype-expressive-code@0.43.1
 allowBuilds:
-  core-js: true
   esbuild: true
   sharp: true
