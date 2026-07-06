@@ -19,3 +19,6 @@ pnpm-debug.log*
 
 # macOS-specific files
 .DS_Store
+
+# PostHog wizard skill (local agent context, not shipped)
+.claude/skills/integration-astro-static/
