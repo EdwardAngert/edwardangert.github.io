@@ -1,0 +1,23 @@
+# Edward Angert
+
+> Portfolio site of Edward Angert, a documentation leader and technical writer with ten years of developer-facing experience. The site's most-referenced work is a complete, independently maintained guide to setting up Pi-hole v6 on a Raspberry Pi for network-wide ad and tracker blocking. The guide covers Raspberry Pi OS setup and hardening, installing Pi-hole v6 with Cloudflare DNS, HaGeZi blocklists and streaming allowlists, per-device blocking groups, network-wide DNS enforcement (router DHCP and iptables for hardcoded-DNS devices), Tailscale remote access, optional unbound recursive DNS and Netdata monitoring, maintenance and Teleporter backups, and troubleshooting.
+
+The full text of the guide is at https://edwardangert.com/llms-full.txt.
+
+## Pi-hole v6 Setup Guide
+
+- [Pi-hole v6 Setup Guide](https://edwardangert.com/docs/pi-hole/): Overview of the full build: HaGeZi blocklists, streaming allowlists, optional unbound recursive DNS, Tailscale remote access, and Netdata monitoring.
+- [Set Up Raspberry Pi OS](https://edwardangert.com/docs/pi-hole/install-configure/): Flash the SD card, harden with UFW and Fail2Ban, and set a static IP.
+- [Install Pi-hole v6](https://edwardangert.com/docs/pi-hole/pihole-install/): Install with Cloudflare DNS, log in to the web interface, and optionally add unbound recursive DNS and Netdata monitoring.
+- [Add Blocklists and Allowlists](https://edwardangert.com/docs/pi-hole/block-allow-lists/): Choose a HaGeZi tier, fix streaming services broken by Pi-hole, and control blocking per device with groups.
+- [Enable Network-Wide DNS Blocking](https://edwardangert.com/docs/pi-hole/network-level-blocking/): Set Pi-hole as the network DNS via router DHCP, and force hardcoded-DNS devices like Chromecast and smart TVs through it with iptables NAT rules.
+- [Use Pi-hole as a VPN with Tailscale](https://edwardangert.com/docs/pi-hole/tailscale/): Remote ad blocking on any device, SSH without port forwarding, and an optional private exit node.
+- [Maintenance and Advanced Configuration](https://edwardangert.com/docs/pi-hole/maintenance/): Update Pi-hole, back up with Teleporter, edit pihole.toml, and offload the FTL database to a USB drive to spare the SD card.
+- [Common Issues and How to Fix Them](https://edwardangert.com/docs/pi-hole/troubleshooting/): Fixes for installation, DNS, streaming, blocklist, and Tailscale problems, plus a verification checklist.
+
+## Optional
+
+- [Work Samples](https://edwardangert.com/portfolio/): Documentation portfolio across Linode, Pantheon, Coder, and GitLab.
+- [Resume](https://edwardangert.com/about/resume/): Career highlights as a documentation leader and technical writer.
+- [AI is coming for my job. Maybe to my job.](https://edwardangert.com/blog/ai-docs-assist/): Essay on documentation's dual human and AI audience.
+- [Chasing the Meta: Fundamentals, Hype, and Progress](https://edwardangert.com/blog/chasing-meta/): On a broken MCP, jiu-jitsu meta, and why the fundamentals outlast every shiny new AI tool.
