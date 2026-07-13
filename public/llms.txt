@@ -20,3 +20,4 @@ The full text of the guide is at https://edwardangert.com/llms-full.txt.
 - [Work Samples](https://edwardangert.com/portfolio/): Documentation portfolio across Linode, Pantheon, Coder, and GitLab.
 - [Resume](https://edwardangert.com/about/resume/): Career highlights as a documentation leader and technical writer.
 - [AI is coming for my job. Maybe to my job.](https://edwardangert.com/blog/ai-docs-assist/): Essay on documentation's dual human and AI audience.
+- [Chasing the Meta: Fundamentals, Hype, and Progress](https://edwardangert.com/blog/chasing-meta/): On a broken MCP, jiu-jitsu meta, and why the fundamentals outlast every shiny new AI tool.
