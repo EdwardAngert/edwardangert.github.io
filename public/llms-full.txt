@@ -1,0 +1,2316 @@
+# Edward Angert: Pi-hole v6 Setup Guide (Full Text)
+
+> Full text of the Pi-hole v6 setup guide from edwardangert.com, concatenated for AI grounding. Each section links its source page. Written and maintained by Edward Angert, documentation leader and technical writer.
+
+
+---
+
+# Pi-hole v6 Setup Guide
+
+Source: https://edwardangert.com/docs/pi-hole/
+
+
+Pi-hole is a DNS-based ad blocker for your whole network.
+
+![Pi-hole dashboard](./screenshots/pi-hole-dashboard.png)
+
+## What Pi-hole Does
+
+When a device on your network tries to access something from the Internet, it checks in with the Pi-hole first.
+The Pi-hole checks the address against a list you've configured, and if that resource isn't on the list, it allows the device to connect.
+
+Usually, the website itself still loads while the ads and trackers get blocked.
+
+Unlike a browser extension, Pi-hole works on almost every device on your network: phones, smart TVs, game consoles, and guests' devices, without needing to install anything.
+It can also block known malware domains, phishing sites, and telemetry endpoints.
+Blocking ad server requests before they're made can also speed up page loads.
+
+### Pi-hole Limitations
+
+Pi-hole works at the DNS level ([DNS Reddit ELI5](https://www.reddit.com/r/explainlikeimfive/comments/fx4sgy/eli5_what_is_dns/fms3kk2/)).
+It sees the domain name but not the URL or content, so it can't distinguish between types of content on the same domain.
+`youtube.com` is either blocked entirely or not at all.
+
+Some streaming services serve ads through the same domains as their content.
+Pi-hole cannot block Hulu or Disney+ ads on their ad-supported plans without breaking the service.
+
+For most other services, you can [add service-specific rules to the allowlists](./block-allow-lists/#fix-streaming-services-and-other-broken-sites) when you get to that page, or skip ahead if that's your main use case.
+
+You can set up a Pi-hole to reduce the advertising noise of the Internet.
+But if you're looking for a way to remove the essay before a recipe, this isn't it.
+
+## Why This Guide Exists
+
+Due to some hardware issues in the past, I've had to rebuild this setup several times, collecting steps from around the Internet each time.
+This guide is a collection of my notes, organized into documentation to help other people set up or rebuild their Pi-hole.
+
+The steps in this guide document how I set up Pi-hole v6 with:
+
+- Raspberry Pi running Raspberry Pi OS (Bookworm)
+- UFW firewall
+- [HaGeZi tiered blocklists](https://github.com/hagezi/dns-blocklists) with supplementary category lists
+- Allowlists for streaming and smart TV platforms
+- Omada controller DHCP configured for network-wide blocking
+- Optional:
+  - Teleporter backup for configuration export/restoration
+  - [Unbound](https://docs.pi-hole.net/guides/dns/unbound/) recursive DNS with Cloudflare as fallback
+  - [Netdata](https://www.netdata.cloud/) system and Pi-hole monitoring
+  - [Tailscale](https://tailscale.com/) for remote admin access and to make the Pi-hole act as a personal VPN
+  - More restrictive [groups for specific devices](./block-allow-lists#block-youtube-and-social-media-for-a-specific-device)
+
+Visit [the official Pi-hole documentation](https://docs.pi-hole.net/) for more use cases and details.
+
+This guide is written for Pi-hole v6 as an opinionated copy-and-paste solution that a relative novice can follow from beginning to end or use as a reference.
+
+If you have Pi-hole v5 installed, many of the concepts remain the same in v6.
+You can still access the [older version of this guide on GitHub](https://github.com/EdwardAngert/edwardangert.github.io/blob/551b9d08bb444c42ed2b56dcbc928105984da7bd/src/content/docs/pi-hole/index.mdx).
+
+If you identify any errors or areas for improvement, please [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new) or select **Edit page** at the bottom of any page to suggest a change.
+
+## Prerequisites
+
+- Access to your router's configuration.
+  - This is required if you want devices on your network to use the Pi-hole.
+  - Some routers have a sticker with their admin information.
+    You can also try [some common router IPs](https://www.techspot.com/guides/287-default-router-ip-addresses/) like `192.168.1.1`.
+
+    This is usually your gateway IP.
+- [Raspberry Pi](https://www.raspberrypi.com)
+  - You can use another always-on device on your local network or even a VPS and most of the steps in this guide will still work, but it's outside the scope of this guide and some steps might differ.
+- microSD card, 8 GB or larger, with a way to plug it into your computer.
+- Familiarity with a terminal and the command line, or at least comfort following terminal commands.
+  Most commands in this guide can be copied and pasted, and I try to explain the ones that can't be.
+
+## In This Guide
+
+- [Set Up Raspberry Pi OS](./install-configure/)
+  - Flash the SD card, harden the OS with UFW and Fail2Ban, set a static IP.
+- [Install Pi-hole v6](./pihole-install/)
+  - Run the installer, set a password, optional unbound and Netdata, troubleshooting.
+- [Add Blocklists and Allowlists](./block-allow-lists/)
+  - Choose a blocklist tier, add supplementary lists, allowlist streaming services and smart TVs, and use groups to control blocking per device (including how to bypass Pi-hole for a specific device or apply stricter rules for a child's device).
+- [Enable Network-wide DNS Blocking with Pi-hole](./network-level-blocking/)
+  - Configure router DHCP so every device uses Pi-hole for DNS.
+- [Use Pi-hole as a VPN to Block Ads On the Go with Tailscale](./tailscale/)
+  - Block ads on your phone and laptop anywhere, remote admin access, no port forwarding required.
+- [Pi-hole Maintenance and Advanced Configuration](./maintenance/)
+  - Update Pi-hole, export/import backups with Teleporter, tune `pihole.toml`, offload logs to a USB drive.
+- [Troubleshooting](./troubleshooting/)
+  - Fix common installation issues, DNS failures, broken streaming services, Gravity errors, and Tailscale DNS problems.
+
+
+---
+
+# Set Up Raspberry Pi OS
+
+Source: https://edwardangert.com/docs/pi-hole/install-configure/
+
+
+
+## Install Software Locally
+
+The tools below are linked to their official download pages.
+
+macOS users can install tools both using [Homebrew](https://brew.sh/).
+Windows and Linux users can download installers directly from each link.
+
+- [SD Card Formatter](https://www.sdcard.org/downloads/formatter/)
+- [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+
+For macOS users with Homebrew:
+
+```shell title="From your Mac"
+brew install sdformatter raspberry-pi-imager
+```
+
+## Format the SD Card
+
+:::caution
+This process erases everything on the SD card.
+:::
+
+
+1. Insert a microSD card, then open SD Card Formatter and choose the card from the **Select card** dropdown.
+1. Select **Format** to format the card.
+   - The default settings are fine: Quick format and no volume label.
+1. Exit SD Card Formatter and leave the SD card inserted.
+
+
+## Create the Pi OS Image on the SD Card
+
+Raspberry Pi Imager makes the SD card a bootable drive.
+After you set up the SD card, you'll install it in the Raspberry Pi as its primary drive.
+
+
+1. Open Raspberry Pi Imager.
+1. **Select your Raspberry Pi Device**: Raspberry Pi 4.
+1. **Choose operating system**: Raspberry Pi OS (64-bit).
+1. **Select your storage device**: Select the SD card.
+1. **Customisation: Choose hostname**: `pi-hole`.
+1. **Customisation: Localisation**: Select your location and time zone.
+   - My selections:
+     - Capital city: `Washington, D.C. (United States)`
+     - Time zone: `America/New_York`
+     - Keyboard layout: `us`
+1. **Customisation: Choose username**: Create a user account.
+   - The examples in this guide use the username `pi-admin`.
+1. **Customisation: Choose Wi-Fi** to configure the wireless network connection.
+   - Select **Next** if you will connect using Ethernet.
+1. **Customisation: SSH authentication**: Enable SSH and select **Use password authentication**.
+   - Optionally, [use public key authentication](https://www.raspberrypi.com/documentation/computers/remote-access.html#configure-ssh-without-a-password) for more secure access.
+1. **Write image**: select **Write**.
+1. In the popup, review the warning, then select **I understand, erase and write** to continue.
+1. When the write completes, remove the SD card from your computer and insert it into the Raspberry Pi.
+1. Plug in the Pi and give it a few minutes to boot.
+
+
+<details>
+<summary>Rebuilds and Upgrades: Confirm Your Linux Version</summary>
+
+Pi-hole v6 requires Debian 11 (Bullseye) or later.
+
+If you're on an existing Pi, use `cat /etc/os-release | grep PRETTY_NAME` to confirm the release version before you continue:
+
+```shellsession title="From the Pi"
+pi-admin@pi-hole:~ $ cat /etc/os-release | grep PRETTY_NAME
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+```
+
+</details>
+
+## Configure Raspberry Pi OS
+
+
+1. Find the Pi's IP Address:
+
+   <Tabs>
+   <TabItem label="Mac/Linux">
+   ```shell title="From your device"
+   ping -c 3 pi-hole.local
+   ```
+   </TabItem>
+
+   <TabItem label="Windows">
+   ```shell title="From your device"
+   ping -n 3 pi-hole.local
+   ```
+
+   Windows users: If `pi-hole.local` doesn't resolve when you try to SSH, try the `arp` command:
+
+   ```shell title="From your device"
+   arp -a
+   ```
+
+   Look for a recently added entry and try to SSH to it in the next step.
+   Or search your router's documentation for something like "DHCP client list" to help find the Pi on your network.
+   </TabItem>
+   </Tabs>
+
+   <details>
+   <summary>Other ways to find the Pi's IP</summary>
+
+     - **Check your router**
+       - Look for a page that says "DHCP clients" or "connected devices."
+     - **Scan the network**
+       - Use `nmap -sn 192.168.1.0/24` (adjust the subnet for your network, `192.168.1.0` in this example).
+   </details>
+
+1. SSH into the Pi from your local terminal:
+
+   ```shell title="From your device"
+   ssh pi-admin@pi-hole.local
+   ```
+
+   You can also use the IP you find in step 1 instead of `pi-hole.local`.
+
+1. Enter the password you set in Raspberry Pi Imager when prompted.
+
+1. If you configured Wi-Fi and also plugged the Pi in via Ethernet, your Pi will have two IP addresses.
+
+   To make it easier to [enable network-wide blocking](./network-level-blocking/#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+
+   Confirm the Ethernet IP address from inside the SSH session on the Pi:
+
+   ```shell title="From the Pi"
+   ip addr show eth0
+   ```
+
+
+#### TP-Link Omada-specific steps to find and fix the Pi's IP
+
+<details>
+<summary>Find the Pi and set a fixed IP on a TP-Link Omada controller</summary>
+
+
+1. Log in and select the site's name.
+1. Select **Clients** then **Wired** to filter the table of connected clients.
+1. Select **pi-hole** in the **Client Name** column to open the **Details** sidebar.
+1. Select **Manage Client** > **Config** and check **Enable** next to **Use Fixed IP Address**.
+1. Select **Save**.
+
+   You should still follow the steps in the [Set a Static IP](#set-a-static-ip-address) section when you get there.
+
+
+![Set fixed IP in Omada controller](./screenshots/omada-fixed-ip-address.png)
+
+</details>
+
+### Require a Password for sudo Commands
+
+The non-root user that Raspberry Pi Imager created can run `sudo` commands without a password.
+
+Raspberry Pi Imager creates a configuration file to enforce passwordless `sudo`.
+Remove the file so that sudo commands require authentication.
+
+
+1. Remove the configuration file:
+
+   ```shell title="From the Pi"
+   sudo rm /etc/sudoers.d/010_pi-nopasswd
+   ```
+
+1. Log out of the SSH session, then log back in:
+
+   ```shell
+   exit
+   ssh pi-admin@pi-hole.local
+   ```
+
+
+### Set Up a Firewall on Your Pi With UFW
+
+UFW (Uncomplicated Firewall) restricts which ports are accessible on the Pi.
+Pi-hole requires ports for DNS and the web interface.
+SSH is allowed for remote administration.
+
+
+1. Install UFW:
+
+   ```shell title="From the Pi"
+   sudo apt install ufw
+   ```
+
+1. Allow SSH immediately to avoid getting locked out later:
+
+   ```shell title="From the Pi"
+   sudo ufw allow OpenSSH
+   ```
+
+1. Set the defaults for incoming and outgoing connections:
+
+   ```shell title="From the Pi"
+   sudo ufw default deny incoming
+   sudo ufw default allow outgoing
+   ```
+
+1. Add the following to `/etc/ufw/applications.d/pihole` to group the required ports into a single app profile rule.
+   Remember to use `sudo` to edit files throughout this guide:
+
+   ```ini title="/etc/ufw/applications.d/pihole"
+   [Pi-hole]
+   title=Pi-hole
+   description=Pi-hole DNS and Web Interface
+   ports=53/tcp|53/udp|80/tcp|443/tcp
+   ```
+
+   If you don't have a preferred terminal-based text editor, you can use `sudo nano /etc/ufw/applications.d/pihole`.
+   That will create the file and open the nano editor so you can add the rule.
+
+   To save and exit nano: <kbd>CTRL+X</kbd>, then <kbd>Y</kbd>, then <kbd>Enter</kbd>.
+
+1. Allow the profile:
+
+   ```shell title="From the Pi"
+   sudo ufw allow Pi-hole
+   ```
+
+1. Enable UFW with the new configuration:
+
+   ```shell title="From the Pi"
+   sudo ufw enable
+   ```
+
+1. Verify the rules are active:
+
+   ```shell title="From the Pi"
+   sudo ufw status
+   ```
+
+
+<details>
+<summary>If you plan to use Pi-hole as a DHCP server</summary>
+
+Pi-hole as a DHCP server is not covered in this guide, but this seems to be an issue people encounter.
+
+If you plan to use Pi-hole as a DHCP server, add another `ufw allow`:
+
+```shell title="From the Pi"
+sudo ufw allow 67/udp comment 'DHCP'
+```
+
+</details>
+
+### Protect SSH with Fail2Ban
+
+Fail2Ban automatically bans IPs that fail too many login attempts.
+This helps minimize the risk of brute-force attacks.
+
+
+1. Install Fail2Ban:
+
+   ```shell title="From the Pi"
+   sudo apt install fail2ban
+   ```
+
+1. Create `/etc/fail2ban/jail.local`:
+
+   ```ini title="/etc/fail2ban/jail.local"
+   [sshd]
+   enabled = true
+   banaction = ufw
+   maxretry = 4
+   bantime = 1h
+   findtime = 10m
+   ```
+
+   `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables (an alternative way to manage network access to the Pi) rules directly, keeping all firewall rules in one place.
+
+   Remember to use `sudo` to edit the file (`sudo nano /etc/fail2ban/jail.local` if you're new to this).
+
+1. Enable and start Fail2Ban:
+
+   ```shell title="From the Pi"
+   sudo systemctl enable --now fail2ban
+   ```
+
+1. Verify the SSH jail is active:
+
+   ```shell title="From the Pi"
+   sudo fail2ban-client status sshd
+   ```
+
+   You should see the jail listed as active with 0 currently banned IPs on a fresh install.
+
+
+### Set a Static IP Address
+
+Pi-hole needs a stable IP address.
+If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the Internet.
+
+These steps use `nmcli` to lock the IP.
+They set the Ethernet connection name as a temporary shell variable.
+The variable is cleared when you exit the session.
+
+
+1. Set the static IP, gateway, and DNS.
+
+   This example is intentionally set to fail if you don't adjust `YOUR-PI-IP` and `YOUR-GATEWAY-IP`.
+   This way you're less likely to get locked out if you don't change the example first:
+
+   ```shell "YOUR-PI-IP" "YOUR-GATEWAY-IP" title="From the Pi"
+   CON=$(nmcli -t -f NAME,DEVICE con show | grep eth0 | cut -d: -f1) && \
+   echo $CON && \
+   sudo nmcli con mod "$CON" \
+     ipv4.addresses YOUR-PI-IP/24 \
+     ipv4.gateway YOUR-GATEWAY-IP \
+     ipv4.dns "1.1.1.1" \
+     ipv4.method manual
+   ```
+
+   <details>
+   <summary>Help with this step</summary>
+
+   - This setting uses the shell variable `CON` to make it easier to copy and paste the command consistently.
+     The first line finds the device's name, and sets it as the variable.
+     `echo $CON` on the second line displays it in the terminal for your information.
+   - Replace `YOUR-PI-IP` with the Pi's IP you found in [step 1 of Configure Raspberry Pi OS](#configure-raspberry-pi-os).
+   - Replace `YOUR-GATEWAY-IP` with your router's IP (or your gateway if you already know it).
+
+   For more about these settings, see the
+   [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
+   </details>
+
+   - If you do get locked out, you'll need to access the Pi directly.
+     Then run this same command in the terminal with the correct IPs.
+
+1. Apply the changes:
+
+   ```shell title="From the Pi"
+   sudo nmcli con up "$CON"
+   ```
+
+1. If you changed the IP address, your SSH session will drop.
+
+   Still in the terminal, but on your local machine, remove the old cached keys and reconnect at the new IP:
+
+   ```shell "YOUR-OLD-PI-IP" "YOUR-PI-IP" title="From your device"
+   ssh-keygen -R YOUR-OLD-PI-IP
+   ssh pi-admin@YOUR-PI-IP
+   ```
+
+   Accept the new host key when prompted.
+
+1. Verify the settings persisted on the Pi:
+
+   ```shell title="From the Pi"
+   ip addr show eth0
+   ```
+
+   Confirm your static IP is listed.
+
+1. Reboot the Pi:
+
+   ```shell title="From the Pi"
+   sudo reboot now
+   ```
+
+   Wait a few minutes before you SSH back in.
+
+
+## Checkpoint
+
+At this point you have a hardened Raspberry Pi OS ready for Pi-hole.
+
+Before you continue, confirm the following:
+
+- SSH access works: `ssh pi-admin@pi-hole.local`.
+- UFW is active with Pi-hole rules: `sudo ufw status`.
+- Fail2Ban is protecting SSH: `sudo fail2ban-client status sshd`.
+- The Pi has a static IP that won't change on reboot.
+- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#pi-hole-installation).
+
+The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.
+
+
+---
+
+# Install Pi-hole v6
+
+Source: https://edwardangert.com/docs/pi-hole/pihole-install/
+
+
+
+Install Pi-hole and configure it with a secure DNS resolver.
+
+<details>
+<summary>If you skipped to this section, expand for setup notes.</summary>
+
+If you installed Pi-hole on an existing device or skipped to this section, these OS-specific things might be different for your setup:
+
+- Installed software like Git, curl, or zsh.
+- `apt` package manager - your OS might use a different one.
+- The Pi's hostname is `pi-hole` throughout this guide.
+
+</details>
+
+
+1. SSH to the Pi:
+
+   ```shell title="From your device"
+   ssh pi-admin@pi-hole.local
+   ```
+
+   Replace `pi-admin` with your username if you chose a different one in Raspberry Pi Imager.
+
+1. Update the system and install dependencies:
+
+   ```shell title="From the Pi"
+   sudo apt update && sudo apt upgrade -y
+   ```
+
+   This can take 10-20 minutes even on a freshly installed OS.
+
+1. Run the Pi-hole installer:
+
+   ```shell title="From the Pi"
+   curl -sSL https://install.pi-hole.net | bash
+   ```
+
+1. The installer prompts you with warnings and options. Select:
+
+   - **Static IP Needed**: **Continue**
+   - **Upstream DNS Provider**: **Cloudflare** - You can switch to unbound later.
+   - **Blocklists**: **Yes** to include the default list.
+     We'll change it to a more curated set of lists later.
+   - **Enable Logging**: **Yes** - this helps diagnose issues like when streaming apps won't load.
+   - **Select a privacy mode for FTL**: **0** - shows which site was blocked on which device. See the [official privacy level docs](https://docs.pi-hole.net/ftldns/privacylevels/) for other options.
+
+   The last screen lists the IP address and a temporary password.
+   You'll change the password next, so you can ignore it here.
+
+   ![Pi-hole installed](./screenshots/pi-hole-installed.png)
+
+1. Set a permanent password:
+
+   ```shell title="From the Pi"
+   sudo pihole setpassword
+   ```
+
+1. Open `https://pi-hole.local/admin` in a browser.
+
+   The browser will show a security warning about the security certificate.
+
+   - Chrome: select **Advanced**, then **Proceed to pi-hole.local (unsafe)**.
+   - Firefox: select **Advanced**, then **Accept the Risk and Continue**.
+
+   If you don't see the option to proceed, refresh the page.
+
+
+## Optional: Configure Unbound as Recursive DNS
+
+[Unbound](https://docs.pi-hole.net/guides/dns/unbound/) is a recursive DNS resolver.
+Instead of forwarding DNS queries to Cloudflare or your ISP, unbound resolves queries by [walking the DNS tree](https://notes.kodekloud.com/docs/Demystifying-DNS/DNS-as-a-System/Walking-the-DNS-Tree/page) from the root servers.
+This means no single upstream provider sees all your DNS queries.
+
+Pi-hole works well with Cloudflare.
+Add unbound if you prefer the additional privacy of recursive resolution.
+
+
+1. Install unbound, then immediately stop it so that you can set your own configuration:
+
+   ```shell title="From the Pi"
+   sudo apt install unbound
+   sudo systemctl stop unbound
+   ```
+
+1. Create the Pi-hole-specific unbound configuration:
+
+   ```ini title="/etc/unbound/unbound.conf.d/pi-hole.conf"
+   server:
+       verbosity: 0
+
+       interface: 127.0.0.1
+       port: 5335
+
+       do-ip4: yes
+       do-udp: yes
+       do-tcp: yes
+       do-ip6: no
+       prefer-ip6: no
+
+       # Trust glue only if it is within the server's authority
+       harden-glue: yes
+       # Require DNSSEC data for trust-anchored zones
+       # harden-dnssec-stripped enables DNSSEC validation - unbound rejects responses
+       # that fail cryptographic signature checks, protecting against DNS spoofing.
+       harden-dnssec-stripped: yes
+       # Don't use Capitalization randomization
+       use-caps-for-id: no
+       # Reduce EDNS reassembly buffer size
+       edns-buffer-size: 1232
+       # Prefetch close-to-expired cache entries
+       prefetch: yes
+       # One thread is sufficient for a home network
+       num-threads: 1
+       # Ensure kernel buffer is large enough
+       so-rcvbuf: 1m
+
+       # Ensure privacy of local IP ranges
+       private-address: 192.168.0.0/16
+       private-address: 169.254.0.0/16
+       private-address: 172.16.0.0/12
+       private-address: 10.0.0.0/8
+       private-address: fd00::/8
+       private-address: fe80::/10
+   ```
+
+1. Start unbound and verify that it's running on port 5335:
+
+   ```shell title="From the Pi"
+   sudo systemctl start unbound
+   dig google.com @127.0.0.1 -p 5335 | grep NOERROR
+   ```
+
+   You should see a `NOERROR` status and an answer section with an IP address.
+
+1. Point Pi-hole at unbound with Cloudflare as fallback.
+
+   In the Pi-hole web interface, go to **Settings** > **DNS**:
+
+   - In the **Custom DNS servers** field, add `127.0.0.1#5335`.
+   - Keep **Cloudflare** checked as a fallback.
+   - Select **Save**.
+
+1. Verify Pi-hole is using unbound:
+
+   ```shell title="From the Pi"
+   dig google.com @127.0.0.1 | grep NOERROR
+   ```
+
+   You should see a `NOERROR` status.
+   The first query may be slow as unbound builds its cache.
+
+
+:::caution["port 53: Address in use"]
+If you install unbound and don't stop it right away, it will self-assign port 53 and conflict with the Pi-hole.
+
+The FTL log will show:
+`dnsmasq: failed to create listening socket for port 53: Address in use`
+
+To fix: configure unbound on port 5335 as above, then restart both:
+
+```shell title="From the Pi"
+sudo systemctl restart unbound
+sudo systemctl restart pihole-FTL
+```
+:::
+
+## Optional: Monitor Pi-hole with Netdata
+
+[Netdata](https://www.netdata.cloud/) is a lightweight real-time monitoring tool with a built-in Pi-hole integration.
+It shows query rate, cache hits, blocked domains, and FTL status alongside system metrics such as CPU, memory, temperature, and Fail2Ban statistics.
+
+The Pi-hole web interface already shows DNS stats.
+Add Netdata if you want system-level metrics alongside your Pi-hole data.
+
+
+1. Install Netdata:
+
+   ```shell title="From the Pi"
+   curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && sh /tmp/netdata-kickstart.sh --disable-telemetry
+   ```
+
+   The installer takes a few minutes.
+
+   When it finishes, Netdata starts automatically and auto-discovers Pi-hole.
+
+1. Allow the dashboard port through UFW if you want access from other devices on your network:
+
+   ```shell title="From the Pi"
+   sudo ufw allow 19999/tcp comment 'Netdata dashboard'
+   ```
+
+   <details>
+   <summary>If you'll only access Netdata over an SSH tunnel</summary>
+
+   ```shell title="From the Pi"
+   ssh -L 19999:localhost:19999 pi-admin@pi-hole.local
+   ```
+
+   </details>
+
+1. Open the dashboard at `http://pi-hole.local:19999`
+   Scroll down to the **Pi-hole** section to see query rate, cache, and blocking stats alongside system metrics.
+
+1. Enable the Fail2Ban collector to see banned IPs per jail.
+   This command copies the default configuration.
+
+   After it opens, press <kbd>CTRL+X</kbd> to save it:
+
+   ```shell title="From the Pi"
+   sudo /etc/netdata/edit-config go.d/fail2ban.conf
+   ```
+
+1. Restart Netdata to apply:
+
+   ```shell title="From the Pi"
+   sudo systemctl restart netdata
+   ```
+
+   The **Fail2Ban** section will appear in the dashboard showing currently banned IPs and active failures for each jail.
+
+
+## Checkpoint
+
+At this point Pi-hole is installed and running.
+
+Before you continue to blocklists and allowlists to control what gets blocked, confirm the following:
+
+- Pi-hole web interface loads at `https://pi-hole.local/admin`.
+- DNS queries are appearing in the query log.
+- The default blocklist is active.
+  You can check **Gravity** in the Pi-hole dashboard to confirm.
+- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#pi-hole-installation).
+
+
+---
+
+# Add Blocklists and Allowlists
+
+Source: https://edwardangert.com/docs/pi-hole/block-allow-lists/
+
+
+
+Pi-hole v6 manages blocklists and allowlists natively through the web interface or command line.
+
+![Pi-hole block and allow lists UI](./screenshots/pi-hole-subscribed-lists.png)
+
+Blocklists tell Pi-hole which domains to block.
+Allowlists tell it which ones to always let through, even if they match an entry on the blocklist.
+
+A bigger blocklist isn't necessarily better and can cause issues for day-to-day browsing or streaming.
+Many services depend on domains that look like tracking but are required to work.
+
+Most streaming apps run a verification chain on launch: they contact telemetry or analytics domains, and if those fail, the streaming app refuses to play content.
+This can be frustrating and has led to a number of "why isn't the TV working" complaints in my house.
+
+If you're just here to add lists, you can skip to the section:
+- [Add Blocklists to Pi-hole](#add-blocklists-to-pi-hole)
+- [Add Allowlists and Domains to Pi-hole](#add-allowlists-and-domains-to-pi-hole)
+
+## How to Choose the Best Pi-hole Blocklist
+
+The two most-recommended Pi-hole blocklists are [HaGeZi](https://github.com/hagezi/dns-blocklists) and [OISD](https://oisd.nl/).
+Both are well-maintained, low-false-positive options.
+
+The difference is how much control you want:
+
+**OISD Big** is a single URL, maintained by one person, optimized for zero breakage.
+If you want to set it and never think about it again, use `https://big.oisd.nl/`.
+
+**HaGeZi** aggregates dozens of upstream sources including OISD, StevenBlack, EasyList, EasyPrivacy, URLHaus, and PhishTank into tiered lists you can dial up or down.
+At the Normal tier it's comparable to OISD Big.
+At Pro and above it blocks significantly more, and OISD is still included as an upstream source.
+HaGeZi also offers supplementary category lists (threat intelligence, spam TLDs, smart TV telemetry) that don't have OISD equivalents.
+
+This guide uses HaGeZi because the tiered approach gives a clear choice between "fewest possible issues" and "maximum blocking," and the supplementary lists add coverage that a single all-in-one list can't match.
+
+Most of the setup in this guide relies on one maintainer.
+
+Six of the lists below come from HaGeZi.
+If the project goes inactive, the supplementary lists (Perflyst Smart-TV, BLP Phishing) will keep working, but the core blocklist won't update.
+[OISD Big](https://oisd.nl/) is a natural, and still excellent, fallback.
+
+:::note[Blocklists/Allowlists and Blacklists/Whitelists]
+As of Pi-hole v6, Pi-hole uses the words `blocklist` and `allowlist` instead of the legacy `whitelist` and `blacklist`.
+
+Some list maintainers still use some of the outdated languages in their descriptions and in the list URLs.
+:::
+
+### Choose a HaGeZi tier
+
+- **HaGeZi Normal**
+  - Balanced blocking with minimal false positives.
+    Good for environments where there's no admin nearby to unblock something.
+
+- **HaGeZi Pro**
+  - Good coverage, manageable breakage (this guide uses this)
+    More aggressive than "Normal," but still reasonable for daily use.
+
+    Occasionally blocks something legitimate.
+    Check the query log when something breaks.
+
+- **HaGeZi Pro++**
+  - HaGeZi recommends this for experienced users with an admin available to troubleshoot.
+
+For quick reference, the full tier progression is: Light > Normal > Pro > Pro++ > Ultimate.
+See [HaGeZi's README](https://github.com/hagezi/dns-blocklists) for descriptions of each.
+
+### Recommended blocklists
+
+If you enabled the default blocklist or previously used [The Firebog](https://firebog.net/), [StevenBlack/hosts](https://github.com/StevenBlack/hosts), or [1Hosts](https://github.com/badmojr/1Hosts), you can disable them in favor of the lists on this page.
+
+HaGeZi already includes these as upstream sources.
+They can create duplicate entries without providing additional coverage.
+Pi-hole deduplicates during Gravity updates so it won't break anything, but it's unnecessary weight.
+
+
+1. Choose one core HaGeZi list:
+
+   - HaGeZi Normal
+
+     ```url
+     https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.txt
+     ```
+
+   - HaGeZi Pro (recommended)
+
+     ```url
+     https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/pro.txt
+     ```
+
+   - HaGeZi Pro++
+
+     ```url
+     https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/pro.plus.txt
+     ```
+
+1. Optional: Choose any supplementary lists (use with either tier):
+
+   - HaGeZi TIF
+
+     Threat Intelligence Feeds - malware, phishing, cryptojacking
+
+     ```url
+     https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/tif.txt
+     ```
+
+   - HaGeZi Bad Hoster
+
+     Known bad hosting providers
+
+     ```url
+     https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/hoster.txt
+     ```
+
+   - HaGeZi Anti-Piracy
+
+     Piracy-related domains
+
+     ```url
+     https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/anti.piracy.txt
+     ```
+
+   - HaGeZi Spam TLDs
+
+     Entire TLDs with no legitimate traffic
+
+     ```url
+     https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/spam-tlds-adblock.txt
+     ```
+
+   - Smart-TV Blocklist
+
+     Smart TV telemetry and ads
+
+     ```url
+     https://perflyst.github.io/PiHoleBlocklist/SmartTV-AGH.txt
+     ```
+
+   - BLP Phishing
+
+     Phishing domains - supplements HaGeZi TIF
+
+     ```url
+     https://blocklistproject.github.io/Lists/phishing.txt
+     ```
+
+
+## Add Blocklists to Pi-hole
+
+To add a list:
+
+
+1. Log in to the Pi-hole web interface at `https://pi-hole.local/admin`.
+1. Go to **Lists**.
+1. Paste a list URL, then select **Add blocklist**.
+1. After you add all the lists, update the Pi-hole's list settings (what it calls "Gravity") in **Tools** > **Update Gravity** to apply them, or use the CLI:
+
+   ```shell title="From the Pi"
+   sudo pihole -g
+   ```
+
+   Gravity also runs automatically on a weekly schedule.
+
+
+## Add Allowlists and Domains to Pi-hole
+
+There are two ways to allowlist in Pi-hole v6:
+
+- **List subscriptions**: Subscribe to a URL and Pi-hole manages it automatically, like a blocklist.
+  Best for maintained collections of domains.
+- **Individual domain entries**: Add a single domain directly in **Domains** > **Allowlist** in the web interface.
+  Best for one-off fixes when a specific service breaks.
+
+### Subscribe to a referral allowlist
+
+The HaGeZi Referral Allowlist is a maintained collection of domains that blocklists commonly block but that services legitimately need.
+Adding it as a subscription prevents a large category of false positives before they happen.
+
+
+1. In the Pi-hole web interface, go to **Lists**.
+1. Paste the allowlist:
+
+   ```url
+   https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/whitelist-referral.txt
+   ```
+
+1. Select **Add allowlist**
+1. After you add all the lists, update Gravity in **Tools** > **Update Gravity** to apply them, or use the CLI:
+
+   ```shell title="From the Pi"
+   sudo pihole -g
+   ```
+
+   Gravity also runs automatically on a weekly schedule.
+
+
+### Add an Individual Domain to the Allowlist
+
+You can instruct Pi-hole to allow individual domains.
+
+This is different from the lists we added in previous sections.
+
+If you encounter an error with a website or service, check the query log at `https://pi-hole.local/admin/queries`.
+Select **Advanced filtering** to filter by client or domain and sort by time.
+After you find the domain, select **Allow** to add the domain to the allowlist.
+
+See [Troubleshoot a Broken Service](./troubleshooting/#troubleshoot-a-broken-service) for tips.
+
+### Fix Streaming Services and Other Broken Sites
+
+If a service stops working after you set up Pi-hole, the likely cause is a blocked domain.
+The sections below list known fixes for common services.
+
+You can use the Pi-hole dashboard to add multiple domains one at a time through the **Domains** section at `https://pi-hole.local/admin/groups/domains`.
+
+The CLI allows you to add multiple domains in the same command.
+For each service in the sections below, you can copy the domains from the table into the dashboard, or run the `pihole allowlist` command.
+
+Run the command for the services you use, then run `sudo pihole -g` to apply the changes.
+
+Note that domains can change.
+Streaming services update their CDN and analytics infrastructure regularly.
+If a service breaks again after you've already allowlisted it, check the query log for newly blocked domains.
+
+#### Disney+
+
+```shell title="From the Pi"
+pihole allowlist geolocation.onetrust.com registerdisney.go.com global.edge.bamgrid.com disney.demdex.net
+```
+
+| Domain                     | Why it's needed |
+|----------------------------|-----------------|
+| `geolocation.onetrust.com` | Geolocation and rights verification - checked on launch |
+| `registerdisney.go.com`    | Authentication - needed at sign-in and on app launch |
+| `global.edge.bamgrid.com`  | Core streaming CDN |
+| `disney.demdex.net`        | Audience/identity service - blocks cause content to fail to load |
+
+#### Hulu
+
+Required for ad-supported plans.
+
+On Hulu's ad-supported plan, ad-serving domains share infrastructure with content delivery.
+Blocking ads breaks playback entirely.
+
+There is no domain you can allowlist to effectively block the ads.
+Sorry.
+
+```shell title="From the Pi"
+pihole allowlist geolocation.onetrust.com
+```
+
+| Domain                     | Why it's needed |
+|----------------------------|-----------------|
+| `geolocation.onetrust.com` | Same geolocation check as Disney+ |
+
+#### Paramount+
+
+Paramount+ uses Google's Dynamic Ad Insertion, which means fixing it requires allowlisting Google ad infrastructure domains (which defeats the purpose of Pi-hole).
+
+The better fix is to put the Paramount+ device in a bypass group so it skips filtering entirely.
+See [Skip Pi-hole for a Specific Device](#skip-pi-hole-for-a-specific-device) below.
+
+#### YouTube
+
+Pi-hole cannot effectively block YouTube video ads.
+
+Google serves ads and content from the same domains and there is no DNS-level way to separate them.
+Pi-hole can block some banner ads on the YouTube website, but pre-roll and mid-roll video ads are unaffected.
+This is a fundamental limitation of DNS-based blocking, not a configuration problem.
+
+For YouTube in the browser, an extension like [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo) can be more successful.
+
+#### Netflix, Max, Apple TV+
+
+These services generally work without individual domain allowlisting.
+If thumbnails fail to load or playback fails, check the query log for blocked CDN domains and allowlist as needed.
+
+#### Samsung Smart TVs
+
+These domains are required for the Smart Hub, app downloads, and basic platform functionality.
+Blocking them can break the entire app ecosystem, not just one service.
+
+```shell title="From the Pi"
+pihole allowlist samsungcloudsolution.com lcprd1.samsungcloudsolution.net time.samsungcloudsolution.com
+```
+
+| Domain                            | Why it's needed |
+|-----------------------------------|-----------------|
+| `samsungcloudsolution.com`        | Smart Hub core service |
+| `lcprd1.samsungcloudsolution.net` | CDN for Smart Hub content |
+| `time.samsungcloudsolution.com`   | Platform time sync |
+
+#### Amazon Fire TV / Fire Stick
+
+```shell title="From the Pi"
+pihole allowlist fireoscaptiveportal.com dp-discovery-na-ext.amazon.com
+```
+
+| Domain                           | Why it's needed |
+|----------------------------------|-----------------|
+| `fireoscaptiveportal.com`        | Network connectivity check - blocks cause "no internet" errors |
+| `dp-discovery-na-ext.amazon.com` | App discovery and store |
+
+#### Roku
+
+Roku devices are sensitive to blocked telemetry domains and apps might load but show no thumbnails, or video won't play.
+Specific blocked domains vary by region and Roku model.
+Use the query log method to identify what your device requests.
+
+## Control Blocking Per Device with Groups
+
+By default, every device on your network is part of the same `Default` group and follows that group's rules.
+Pi-hole's group system lets you change that per device so that you can assign a group to skip blocking entirely for problem devices, or to apply stricter rules for a specific device like a child's laptop.
+
+All blocklists are assigned to the `Default` group, and every device is in that group unless you change it.
+
+A device can be added to multiple groups at the same time and will follow the combined rules of all its groups.
+
+### Skip Pi-hole for a Specific Device
+
+Useful for a device where blocking breaks functionality and you can't or would rather not troubleshoot it (smart TVs, streaming sticks, Paramount+, Roku).
+
+
+1. Find the device's IP address in **Tools** > **Network** or based on its traffic in the **Query Log**.
+
+1. Go to **Groups** and add a new group.
+   Name it something like `skip` or `unfiltered`.
+
+1. Go to **Clients** and search for or select the device from the **Known clients** dropdown.
+
+1. Under **Group assignment**, uncheck `Default` and select your new group.
+
+1. Select **Add**.
+
+
+The device now resolves DNS without any filtering.
+All other devices are unaffected.
+
+### Block YouTube and Social Media for a Specific Device
+
+Apply extra blocklists on top of the normal ones without affecting the rest of the network.
+This can be useful for a child's device or a school-issued laptop.
+
+
+1. Confirm that the device's network traffic isn't being routed through a VPN.
+
+   You can do this by [checking the IP](https://whatismyip.org/) on one of your other devices and on the device you want to restrict.
+
+   - If the IPs are the same, continue to the next step.
+   - If the IPs are different, the device is probably directing traffic through a VPN and these steps won't work.
+
+1. Go to **Groups** and add a new group.
+   Name it something like `kids` or `restricted`.
+
+1. Go to **Lists** and [add the lists](#add-blocklists-to-pi-hole) you want to apply to this group.
+
+1. Under **Group assignment**, unselect `Default` and select the new group.
+
+   Recommended lists for parental filtering (all from [HaGeZi](https://github.com/hagezi/dns-blocklists)):
+
+   | What it blocks                                           | URL |
+   |----------------------------------------------------------|-----|
+   | Social media (Facebook, Instagram, TikTok, X, Snapchat)  | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/social.txt` |
+   | NSFW and adult content                                   | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/nsfw.txt` |
+   | DoH/VPN/TOR bypass (prevents tunneling out of filtering) | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/doh-vpn-proxy-bypass.txt` |
+
+   :::note
+   Blocking YouTube via DNS is all-or-nothing - there's no way to allow educational content while blocking everything else.
+   If your goal is "no YouTube at all," add `youtube.com` as a domain to the group's blocklist.
+   If your goal is "safe YouTube," DNS isn't the right tool - use YouTube's built-in parental controls or a browser extension instead.
+   :::
+
+1. Go to **Clients** and add the device.
+
+1. Under **Group assignment**, keep `Default` and add the new group.
+
+1. Select **Add**.
+
+
+The device is now blocked by everything in `Default` as well as the extra lists.
+Other devices that are not in the new group are unaffected.
+
+:::note
+MAC address recognition only works for devices on the same router hop as the Pi-hole.
+For devices behind a second router or managed switch, use the IP address instead.
+If the router assigns IPs dynamically, assign a static DHCP lease for that device in your router settings, or the IP may change after a reboot.
+:::
+
+## Checkpoint
+
+Pi-hole is now blocking ads across your network with a curated list configuration:
+
+- Gravity shows a domain count in the dashboard (run `sudo pihole -g` if it's empty)
+- Streaming services load without issues, or you've identified which devices need a bypass group
+- Any problem devices are in a skip group, and any restricted devices are in a group with extra lists
+- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#blocklists-and-allowlists).
+
+The next page covers configuring your router so every device on the network uses Pi-hole for DNS automatically.
+
+
+---
+
+# Enable Network-Wide DNS Blocking
+
+Source: https://edwardangert.com/docs/pi-hole/network-level-blocking/
+
+
+
+Before your device connects to anything, whether it's a page you visit or ads and trackers running in the background of that page, your device asks your DNS server for the address by name first.
+By default, this is handled by your router and ISP.
+When Pi-hole is enabled, it answers those requests and if the name is on a blocklist, Pi-hole blocks the lookup and the connection is never made.
+
+Network traffic itself does not flow through the Pi-hole.
+
+Now that you have your Pi-hole configured to block ads and other types of traffic you want to block, you can configure each device's network settings to use the Pi IP as its DNS server, or you can have your router send all DNS requests through the Pi-hole.
+
+## Configure Network-Wide Blocking
+
+Configure your router's DHCP server to hand out the Pi-hole's IP as the DNS server and use Cloudflare as a backup.
+
+Every device that gets its network settings from your router via DHCP will automatically use Pi-hole for DNS, and if the Pi loses power it will fall back to Cloudflare so your network stays online.
+
+In your router's DHCP settings, set:
+
+- **Primary DNS** - your Pi-hole's IP address (for example, `192.168.1.25`)
+- **Secondary DNS** - `1.1.1.1` (Cloudflare) as a fallback
+
+This will look different for each router brand.
+Look for **DHCP**, **LAN**, or **DNS** settings.
+
+### Set Up Network-Wide Pi-hole on a TP-Link Omada Controller
+
+![Omada controller DNS server settings](./screenshots/omada-dns-server-settings.png)
+
+
+1. Log in to the Omada controller and select the site's name.
+1. In the sidebar, under **Configuration**, select **Network Config** > **LAN**.
+1. Select the edit icon for the network that should use Pi-hole.
+1. Expand **Advanced Settings**
+1. Next to **DHCP Server**, select **☑ Enable** to expand the DHCP options.
+1. Next to **DNS Server**, select **Manual** and enter the Pi-hole's IP address in the first box.
+1. In the second box, enter `1.1.1.1` to use Cloudflare as a backup DNS server.
+1. Select **Next** to save and apply the settings.
+
+
+After you save the settings, devices need to renew their DHCP lease to pick up the new DNS server.
+This happens automatically when the lease expires (typically within 24 hours, depending on your router), or immediately if you disconnect and reconnect Wi-Fi, or restart the device.
+
+For a smart TV, that means a full power cycle from the menu or the old favorite: unplug it, then plug it back in.
+
+**Verify it's working**: On a device that has renewed its lease, open the Pi-hole query log and browse to a few sites - you should see the device's IP appear as a client.
+
+## Optional: Force Devices That Ignore Router DNS to Use the Pi-hole
+
+Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server your router assigns and use their own hardcoded DNS:
+
+- **Google Chromecast and Google Home** hardcode `8.8.8.8`.
+- **Samsung Smart TVs** may use `8.8.8.8` for some services even when a different DNS is assigned.
+- **Android and iOS** support encrypted DNS (DNS-over-HTTPS or DNS-over-TLS), which can send queries directly to Google or Cloudflare, bypassing Pi-hole completely.
+
+
+1. To force traffic from these devices through the Pi-hole, add NAT rules that intercept all outbound DNS on port 53.
+
+   This uses raw iptables because UFW doesn't expose NAT rules.
+   The rules operate at different layers and should not cause conflicts.
+
+   Replace `YOUR-PI-IP` with your Pi-hole's actual IP:
+
+   ```shell "YOUR-PI-IP" title="From the Pi"
+   sudo iptables -t nat -A PREROUTING -i eth0 -p udp --dport 53 -j DNAT --to YOUR-PI-IP
+   sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 53 -j DNAT --to YOUR-PI-IP
+   ```
+
+1. To make the rules persist across reboots:
+
+   ```shell title="From the Pi"
+   sudo apt install iptables-persistent
+   sudo netfilter-persistent save
+   ```
+
+1. Verify the rules were added:
+
+   ```shell title="From the Pi"
+   sudo iptables -t nat -L PREROUTING --line-numbers
+   ```
+
+   You should see two rules with `DNAT` and `to:YOUR-PI-IP` — one for `udp dpt:domain` and one for `tcp dpt:domain`.
+
+
+To verify a specific device is now routing through Pi-hole, check the query log at `https://pi-hole.local/admin/queries` and filter by that device's IP.
+You should see its DNS requests appearing there.
+
+These rules won't catch encrypted DNS (DNS-over-HTTPS) traffic on port 443.
+Blocking DoH requires blocking the IP addresses of known DoH providers, which is more aggressive and can break legitimate HTTPS traffic.
+
+
+---
+
+# Use Pi-hole as a VPN with Tailscale
+
+Source: https://edwardangert.com/docs/pi-hole/tailscale/
+
+
+
+[Tailscale](https://tailscale.com/) lets you securely reach your Pi-hole from anywhere without opening ports on your router.
+
+This page covers two features:
+
+- **Remote access**
+  - SSH into the Pi and open the Pi-hole web interface from any device on your tailnet.
+- **Exit node for a private, ad-blocking VPN** (optional)
+  - Route all of a device's traffic through your home Pi, so you get Pi-hole ad blocking even when away from home.
+
+## Why Tailscale Instead of Port Forwarding
+
+Tailscale creates an encrypted peer-to-peer network called a "tailnet" between your devices using WireGuard.
+The Pi is only available to devices logged in to your Tailscale network.
+
+The alternative to Tailscale is port forwarding: opening SSH (port 22) and the Pi-hole web interface (ports 80/443) on your router so they're reachable from the internet.
+This works, but exposes those ports to the public internet and increases the risk of brute force attacks.
+
+## Prerequisites
+
+- A [Tailscale account](https://tailscale.com/) (free)
+- Pi-hole installed and working
+- [UFW active](./install-configure/#set-up-a-firewall-on-your-pi-with-ufw)
+
+## Install Tailscale and Connect
+
+
+1. Install Tailscale on the Pi:
+
+   ```shell title="From the Pi"
+   curl -fsSL https://tailscale.com/install.sh | sh
+   ```
+
+1. Connect the Pi to your tailnet:
+
+   ```shell title="From the Pi"
+   sudo tailscale up
+   ```
+
+   This displays an authentication URL.
+   Open it in a browser and log in to your Tailscale account to authorize the Pi.
+
+1. Disable key expiration for the Pi in the [Tailscale admin console](https://login.tailscale.com/admin/machines).
+   Find the Pi in the machine list, select the **...** menu, and select **Disable key expiry**.
+
+   By default, Tailscale authentication keys expire after 180 days.
+   When a key expires, the device loses tailnet access until you re-authenticate.
+
+   You can learn more about key expiry in the [Tailscale docs](https://tailscale.com/docs/features/access-control/key-expiry).
+
+1. Note the Pi's Tailscale IP, you can copy it from the machine list or from the Tailscale app.
+
+1. Allow all Tailscale traffic through UFW:
+
+   ```shell
+   sudo ufw allow in on tailscale0 comment 'Tailscale'
+   ```
+
+   This single rule covers SSH, the Pi-hole web interface, and anything else you access through the tailnet.
+
+1. [Install Tailscale](https://tailscale.com/download) on your laptop, phone, or tablet, and add it to your tailnet.
+
+1. Verify remote access.
+
+   From another device on your tailnet (phone, laptop), SSH to the Pi's Tailscale IP and open `https://100.x.x.x/admin` in a browser.
+
+
+## Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet
+
+By default, Tailscale uses its own DNS resolver.
+Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on every connected device wherever it is.
+
+
+1. Allow Pi-hole to accept DNS queries from devices connected to the tailnet:
+
+   ```shell title="From the Pi"
+   sudo pihole-FTL --config dns.listeningMode ALL
+   sudo systemctl restart pihole-FTL
+   ```
+
+1. In the [Tailscale admin console](https://login.tailscale.com/admin/dns), go to **DNS**.
+1. Under **Nameservers**, select **Add nameserver** > **Custom**.
+1. Enter the Pi's Tailscale IP (the `100.x.x.x` address from the previous section).
+1. Add a second nameserver: select **Add nameserver** > **Custom** again and enter `1.1.1.1`.
+   This keeps DNS working on your tailnet if the Pi goes offline.
+1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
+1. Select **Save**.
+
+
+DNS queries from any device on your tailnet now go to your Pi-hole, regardless of where you are.
+
+Traffic from devices on your tailnet will show the device's Tailscale IP in the query log under **Client**.
+
+## Optional: Use the Pi as an Exit Node for a Private VPN
+
+An exit node routes all of a device's traffic through the Pi, not just DNS.
+Your phone or laptop appears to be on your home network when away.
+
+This is useful for accessing local resources or creating another layer of privacy while traveling.
+
+### Enable the exit node on the Pi
+
+
+1. Enable IP forwarding.
+   This is required for the Pi to route packets on behalf of other devices:
+
+   ```shell title="From the Pi"
+   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
+   ```
+
+1. Advertise the Pi as an exit node:
+
+   ```shell title="From the Pi"
+   sudo tailscale set --advertise-exit-node
+   sudo tailscale up
+   ```
+
+1. In the [Tailscale admin console](https://login.tailscale.com/admin/machines), find the Pi in your machine list.
+   Select **Edit route settings** and enable **Use as exit node**.
+
+   Tailscale requires explicit admin console approval.
+
+
+### Enable the exit node on your devices
+
+Advertising an exit node doesn't automatically route traffic through it.
+
+Each client enables its own exit node options.
+
+- **macOS / Windows**:
+  - Open the Tailscale menu bar app > **Exit Node** > select your Pi by name.
+
+- **iOS / Android**:
+  - Open the Tailscale app > select your tailnet name > **Use exit node** > select the Pi.
+
+- **Linux**:
+  - Run on the client device (not the Pi), using the `100.x.x.x` Tailscale IP from above:
+
+    ```shell title="From the client device"
+    sudo tailscale up --exit-node=100.x.x.x
+    ```
+
+To stop using the exit node, select **None** in the app, or run the following from the client (not the Pi):
+
+```shell title="From the client device"
+sudo tailscale up --exit-node=
+```
+
+If you run into issues, see [Tailscale troubleshooting](./troubleshooting/#tailscale).
+
+
+---
+
+# Maintenance and Advanced Configuration
+
+Source: https://edwardangert.com/docs/pi-hole/maintenance/
+
+
+
+After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, or to [use a USB drive to store logs](#offload-logs-to-a-usb-drive).
+
+All of these sections are optional.
+
+## Update Pi-hole
+
+Update the Pi-hole software and refresh the Gravity database with updated lists.
+
+Run these whenever Pi-hole releases a new version, or after adding or changing blocklists.
+
+```shell title="From the Pi"
+sudo pihole -up
+sudo pihole -g
+```
+
+## Back Up Your Configuration
+
+Pi-hole's Teleporter exports your full configuration: blocklists, allowlists, custom domains, regex rules, DNS settings, and DHCP config.
+
+
+1. In the Pi-hole web interface, go to **Settings** > **Teleporter**.
+1. Select **Export** to download a backup file.
+
+
+To restore after a rebuild or SD card failure, use the **Import** option on the same page and select the backup file.
+
+Re-export after making significant changes to lists or settings.
+Store the backup file somewhere other than the Pi, such as on your local computer, a NAS, or cloud storage.
+
+## Advanced Pi-hole Configuration with pihole.toml
+
+If you need to configure Pi-hole's DNS behavior outside the web interface, edit `/etc/pihole/pihole.toml` directly.
+
+After editing, restart the FTL service to apply changes:
+
+```shell title="From the Pi"
+sudo systemctl restart pihole-FTL
+```
+
+`pihole-FTL` is the core Pi-hole system service.
+It needs to be restarted when you make core configuration changes.
+
+:::note[Back up the file before you make changes]
+Editing `pihole.toml` directly can break Pi-hole if you introduce syntax errors.
+
+```shell title="From the Pi"
+sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
+```
+:::
+
+### Example: change upstream DNS
+
+In the `[dns]` section of `pihole.toml`:
+
+```toml title="pihole.toml"
+[dns]
+upstreams = ["127.0.0.1#5335", "1.1.1.1"]  # unbound on localhost, Cloudflare backup
+```
+
+Or for Cloudflare directly:
+
+```toml title="pihole.toml"
+[dns]
+upstreams = ["1.1.1.1", "1.0.0.1"]
+```
+
+### Reference: full pihole.toml
+
+This is the full `pihole.toml` from my setup, with comments stripped and the password hash redacted.
+Values marked `### CHANGED` were modified from the Pi-hole default.
+
+<details>
+<summary>pihole.toml (v6.5, comments stripped)</summary>
+
+```toml
+# Pi-hole configuration file (v6.5)
+# Reference config - comments stripped, default values preserved for reference.
+# Values marked ### CHANGED were modified from the Pi-hole default.
+# To apply: copy to /etc/pihole/pihole.toml, then sudo systemctl restart pihole-FTL
+
+[dns]
+  upstreams = [
+    "127.0.0.1#5335",
+    "1.1.1.1"
+  ] ### CHANGED, default = []
+  CNAMEdeepInspect = true
+  blockESNI = true
+  EDNS0ECS = true
+  ignoreLocalhost = false
+  showDNSSEC = true
+  analyzeOnlyAandAAAA = false
+  piholePTR = "PI.HOLE"
+  replyWhenBusy = "ALLOW"
+  blockTTL = 2
+  hosts = []
+  domainNeeded = false
+  expandHosts = false
+  bogusPriv = true
+  dnssec = false
+  interface = "eth0" ### CHANGED, default = ""
+  hostRecord = ""
+  listeningMode = "LOCAL"
+  queryLogging = true
+  cnameRecords = []
+  port = 53
+  localise = true
+  revServers = []
+
+  [dns.domain]
+    name = "lan"
+    local = true
+
+  [dns.cache]
+    size = 10000
+    optimizer = 3600
+    upstreamBlockedTTL = 86400
+    rrtype = "ANY"
+
+  [dns.blocking]
+    active = true
+    mode = "NULL"
+    edns = "TEXT"
+
+  [dns.specialDomains]
+    mozillaCanary = true
+    iCloudPrivateRelay = true
+    designatedResolver = true
+
+  [dns.reply.host]
+    force4 = false
+    IPv4 = ""
+    force6 = false
+    IPv6 = ""
+
+  [dns.reply.blocking]
+    force4 = false
+    IPv4 = ""
+    force6 = false
+    IPv6 = ""
+
+  [dns.rateLimit]
+    count = 1000
+    interval = 60
+
+[dhcp]
+  active = false
+  start = ""
+  end = ""
+  router = ""
+  netmask = ""
+  leaseTime = ""
+  ipv6 = false
+  rapidCommit = false
+  multiDNS = false
+  logging = false
+  ignoreUnknownClients = false
+  hosts = []
+
+[ntp]
+  [ntp.ipv4]
+    active = true
+    address = ""
+
+  [ntp.ipv6]
+    active = true
+    address = ""
+
+  [ntp.sync]
+    active = true
+    server = "pool.ntp.org"
+    interval = 3600
+    count = 8
+
+    [ntp.sync.rtc]
+      set = false
+      device = ""
+      utc = true
+
+[resolver]
+  resolveIPv4 = true
+  resolveIPv6 = true
+  networkNames = true
+  refreshNames = "IPV4_ONLY"
+
+[database]
+  DBimport = true
+  maxDBdays = 91
+  DBinterval = 60
+  useWAL = true
+  forceDisk = false
+
+  [database.network]
+    parseARPcache = true
+    expire = 91
+
+[webserver]
+  domain = "pi.hole"
+  acl = ""
+  port = "80o,443os,[::]:80o,[::]:443os"
+  threads = 50
+  headers = [
+    "X-DNS-Prefetch-Control: off",
+    "Content-Security-Policy: default-src 'none'; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; img-src 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'",
+    "X-Frame-Options: DENY",
+    "X-XSS-Protection: 0",
+    "X-Content-Type-Options: nosniff",
+    "Referrer-Policy: strict-origin-when-cross-origin"
+  ]
+  serve_all = false
+  advancedOpts = []
+
+  [webserver.session]
+    timeout = 1800
+    restore = true
+
+  [webserver.tls]
+    cert = "/etc/pihole/tls.pem"
+    validity = 47
+
+  [webserver.paths]
+    webroot = "/var/www/html"
+    webhome = "/admin/"
+    prefix = ""
+
+  [webserver.interface]
+    boxed = true
+    theme = "default-auto"
+
+  [webserver.api]
+    max_sessions = 16
+    prettyJSON = false
+    pwhash = "" ### CHANGED from default (use `sudo pihole setpassword` to set)
+    totp_secret = ""
+    app_pwhash = ""
+    app_sudo = false
+    cli_pw = true
+    excludeClients = []
+    excludeDomains = []
+    maxHistory = 86400
+    maxClients = 10
+    client_history_global_max = true
+    allow_destructive = true
+
+    [webserver.api.temp]
+      limit = 60.000000
+      unit = "C"
+
+[files]
+  pid = "/run/pihole-FTL.pid"
+  database = "/etc/pihole/pihole-FTL.db"
+  tmp_db = "/etc/pihole/pihole-tmp.db"
+  gravity = "/etc/pihole/gravity.db"
+  gravity_tmp = "/tmp"
+  macvendor = "/etc/pihole/macvendor.db"
+  pcap = ""
+
+  [files.log]
+    ftl = "/var/log/pihole/FTL.log"
+    dnsmasq = "/var/log/pihole/pihole.log"
+    webserver = "/var/log/pihole/webserver.log"
+
+[misc]
+  privacylevel = 0
+  delay_startup = 0
+  nice = -10
+  addr2line = true
+  etc_dnsmasq_d = false
+  dnsmasq_lines = []
+  extraLogging = false
+  readOnly = false
+  normalizeCPU = true
+  hide_dnsmasq_warn = false
+  hide_connection_error = false
+
+  [misc.check]
+    load = true
+    shmem = 90
+    disk = 90
+
+[debug]
+  database = false
+  networking = false
+  locks = false
+  queries = false
+  flags = false
+  shmem = false
+  gc = false
+  arp = false
+  regex = false
+  api = false
+  tls = false
+  overtime = false
+  status = false
+  caps = false
+  dnssec = false
+  vectors = false
+  resolver = false
+  edns0 = false
+  clients = false
+  aliasclients = false
+  events = false
+  helper = false
+  config = false
+  inotify = false
+  webserver = false
+  extra = false
+  reserved = false
+  ntp = false
+  netlink = false
+  timing = false
+  all = false
+```
+
+</details>
+
+## Offload Logs to a USB Drive
+
+The Pi-hole FTL database (`pihole-FTL.db`) grows continuously and can wear out an SD card over months.
+Move the database and log file to a USB drive to protect the SD card and extend its life.
+
+### What you need
+
+- A USB flash drive
+- The Pi running with Pi-hole installed
+
+### Mount the USB drive
+
+
+1. Plug in the USB drive and find its device name:
+
+   ```shell title="From the Pi"
+   lsblk
+   ```
+
+   Look for a `/dev/` that wasn't there before, such as `/dev/sda` with a partition at `/dev/sda1`.
+
+1. Get the partition's UUID:
+
+   ```shell title="From the Pi"
+   sudo blkid /dev/sda1
+   ```
+
+   Copy the UUID value from the output.
+
+1. Create a mount point:
+
+   ```shell title="From the Pi"
+   sudo mkdir -p /mnt/pihole-logs
+   ```
+
+1. Add an entry to `/etc/fstab` to auto-mount on boot.
+   Open the file and add this line at the bottom, replacing `YOUR-UUID` with the UUID you copied:
+
+   ```ini title="/etc/fstab"
+   UUID=YOUR-UUID  /mnt/pihole-logs  ext4  defaults,noatime  0  2
+   ```
+
+   Note that this example uses `ext4`.
+   If your USB drive is formatted as exFAT or NTFS instead of ext4, change the filesystem type accordingly.
+
+   <details>
+   <summary>If you need to format the drive first</summary>
+
+   This will delete everything on the drive:
+
+   ```shell title="From the Pi"
+   sudo mkfs.ext4 /dev/sda1
+   ```
+
+   </details>
+
+1. Mount everything in fstab:
+
+   ```shell title="From the Pi"
+   sudo mount -a
+   ```
+
+   If this returns an error, double-check the UUID and filesystem type in `/etc/fstab`.
+
+1. Set ownership so Pi-hole's FTL process can write to the drive:
+
+   ```shell title="From the Pi"
+   sudo chown pihole:pihole /mnt/pihole-logs
+   ```
+
+
+### Point Pi-hole to the USB drive
+
+
+1. Back up the current `pihole.toml`:
+
+   ```shell title="From the Pi"
+   sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
+   ```
+
+1. Move the existing database to the USB drive (so you don't lose query history):
+
+   ```shell title="From the Pi"
+   sudo systemctl stop pihole-FTL
+   sudo mv /etc/pihole/pihole-FTL.db /mnt/pihole-logs/
+   sudo mv /var/log/pihole/pihole.log /mnt/pihole-logs/ 2>/dev/null || true
+   ```
+
+1. Edit `/etc/pihole/pihole.toml` to update the file paths.
+   Find the `[files]` section and set:
+
+   ```toml title="pihole.toml"
+   [files]
+   database = "/mnt/pihole-logs/pihole-FTL.db"
+   log = "/mnt/pihole-logs/pihole.log"
+   ```
+
+   If there is no `[files]` section, add it at the end of the file.
+
+1. Start FTL and verify it comes up cleanly:
+
+   ```shell
+   sudo systemctl start pihole-FTL
+   sudo systemctl status pihole-FTL
+   ```
+
+1. Confirm the database is on the USB drive and growing:
+
+   ```shell title="From the Pi"
+   ls -lh /mnt/pihole-logs/
+   ```
+
+1. Reboot the Pi:
+
+   ```shell title="From the Pi"
+   sudo reboot now
+   ```
+
+1. Verify that the USB drive mounts and Pi-hole starts correctly:
+
+   ```shell title="From the Pi"
+   lsblk
+   systemctl status pihole-FTL
+   ```
+
+   The FTL service won't start if it can't find the database file.
+   DNS queries from all network devices will fail until the mount is fixed.
+
+
+### Optional: Set Pi-hole database retention
+
+By default, Pi-hole keeps 91 days of query history.
+
+If you want to change the database size:
+
+
+1. Set a the number of days to keep the database in `pihole.toml`:
+
+   ```toml title="pihole.toml"
+   [database]
+   maxDBdays = 180
+   ```
+
+1. Restart FTL after changing this:
+
+   ```shell title="From the Pi"
+   sudo systemctl restart pihole-FTL
+   ```
+
+
+
+---
+
+# Common Issues and How to Fix Them
+
+Source: https://edwardangert.com/docs/pi-hole/troubleshooting/
+
+
+
+## Enable/Disable Debug Logging
+
+The Pi-hole debug tool turns on verbose logging flags when run.
+You can leave it on while you troubleshoot and turn it off when you're done:
+
+```shell title="From the Pi"
+sudo pihole-FTL --config debug.all true
+sudo systemctl restart pihole-FTL
+```
+
+Change `true` to `false` when you're done troubleshooting.
+
+## Pi-hole Installation
+
+### SSH host key mismatch after rebuild
+
+**Symptom**: `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED` when SSHing to the Pi.
+
+**Cause**: You reformatted the SD card and reinstalled, or changed the IP address, but your computer still has the old SSH host key cached.
+
+**Fix**:
+
+```shell title="From your device"
+ssh-keygen -R pi-hole.local
+ssh pi-admin@pi-hole.local
+```
+
+### Port 53 conflict between Pi-hole and unbound
+
+**Symptom**: Pi-hole installs successfully, the web interface works, but DNS resolution fails on your network. The dashboard may show "DNS server failure."
+
+**Cause**: Both Pi-hole (via dnsmasq) and unbound are trying to listen on port 53.
+This happens if unbound was installed with its default configuration before Pi-hole.
+
+**Check**:
+
+```shell title="From the Pi"
+sudo journalctl -u pihole-FTL | grep "port 53"
+```
+
+Look for: `dnsmasq: failed to create listening socket for port 53: Address in use`
+
+**Fix**: Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](./pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
+
+```shell title="From the Pi"
+sudo systemctl restart unbound
+sudo systemctl restart pihole-FTL
+```
+
+### Pi-hole web interface shows 403 Forbidden or won't load
+
+**Symptom**: `https://pi-hole.local/admin` returns 403 Forbidden or the page won't connect.
+
+**Most common cause**: lighttpd (the v5-era web server) is installed and running, occupying port 80.
+Pi-hole v6 has its own embedded web server - if lighttpd grabs port 80 first, FTL falls back to port 8080 silently.
+
+**Check**:
+
+```shell title="From the Pi"
+sudo systemctl status lighttpd
+```
+
+**Fix**:
+
+```shell title="From the Pi"
+sudo systemctl stop lighttpd
+sudo systemctl disable lighttpd
+sudo systemctl restart pihole-FTL
+```
+
+**Check what port FTL is actually using**:
+
+```shell title="From the Pi"
+pihole-FTL --config webserver.port
+```
+
+If it shows `8080`, try `http://pi-hole.local:8080/admin` as a temporary workaround.
+
+**Secondary cause**: FTL is not running at all.
+
+```shell title="From the Pi"
+sudo systemctl status pihole-FTL
+sudo journalctl -u pihole-FTL -n 50
+```
+
+The most common reason on a fresh install is a port 53 conflict - see above.
+
+### Gravity fails to update
+
+**Symptom**: Running `sudo pihole -g` exits with "DNS resolution is currently unavailable"
+or "list download failed: no cached list available."
+
+**Cause**: `/etc/resolv.conf` points to `127.0.0.1` (Pi-hole itself).
+If FTL isn't fully ready when Gravity runs - for example, immediately after install
+before the first restart - the DNS lookup for list URLs fails.
+
+**Fix**: Wait 30 seconds after install completes, confirm FTL is running, then re-run:
+
+```shell title="From the Pi"
+sudo systemctl status pihole-FTL
+pihole -g
+```
+
+If Gravity still fails, verify outbound connectivity:
+
+```shell title="From the Pi"
+dig raw.githubusercontent.com @1.1.1.1
+curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.txt
+```
+
+**Note**: The web interface Gravity button can silently fail in some FTL versions.
+If the dashboard shows an error but `sudo pihole -g` from the terminal succeeds, use the CLI.
+
+### Maximum number of concurrent DNS queries reached
+
+**Symptom**: DNS becomes unresponsive. The FTL log shows:
+`Maximum number of concurrent DNS queries reached (max: 150)`
+
+**Most common cause**: A DNS loop - Pi-hole is forwarding queries to itself.
+Check **Settings** > **DNS** and confirm the upstream servers are not `127.0.0.1`
+or the Pi's own LAN IP.
+
+**Check**:
+
+
+1. Watch live queries.
+   Look for a single source IP flooding requests:
+
+   ```shell title="From the Pi"
+   pihole -t
+   ```
+
+   Press <kbd>CTRL+C</kbd> to stop.
+
+1. Test if the upstream is reachable:
+
+   ```shell title="From the Pi"
+   dig google.com @1.1.1.1
+   ```
+
+
+**Fix**: In **Settings** > **All Settings** > **DNS**, raise `dns.maxConcurrent` to `300` or `500`.
+Treat this as a symptom fix.
+Find the root cause (DNS loop or misbehaving client) separately.
+
+### Intermittent DNS failures with unbound
+
+**Symptom**: DNS works, then randomly stops for minutes several times a day.
+Restarting FTL or unbound temporarily fixes it.
+Switching to Cloudflare upstream eliminates the problem.
+
+**Cause**: Unbound periodically fails to respond within FTL's timeout.
+This can happen when unbound needs to re-validate DNSSEC chains or when its root hint cache is stale.
+
+**Check**: Test unbound independently while Pi-hole is failing:
+
+```shell title="From the Pi"
+dig google.com @127.0.0.1 -p 5335
+```
+
+If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
+
+**Fix - refresh root hints**:
+
+```shell title="From the Pi"
+sudo unbound-anchor -a /var/lib/unbound/root.key
+sudo systemctl restart unbound
+```
+
+**Fix - check unbound logs**:
+
+```shell title="From the Pi"
+sudo journalctl -u unbound -n 100
+```
+
+Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
+
+### FTL database grows too large and FTL fails to start
+
+**Symptom (weeks or months after setup)**: After a reboot, Pi-hole never comes back online.
+`systemctl status pihole-FTL` shows failed.
+
+The journal shows:
+`CRIT: realloc_shm(): Failed to resize "FTL-queries": No space left on device`
+
+**Cause**: Pi-hole v6 stores every DNS query for 91 days by default.
+Pi-hole v5 has a default of 365 days.
+If you have Pi-hole v5 or upgraded from it, check your `maxDBdays` setting.
+
+**Quick fix (loses query history)**:
+
+```shell title="From the Pi"
+sudo systemctl stop pihole-FTL
+sudo rm /etc/pihole/pihole-FTL.db
+sudo systemctl start pihole-FTL
+```
+
+**Prevention**: Verify your retention setting in `/etc/pihole/pihole.toml`:
+
+```toml title="/etc/pihole/pihole.toml"
+[database]
+maxDBdays = 91
+```
+
+Lower this further if disk space is a concern.
+
+Refer to the [example pihole.toml](./maintenance/#reference-full-piholetoml) in the maintenance section for a full `pihole.toml` reference.
+
+### NTP warnings in the Pi-hole dashboard
+
+**Symptom**: Dashboard shows "No valid NTP replies received" or "Standard deviation of time offset is too large, rejecting synchronization."
+
+**Cause**: Pi-hole v6 has its own NTP client that runs alongside the OS time sync (`systemd-timesyncd`).
+Occasionally an NTP pool server times out.
+
+**Check**: Verify the system clock is correct:
+
+```shell title="From the Pi"
+timedatectl status
+```
+
+If `System clock synchronized: yes` and the time is correct, the warning is cosmetic.
+
+**Optional fix**: Disable Pi-hole's NTP client since the OS handles time sync:
+
+```shell title="From the Pi"
+sudo pihole-FTL --config ntp.sync.active false
+sudo systemctl restart pihole-FTL
+```
+
+## Blocklists and Allowlists
+
+### Troubleshoot a Broken Service
+
+#### Step 1: Check if Pi-hole is the problem
+
+
+1. In the Pi-hole web interface, go to **Disable** and choose a duration (5 minutes is usually enough).
+1. Try the broken service again.
+1. If it works with Pi-hole disabled, Pi-hole is blocking something the service needs.
+   Continue to find the blocked domain.
+
+
+If it's still broken with Pi-hole disabled, the problem is elsewhere.
+
+#### Step 2: Find the blocked domain
+
+
+1. Re-enable Pi-hole.
+1. In the Pi-hole web interface, go to **Query Log**.
+1. On the device where the service is broken, try to use it again.
+1. In the query log, filter by the device's IP address or name.
+1. Look for domains with a **Blocked** status that appeared when you tried the service.
+
+
+#### Step 3: Allowlist the domain
+
+
+1. In the Query Log, select the blocked domain.
+1. Select **Allow** to add it to your allowlist.
+1. Try the service again.
+
+
+You may need to repeat this.
+Some services check multiple domains sequentially, so you might need to allowlist several before the service works.
+
+#### Step 4: If you can't find the domain
+
+
+1. In the query log, search for part of the service name (for example, `disney`).
+1. If nothing appears, look for blocked requests to CDN or analytics domains that coincide with your attempts to use the service.
+1. As a last resort: disable Pi-hole, use the service, then check the log for all domains the service contacted.
+   These are candidates for your allowlist.
+
+
+#### When allowlisting isn't enough
+
+Some services can't be fixed by allowlisting because ads and content come from the same domains.
+Hulu's ad-supported tier and YouTube video ads are the main examples.
+Options in those cases:
+
+- Upgrade to ad-free tiers
+- Accept that DNS-level blocking has limits for those specific services
+- Use a browser extension for web-based viewing
+
+### Custom Filtering Rules
+
+Pi-hole v6 supports regex rules for both blocking and allowlisting.
+Add them via CLI or in the web interface under **Domains** > **Regex filter**.
+
+These rules run against every queried domain in real time, so keep the list reasonably short and test after adding.
+Regex rules can cause false positives that don't show up until something breaks.
+
+### Fix List Health Issues
+
+#### Gravity shows "Invalid protocol" errors for domain names
+
+**Symptom**: `sudo pihole -g` shows errors like:
+
+```shellsession title="From the Pi"
+[✗] Status: Invalid protocol specified. Ignoring list.
+    Ensure your URL starts with a valid protocol like http:// , https:// or file:// .
+[✗] Status: geolocation.onetrust.com ()
+```
+
+**Cause**: Individual domain names were added to **Lists** instead of **Domains** > **Allowlist**.
+Pi-hole's Gravity system downloads list files (usually `.txt`) from URLs.
+It can't process bare domain names as list entries.
+
+**Fix**: In the web interface, go to **Lists** and delete any entries that are bare domain names (not URLs starting with `https://`).
+Then re-add those domains via CLI or under **Domains** > **Allowlist**:
+
+```shell title="From the Pi"
+pihole allowlist geolocation.onetrust.com registerdisney.go.com
+```
+
+Gravity still runs successfully - blocked domain counts are unaffected.
+The errored entries are simply ignored.
+
+#### A list shows 0 domains after `sudo pihole -g`
+
+Check the format. Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
+Wildcard TLD rules (`||*.tld^`) and AdGuard-specific modifiers (`$denyallow=`) are common culprits.
+
+Look for a Pi-hole-specific variant of the list.
+HaGeZi provides separate `-adblock` versions for exactly this reason - the plain `spam-tlds.txt` is one example where the default file parses 0 domains.
+
+#### A list hasn't updated in a long time
+
+Run `sudo pihole -g` and check the output.
+If a list shows "No changes detected" for weeks, visit the source repo and check whether it's still maintained.
+Blocklist projects get archived - [anudeepND/whitelist](https://github.com/anudeepND/whitelist) was archived in August 2025, for example.
+If a source goes dark, replace it.
+[OISD Big](https://oisd.nl/) is a good general-purpose fallback, and [The Firebog](https://firebog.net/) still curates a list of actively maintained sources.
+
+#### A list URL returns a 404
+
+Projects rename tiers and reorganize files.
+For example, 1Hosts renamed `Pro` to `Xtra` in 2025, breaking old URLs.
+If a URL 404s, check the project's README for current links before assuming the project is dead.
+
+## Tailscale
+
+### DNS queries aren't showing in the Pi-hole query log
+
+If you've configured Tailscale to use your Pi-hole as a nameserver but queries from remote devices aren't appearing in the query log and nothing is getting blocked, Pi-hole is rejecting the queries.
+By default, Pi-hole only accepts DNS queries from the local subnet.
+
+Run the following on the Pi:
+
+```shell title="From the Pi"
+sudo pihole-FTL --config dns.listeningMode ALL
+sudo systemctl restart pihole-FTL
+```
+
+See [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](./tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) for the full setup.
+
+### Pi-hole web interface loads but DNS isn't filtering
+
+Confirm **Override local DNS** is enabled in the Tailscale admin DNS settings.
+If it's off, devices use their own local resolver, not Pi-hole.
+
+Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it should be the `100.x.x.x` address, not the Pi's LAN IP.
+
+### Exit node connected but traffic isn't routing through the Pi
+
+
+1. Confirm IP forwarding is active:
+
+   ```shell title="From the Pi"
+   sysctl net.ipv4.ip_forward
+   ```
+
+   It should return `net.ipv4.ip_forward = 1`.
+
+   - If it returns `0`, re-run the sysctl commands and verify the file was written:
+
+      ```shell title="From the Pi"
+      cat /etc/sysctl.d/99-tailscale.conf
+      ```
+
+1. Confirm the exit node is approved in the Tailscale admin console.
+   Unapproved exit nodes don't route traffic even if the client selects them.
+
+
+### SSH into the Pi from anywhere on your tailnet
+
+SSH to the Pi using either its Tailscale IP or its machine name.
+Both work as long as the client device is connected to Tailscale, with or without the exit node active:
+
+```shell title="From the client device"
+ssh user@100.x.x.x
+# or
+ssh user@pi-hole
+```
+
+If SSH stops working when you enable the exit node, enable **Allow Local Network Access** in the Tailscale app on the client device.
+"Local network access" means local to your client device.
+Without it, all traffic including the SSH connection routes through the exit node, which creates a loop back to the Pi itself.
+
+### SSH works over Tailscale but the Pi-hole web interface doesn't load
+
+
+1. Confirm the `tailscale0` UFW rule is in place:
+
+   ```shell title="From the Pi"
+   sudo ufw status verbose | grep tailscale
+   ```
+
+   It should show `Anywhere on tailscale0 ALLOW IN Anywhere`.
+
+1. If it's missing, run:
+
+   ```shell title="From the Pi"
+   sudo ufw allow in on tailscale0 comment 'Tailscale'
+   ```
+
+
+## Verify Pi-hole Is Working
+
+After you complete the Pi-hole setup:
+
+
+1. Check the dashboard:
+   - Total queries should be increasing as devices make DNS requests.
+   A non-zero "Queries Blocked" percentage confirms blocking is active.
+   Blocking percentage varies by household - update this with your own numbers after a week of use.
+
+1. Test blocking:
+   - On a device using Pi-hole as its DNS server, go to:
+
+     ```url
+     http://doubleclick.net
+     ```
+
+     You should see a connection error or blank page.
+
+1. Test allowlisting:
+   - Make sure normal browsing works.
+   Try loading a few common sites and use your smart TV or devices to stream media.
+   If anything breaks, check the Query Log for blocked domains and allowlist as needed.
+
+1. Check all devices:
+   - Pi-hole only works for devices using it as their DNS server.
+   If you configured it in your router's DHCP settings, devices need to renew their DHCP lease to pick up the new DNS server.
+   You can force this by disconnecting and reconnecting Wi-Fi, or restarting the device.
+
