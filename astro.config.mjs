@@ -20,7 +20,7 @@ export default defineConfig({
 			title: 'Edward Angert',
 			favicon: '/favicon.ico',
 			tagline: 'Technical writer, team leader, relationship-builder',
-			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css'],
+			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css'],
 			disable404Route: true,
 			components: {
 				PageTitle: './src/components/PageTitle.astro',

@@ -1,0 +1,45 @@
+/* Center content images by default, capped at 800px since the lightbox
+   below covers full-resolution viewing.
+   Element-selector specificity (0,0,1) makes this easy to override with a
+   class or inline style on a specific image. */
+img {
+  display: block;
+  margin-inline: auto;
+  max-width: min(800px, 100%);
+}
+
+/* Click-to-zoom lightbox for content images (see ImageLightbox.astro).
+   Hand-rolled because starlight-image-zoom doesn't yet support Astro 7's
+   default "Sätteri" markdown processor. */
+.sl-markdown-content img {
+  cursor: zoom-in;
+}
+
+.image-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  cursor: zoom-out;
+  animation: image-lightbox-fade-in 0.15s ease-out;
+}
+
+.image-lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  margin: 0;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+}
+
+@keyframes image-lightbox-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

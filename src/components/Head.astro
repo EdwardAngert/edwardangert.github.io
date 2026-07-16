@@ -2,11 +2,14 @@
 import type { Props } from '@astrojs/starlight/props';
 import StarlightHead from '@astrojs/starlight/components/Head.astro';
 import PostHog from './posthog.astro';
+import ImageLightbox from './ImageLightbox.astro';
 ---
 
 <StarlightHead {...Astro.props}>
   <slot />
 </StarlightHead>
+
+<ImageLightbox />
 
 <!-- clarity (disabled in favor of PostHog) -->
 <!--
