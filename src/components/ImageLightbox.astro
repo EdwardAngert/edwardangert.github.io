@@ -1,0 +1,58 @@
+---
+// Click-to-zoom lightbox for content images.
+// Hand-rolled because starlight-image-zoom doesn't yet support Astro 7's
+// default "Sätteri" markdown processor: https://github.com/HiDeoo/starlight-image-zoom/issues/63
+---
+
+<script>
+  declare global {
+    interface Window {
+      __imageLightboxInit?: boolean;
+    }
+  }
+
+  function initImageLightbox() {
+    if (window.__imageLightboxInit) return;
+    window.__imageLightboxInit = true;
+
+    let overlay: HTMLDivElement | null = null;
+
+    function closeLightbox() {
+      overlay?.remove();
+      overlay = null;
+      document.removeEventListener('keydown', onKeydown);
+    }
+
+    function onKeydown(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeLightbox();
+    }
+
+    function openLightbox(src: string, alt: string) {
+      overlay = document.createElement('div');
+      overlay.className = 'image-lightbox-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = alt || '';
+      img.className = 'image-lightbox-img';
+
+      overlay.appendChild(img);
+      overlay.addEventListener('click', closeLightbox);
+      document.body.appendChild(overlay);
+      document.addEventListener('keydown', onKeydown);
+    }
+
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLImageElement)) return;
+      if (!target.closest('.sl-markdown-content')) return;
+      if (target.closest('a')) return; // already a link; don't hijack it
+      openLightbox(target.currentSrc || target.src, target.alt);
+    });
+  }
+
+  initImageLightbox();
+  document.addEventListener('astro:page-load', initImageLightbox);
+</script>
