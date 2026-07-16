@@ -4,6 +4,8 @@
 
 The full text of the guide is at https://edwardangert.com/llms-full.txt.
 
+> Docs pages use `description` and `summary` for their frontmatter summary fields; blog posts use `excerpt` instead.
+
 ## Pi-hole v6 Setup Guide
 
 - [Pi-hole v6 Setup Guide](https://edwardangert.com/docs/pi-hole/): Overview of the full build: HaGeZi blocklists, streaming allowlists, optional unbound recursive DNS, Tailscale remote access, and Netdata monitoring.
@@ -21,3 +23,5 @@ The full text of the guide is at https://edwardangert.com/llms-full.txt.
 - [Resume](https://edwardangert.com/about/resume/): Career highlights as a documentation leader and technical writer.
 - [AI is coming for my job. Maybe to my job.](https://edwardangert.com/blog/ai-docs-assist/): Essay on documentation's dual human and AI audience.
 - [Chasing the Meta: Fundamentals, Hype, and Progress](https://edwardangert.com/blog/chasing-meta/): On a broken MCP, jiu-jitsu meta, and why the fundamentals outlast every shiny new AI tool.
+- [The Riptide of AI Hype](https://edwardangert.com/blog/riptide-of-ai-hype/): On unverifiable AI promises, AI-washing, moving goalposts, and why the hype is a riptide, not a lie.
+- [Docs Assist: A Technical Writing Aide](https://edwardangert.com/blog/docs-assist-plugin/): A technical writer is a developer, too. How the Docs Assist Claude Code plugin handles the structural work so you can spend more time on technical writing.
