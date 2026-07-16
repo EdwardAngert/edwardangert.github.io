@@ -13,21 +13,26 @@ Strangers, mid-troubleshooting, asking their AI `so how do i know if pihole work
 
 If you were the one who found me via `i only have the physical pi and a blank micro sd card`, I hope I helped guide you, whoever you are.
 
-I've been that person, often late at night, SSHing into the Raspberry Pi and trying to figure out why the logs are full.
-Or worse yet, searching my spare parts bins for that microSD card.
+I've been that person, often late at night, SSHing into my Raspberry Pi and trying to figure out why there's `No space left on device` when there's definitely space left on the device.
+Or worse, searching my spare parts bins for a working microSD card.
 
 That's what prompted my rewrite earlier this year.
 An unresponsive microSD card and an echo of "why isn't the Internet working?"
+That, and my traffic analytics said I was getting a lot of traffic to a single page and nearly everyone who visited bounced to a site I linked to.
 
-For queries about Pi-hole block lists, my pages show up in about a third of AI answers.
+Now, for queries about Pi-hole block lists, my pages show up in about a third of AI answers.
 For `pihole backup`, it's 100%.
 
-[My whole job](../ai-docs-assist/) has been anticipating what someone needs, and delivering an answer in the first place they'll look for it.
+My whole job as a technical writer has always been to anticipate what someone needs, and to make sure they find their answer in the first place they look for it.
 I didn't write those docs for AI.
 I wrote them for me and for the greater good of the Internet.
-Everything I know is because someone shared their knowledge.
-The AI citations are a side effect of that work, not the goal of it.
-The goal is still empowering the end user.
+
+My personal site's docs are just here to help - they don't sell anything.
+Humans trust documentation that actually solves their problem, and tend to shy away from documentation that feels like it's been padded or trying to sell something.
+AI has the same calibration. [Research on generative-engine visibility](https://arxiv.org/abs/2311.09735) found that citing sources and adding statistics improved how often AI systems surfaced a page (👀), while keyword stuffing, the classic SEO move, did essentially nothing.
+The AI citations here are a side effect of that trust.
+
+The goal is still, and always, empowering the end user.
 
 ## How Much of Technical Writing Is Writing?
 
@@ -35,10 +40,10 @@ Ask any technical writer how they spend their time.
 
 Writing is often the [smallest portion](https://essentialdata.com/tech-writers-making-the-complex-simple/).
 
-The job is:
+The job includes:
 
 - Reading PRDs and the codebase to find what's real.
-- Interviewing the engineer who built the feature and the support lead who knows every way it breaks.
+- Interviewing the engineer who built the feature and the support teams who know where the issues arise.
 - Running through each step to make sure I didn't miss anything.
 - Digging through Slack threads searching for concurring opinions.
 - Working through how the feature relates to other documentation, and finding the best way to surface it to the reader.
@@ -46,7 +51,9 @@ The job is:
 
 The industry pitch for AI in documentation is aimed almost entirely at the writing part.
 
-"AI will write your docs" is a promise about the part of the job that was never the bottleneck.
+"AI will write your docs" is a promise that won't resolve the core bottleneck, the real work.
+Writing code and writing documentation are both separate and time-consuming.
+Often, the code gets included in the definition of "done," and the documentation chases after.
 
 A technical writer is a developer, too.
 Not of software, but of structured information: curation, synthesis, information architecture, judgment.
@@ -68,7 +75,7 @@ That's a first step in documentation (write it down), and it's technical writing
 They should own that proudly.
 A technical writer is someone who makes that documentation better.
 
-So I made a Claude Code plugin to help more people do more technical writing.
+I made a Claude Code plugin to help more people do more technical writing.
 
 ## Docs Assist
 
@@ -84,11 +91,7 @@ It delivers a workable draft with less anxiety.
 
 If you can't tell your Glossary from your Quickstart, it helps you choose a template from [The Good Docs Project](https://www.thegooddocsproject.dev/template).
 
-Knowledge is the foundation.
-Without it you can't build.
-(Thanks RZA)
-
-## It Documented Itself
+## Docs Assist Documented Itself
 
 I built the plugin collaboratively with Claude Code.
 
@@ -101,6 +104,10 @@ I asked it to help improve its own README:
 > **Me:** Help me update the README with great docs about this plugin. Where do I start?
 >
 > **Docs Assist:** Let me read it back first. The README is solid, but it tells more than it shows, it opens with a rename note that only old users care about, and the file tree has drifted from the code (it's missing two files). Start with one thing: a short "What it looks like" example near the top, because that's what turns a scroller into someone who tries it. Then move the rename note down and fix the tree. I'll ship those three now.
+
+Today, I ran an audit against this post's branch:
+
+![Screenshot of Docs Assist auditing this blog post's branch](@img/docs-assist-audit.png)
 
 ## How to Use the Docs Assist Claude Code Plugin
 
@@ -177,8 +184,6 @@ I checked its claims against the code the way I'd check any SME's draft.)
 
 ## Replace Your Docs Team With This One Weird Plugin
 
-I'm writing this immediately after a post about [the riptide of AI hype](../riptide-of-ai-hype/) and how real capability is buried under an industry selling a deck of universal fixes.
-
 It probably won't replace a technical writer, which is good, because I still [need a job](../about/resume.mdx).
 But it does cover some of the tasks that slow an SME contributor and a technical writer down.
 
@@ -186,15 +191,22 @@ Every hour I don't spend fixing nested markdown or looking for the most recent S
 
 Whether the last hop to that human is a search engine, a docs site, or an AI reading on their behalf, I'm happy knowing they got their answer.
 
-That's a real AI capability and a real human-AI collaboration that's worth the hype.
+I'm writing this immediately after my post about [the riptide of AI hype](../riptide-of-ai-hype/) and how real capability is buried under an industry selling a deck of universal fixes.
+This plugin is not a universal fix.
+It's [an aide](../ai-docs-assist/).
+It's a real AI capability and a real human-AI collaboration that's worth the hype.
 
 ## Postscript
+
+> Knowledge is the foundation.
+> Without it you can't build.
+> (Thanks RZA)
 
 While I was writing this, sending Claude off to find backup sources and references I could use, I (yes, I, not Claude) found that Fabrizio Ferri Benedetti had [already written much of this argument](https://passo.uno/skills-are-docs/), better sourced and a step ahead.
 Fitting that someone already documented their thoughts and approach.
 Everyone else gets to benefit and build upon it.
 
-Try it out.
+Try out the plugin and report back.
 It's open source, Apache 2.0, and actively evolving.
 
 I'd love to hear about what you do with it.
