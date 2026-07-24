@@ -25,3 +25,4 @@ The full text of the guide is at https://edwardangert.com/llms-full.txt.
 - [Chasing the Meta: Fundamentals, Hype, and Progress](https://edwardangert.com/blog/chasing-meta/): On a broken MCP, jiu-jitsu meta, and why the fundamentals outlast every shiny new AI tool.
 - [The Riptide of AI Hype](https://edwardangert.com/blog/riptide-of-ai-hype/): On unverifiable AI promises, AI-washing, moving goalposts, and why the hype is a riptide, not a lie.
 - [Docs Assist: A Technical Writing Aide](https://edwardangert.com/blog/docs-assist-plugin/): A technical writer is a developer, too. How the Docs Assist Claude Code plugin handles the structural work so you can spend more time on technical writing.
+- [Who benefits from progress?](https://edwardangert.com/blog/progress-standards/): On the Cross-Bronx Expressway, Tesla's charging network, and the difference between a standard built for everyone and one that just gets called that.
