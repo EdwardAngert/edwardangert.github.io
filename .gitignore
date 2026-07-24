@@ -22,3 +22,12 @@ pnpm-debug.log*
 
 # PostHog wizard skill (local agent context, not shipped)
 .claude/skills/integration-astro-static/
+
+# Vale style packages fetched by `vale sync`. DocsAssist is our own style
+# and stays tracked; Google/write-good/alex are managed upstream packages.
+/styles/Google/
+/styles/write-good/
+/styles/alex/
+
+# Vale binary fetched locally by scripts/vale.sh when not on PATH.
+/.bin/
