@@ -7,7 +7,10 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "lint:md": "markdownlint-cli2 \"src/content/docs/**/*.mdx\"",
+    "lint:vale": "scripts/vale.sh .",
+    "lint": "pnpm lint:md && pnpm lint:vale"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.3",
@@ -17,5 +20,8 @@
     "sharp": "^0.35.3",
     "starlight-blog": "^0.27.0",
     "starlight-fullview-mode": "^0.2.6"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.23.1"
   }
 }
