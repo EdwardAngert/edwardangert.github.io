@@ -66,6 +66,7 @@ export default defineConfig({
 					label: 'Portfolio',
 					items: [
 						{ label: 'Overview', link: 'portfolio/' },
+						{ label: 'Docs Assist Plugin', link: 'portfolio/docs-assist-plugin/' },
 						{ label: 'Coder Quickstart', link: 'portfolio/coder-quickstart/' },
 						{ label: 'Contributing to GitLab', link: 'portfolio/gitlab-first-contribution/' },
 						{ label: 'WordPress Remote DB', link: 'portfolio/linode-wp-remote-db/' },

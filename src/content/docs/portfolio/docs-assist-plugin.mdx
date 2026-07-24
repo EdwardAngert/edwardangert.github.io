@@ -1,0 +1,39 @@
+---
+slug: portfolio/docs-assist-plugin
+title: "Docs Assist: A Claude Code Plugin"
+description: "Open-source Claude Code plugin that codifies my documentation methodology into reusable AI workflows"
+summary: "Built an open-source Claude Code plugin that turns a subject matter expert's knowledge into a structured draft, and helps small docs teams act at scale with AI."
+icon: "rocket"
+category: "Open Source / AI Tooling"
+externalLink: "https://github.com/EdwardAngert/docs-agent-plugin"
+---
+
+[Docs Assist](https://github.com/EdwardAngert/docs-agent-plugin) is a Claude Code plugin I built and maintain that encodes my technical writing methodology into a repeatable process, so an AI model applies it consistently instead of leaving it up to whoever's prompting that day.
+
+<dl>
+  <dt>For a subject matter expert (engineer, PM, or support team)</dt>
+  <dd>Coaches them through turning what they know into a structured draft without requiring them to learn documentation practice first.</dd>
+  <dt>For a technical writer or a small docs team</dt>
+  <dd>Helps act at scale, applying that same methodology across more codebases and more docs than one person could read line by line.</dd>
+</dl>
+
+## What It Does
+
+No slash command needed, the plugin activates from plain conversation the moment you ask for documentation help.
+It gathers before it structures, plans a whole documentation set before writing a word, flags what it can't verify instead of guessing, keeps writing rules and lint rules in one committed config file so the two can't drift apart, updates every affected doc when code changes, and makes docs agent-ready (`llms.txt`, frontmatter, repo conventions), the same mechanism behind the [Pi-hole documentation](/docs/pi-hole/) on this site picking up thousands of AI citations a quarter.
+
+The design principle underneath: use the model only where judgment is required, and deterministic tools everywhere else.
+An optional CI check, for example, never calls a model; it's a dependency-free script that flags which pull requests likely broke the docs and names the exact range to review, so the expensive model call only runs when a human decides it's warranted.
+
+I've also run it against real, external codebases, both ones I already knew well (Coder's networking internals, Pantheon's Terminus CLI) and ones I didn't, to test that it scales a technical writer's judgment as much as it coaches an SME's.
+Those were practice runs on other teams' repos, not linked here, but they're what the summary above is built on.
+
+## Background
+
+This plugin codifies methodologies from my years of technical writing experience: building documentation practice from scratch for developer tools, managing documentation teams for enterprise platforms, API and SDK documentation, and docs-as-code workflows.
+
+Docs Assist wrote its own README, and it drafted this page.
+
+I wrote more about the thinking behind it in [Docs Assist: A Technical Writing Aide](/blog/docs-assist-plugin/).
+
+Repository: [github.com/EdwardAngert/docs-agent-plugin](https://github.com/EdwardAngert/docs-agent-plugin) (Apache 2.0)
