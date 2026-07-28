@@ -1,0 +1,189 @@
+---
+/**
+ * Marks when a section's claims were last confirmed, and how.
+ *
+ * Place it as the first element after the heading it applies to, never inside
+ * the heading: Starlight builds slugs and the table of contents from heading
+ * content, and inbound links depend on those slugs.
+ *
+ *   ### Hulu
+ *
+ *   <Verified date="2026-05" method="tested" />
+ *
+ * The method is the point. "Tested" and "Community-reported" carry different
+ * weight and must not render identically.
+ *
+ * Dates are month precision (YYYY-MM) deliberately. Community and vendor
+ * evidence usually cannot be pinned to a day, so a day would be invented
+ * precision, and month is the right resolution for the question a reader is
+ * actually asking: how stale is this? Nobody deciding whether to trust a claim
+ * cares whether it was checked on the 14th or the 28th.
+ */
+export type VerificationMethod = 'tested' | 'vendor-docs' | 'community' | 'inherited';
+
+export interface Props {
+  date: string;
+  method: VerificationMethod;
+  /**
+   * The heading this badge belongs to. Injected automatically by
+   * remark-verified; authors do not write it.
+   */
+  section?: string;
+}
+
+const METHOD_LABELS: Record<VerificationMethod, string> = {
+  tested: 'Tested',
+  'vendor-docs': 'Per vendor docs',
+  community: 'Community-reported',
+  inherited: 'Inherited',
+};
+
+/** How the claim was established, spelled out for the hover explanation. */
+const METHOD_EXPLANATIONS: Record<VerificationMethod, string> = {
+  tested: 'confirmed by running it on my own hardware',
+  'vendor-docs': "confirmed against the vendor's own documentation",
+  community: 'compiled from community reports, not tested here',
+  inherited: 'carried forward from an earlier version without re-checking',
+};
+
+/**
+ * The environment a tested claim was confirmed in, from the page's `applies-to`
+ * frontmatter. "Tested" without saying what it was tested against is most of a
+ * claim and none of the evidence, so where the page declares an environment,
+ * the badge says so.
+ */
+function describeEnvironment(appliesTo: unknown): string {
+  if (!appliesTo || typeof appliesTo !== 'object') return '';
+  const parts: string[] = [];
+  const { pihole, devices } = appliesTo as { pihole?: string; devices?: string[] };
+  if (pihole) parts.push(`Pi-hole ${pihole}`);
+  if (Array.isArray(devices) && devices.length > 0) parts.push(devices.join(', '));
+  return parts.join(' on ');
+}
+
+const { date, method, section } = Astro.props;
+
+// The remark plugin validates these at build time across the whole page set.
+// Repeat the checks here so the component is still safe used on its own.
+// A full YYYY-MM-DD is accepted and its day discarded. remark-verified
+// normalises this before the component is reached, so in practice `date` is
+// already month precision; this repeats the rule so the component behaves the
+// same when used on its own.
+const monthMatch = typeof date === 'string' ? /^(\d{4}-\d{2})(?:-\d{2})?$/.exec(date) : null;
+if (!monthMatch) {
+  throw new Error(
+    `<Verified> needs a date as YYYY-MM. Received: ${JSON.stringify(date)}`
+  );
+}
+const month = monthMatch[1];
+
+if (!(method in METHOD_LABELS)) {
+  throw new Error(
+    `<Verified> method must be one of ${Object.keys(METHOD_LABELS).join(', ')}. Received: ${JSON.stringify(method)}`
+  );
+}
+
+// Anchor to the first of the month in UTC, so the rendered month never drifts
+// in a western timezone.
+const parsed = new Date(`${month}-01T00:00:00Z`);
+if (Number.isNaN(parsed.getTime())) {
+  throw new Error(`<Verified> received an invalid date: ${date}`);
+}
+
+const label = METHOD_LABELS[method];
+const readable = parsed.toLocaleDateString('en-GB', {
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+// The visible text stays short, because it sits on the heading's own line and
+// repeating the heading there would just be noise. The subject is restated in
+// the accessible name and the hover text, for anyone who meets the badge
+// without that adjacency: a screen reader, a search snippet, an extracted
+// fragment.
+const subject = section ? `The ${section} section` : 'This page';
+const accessibleName = section ? `${section}: ${label}, ${readable}` : `${label}, ${readable}`;
+
+// Only `tested` gains anything from the environment: it is the one method whose
+// claim is about something the author ran, so the setup is part of the evidence.
+const environment =
+  method === 'tested'
+    ? describeEnvironment(Astro.locals?.starlightRoute?.entry?.data?.['applies-to'])
+    : '';
+const explanation =
+  `${subject} was last verified in ${readable}, ${METHOD_EXPLANATIONS[method]}` +
+  (environment ? ` (${environment}).` : '.');
+---
+
+<span
+  class="verified"
+  data-method={method}
+  data-section={section}
+  aria-label={accessibleName}
+  title={explanation}
+>
+  {label}{' '}<time datetime={month}>{readable}</time>
+</span>
+
+{/*
+  Global rather than scoped: the heading rules below target the badge's
+  previous sibling, which lives outside this component and so never carries
+  Astro's scope attribute. The `.sl-markdown-content .verified` prefix keeps
+  the rules from leaking anywhere else.
+*/}
+<style is:global>
+  .sl-markdown-content .verified {
+    display: inline-block;
+    vertical-align: baseline;
+    font-size: var(--sl-text-xs);
+    line-height: 1.4;
+    color: var(--sl-color-gray-3);
+  }
+
+  .sl-markdown-content .verified time {
+    /* Keep the date from wrapping away from its label. */
+    white-space: nowrap;
+  }
+
+  /*
+   * Lift the badge onto the heading's line.
+   *
+   * The target is Starlight's .sl-heading-wrapper, not the heading itself:
+   * Starlight wraps every heading in a div alongside its anchor link, so the
+   * badge is a sibling of that wrapper and never of the <h*> element. Making
+   * the wrapper inline-block puts the two on one line without touching heading
+   * content, which would pollute the slug and the table of contents.
+   *
+   * Where :has() is unsupported the badge simply sits on its own line below
+   * the heading. Degraded, not broken.
+   */
+  .sl-markdown-content .sl-heading-wrapper:has(+ .verified) {
+    display: inline-block;
+    margin-inline-end: 0.75rem;
+  }
+
+  /*
+   * Breathing room between the badge and the body text it introduces, in both
+   * the same-line and stacked layouts.
+   */
+  .sl-markdown-content .verified + * {
+    margin-top: 0.75rem;
+  }
+
+  /*
+   * Under the mobile breakpoint the heading and badge stop sharing a line, so
+   * a long heading can't squeeze the date into an unreadable column.
+   */
+  @media (max-width: 50rem) {
+    .sl-markdown-content .sl-heading-wrapper:has(+ .verified) {
+      display: block;
+      margin-inline-end: 0;
+    }
+
+    .sl-markdown-content .verified {
+      display: block;
+      margin-top: 0.25rem;
+    }
+  }
+</style>

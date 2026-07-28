@@ -2,7 +2,6 @@
 slug: docs/pi-hole/tailscale
 title: "Use Pi-hole as a VPN to Block Ads On the Go with Tailscale"
 description: "How to use Tailscale with Pi-hole for remote ad blocking on any device, secure SSH access without port forwarding, and an optional exit node for a private VPN."
-summary: "Guide to using Tailscale with Pi-hole v6 for remote ad blocking and admin access without port forwarding. Explains why Tailscale (WireGuard-based, requires device authentication) is safer than exposing SSH and the Pi-hole web interface to the public internet. Covers installing Tailscale on the Pi, disabling key expiry in the admin console, allowing all Tailscale traffic through UFW with a single rule on the tailscale0 interface, and configuring Pi-hole to accept DNS queries from outside the local subnet using pihole-FTL --config dns.listeningMode ALL (the step most guides miss). Optional: advertising the Pi as a Tailscale exit node to route all traffic through the home network (requires IP forwarding via sysctl, tailscale set --advertise-exit-node, and admin console approval), with per-device enable/disable steps for macOS, Windows, iOS, Android, and Linux."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/network-level-blocking/
@@ -35,7 +34,7 @@ This works, but exposes those ports to the public internet and increases the ris
 
 - A [Tailscale account](https://tailscale.com/) (free)
 - Pi-hole installed and working
-- [UFW active](./install-configure/#set-up-a-firewall-on-your-pi-with-ufw)
+- [UFW active](/docs/pi-hole/install-configure/#set-up-a-firewall-on-your-pi-with-ufw)
 
 ## Install Tailscale and Connect
 
@@ -169,4 +168,4 @@ To stop using the exit node, select **None** in the app, or run the following fr
 sudo tailscale up --exit-node=
 ```
 
-If you run into issues, see [Tailscale troubleshooting](./troubleshooting/#tailscale).
+If you run into issues, see [Tailscale troubleshooting](/docs/pi-hole/troubleshooting/#tailscale).

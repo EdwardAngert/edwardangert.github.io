@@ -2,8 +2,9 @@
 slug: docs/pi-hole/block-allow-lists
 title: "Add Blocklists and Allowlists to Pi-hole"
 description: "How to set up Pi-hole v6 blocklists and allowlists: choose a HaGeZi tier, fix streaming services broken by Pi-hole, and control blocking per device with groups."
-summary: "Guide to Pi-hole v6 blocklist and allowlist configuration. Covers the HaGeZi tier system (Normal, Pro, Pro++) and why Firebog, StevenBlack, and 1Hosts are now redundant with HaGeZi. Supplementary list URLs for threat intelligence (TIF), bad hosting, anti-piracy, spam TLDs, smart TV telemetry (Perflyst), and phishing (Blocklist Project). Includes the HaGeZi referral allowlist URL. Per-service allowlist domain tables and CLI pihole allowlist commands for Disney+, Hulu, Samsung Smart TVs, and Amazon Fire TV; notes that Paramount+ requires allowlisting Google ad infrastructure (which defeats the purpose, so a device bypass group is recommended instead) and that YouTube video ads cannot be blocked at the DNS level because ads and content share the same domains. Groups section: creating a bypass group for devices that should skip filtering entirely, and a restricted group for a child's device with HaGeZi social media, NSFW, and DoH/VPN proxy bypass lists. Includes a note that MAC-based client recognition only works for devices on the same router hop as the Pi."
 category: "Personal Reference Documentation"
+applies-to:
+  pihole: "v6"
 prev:
   link: /docs/pi-hole/pihole-install/
   label: Install Pi-hole v6
@@ -13,6 +14,7 @@ next:
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import Verified from '../../../components/Verified.astro';
 
 Pi-hole v6 manages blocklists and allowlists natively through the web interface or command line.
 
@@ -224,7 +226,7 @@ If you encounter an error with a website or service, check the query log at `htt
 Select **Advanced filtering** to filter by client or domain and sort by time.
 After you find the domain, select **Allow** to add the domain to the allowlist.
 
-See [Troubleshoot a Broken Service](./troubleshooting/#troubleshoot-a-broken-service) for tips.
+See [Troubleshoot a Broken Service](/docs/pi-hole/troubleshooting/#troubleshoot-a-broken-service) for tips.
 
 ### Fix Streaming Services and Other Broken Sites
 
@@ -244,6 +246,8 @@ If a service breaks again after you've already allowlisted it, check the query l
 
 #### Disney+
 
+<Verified date="2026-07" method="tested" />
+
 ```shell title="From the Pi"
 pihole allowlist geolocation.onetrust.com registerdisney.go.com global.edge.bamgrid.com disney.demdex.net
 ```
@@ -257,13 +261,21 @@ pihole allowlist geolocation.onetrust.com registerdisney.go.com global.edge.bamg
 
 #### Hulu
 
+<Verified date="2026-07" method="tested" />
+
 Required for ad-supported plans.
 
 On Hulu's ad-supported plan, ad-serving domains share infrastructure with content delivery.
-Blocking ads breaks playback entirely.
+This is server-side ad insertion (SSAI): the ads are stitched into the video stream before it reaches your device, so there is no separate ad request for Pi-hole to answer.
+Blocking at the DNS level breaks playback entirely rather than removing the ads.
 
-There is no domain you can allowlist to effectively block the ads.
-Sorry.
+There is no domain you can allowlist to block the ads on the Hulu app.
+DNS filtering cannot fix this on a smart TV, a Roku, a Fire Stick, or a phone, because the ads and the show arrive as one stream.
+
+**What does work:** on the desktop web player, browser extensions can still strip Hulu's ads, because they operate on the page rather than on DNS.
+[uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo) on Firefox and [AdGuard](https://adguard.com/) both handle it.
+That only helps if you watch in a browser.
+For the native apps, the ad-free tier is the only reliable option.
 
 ```shell title="From the Pi"
 pihole allowlist geolocation.onetrust.com
@@ -275,12 +287,22 @@ pihole allowlist geolocation.onetrust.com
 
 #### Paramount+
 
-Paramount+ uses Google's Dynamic Ad Insertion, which means fixing it requires allowlisting Google ad infrastructure domains (which defeats the purpose of Pi-hole).
+<Verified date="2026-07" method="vendor-docs" />
+
+Paramount+ uses Google's Dynamic Ad Insertion, documented by Google as stitching ad pods directly into the content stream server-side.
+Fixing playback requires allowlisting Google ad infrastructure domains, which defeats the purpose of Pi-hole.
 
 The better fix is to put the Paramount+ device in a bypass group so it skips filtering entirely.
 See [Skip Pi-hole for a Specific Device](#skip-pi-hole-for-a-specific-device) below.
 
+If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback, while `saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
+This is partial at best: the server-stitched ads still get through.
+
+Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed 28 July 2026.)*
+
 #### YouTube
+
+<Verified date="2026-07" method="tested" />
 
 Pi-hole cannot effectively block YouTube video ads.
 
@@ -288,7 +310,14 @@ Google serves ads and content from the same domains and there is no DNS-level wa
 Pi-hole can block some banner ads on the YouTube website, but pre-roll and mid-roll video ads are unaffected.
 This is a fundamental limitation of DNS-based blocking, not a configuration problem.
 
-For YouTube in the browser, an extension like [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo) can be more successful.
+**What does work,** depending on where you watch:
+
+- **In a browser:** an extension like [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo).
+- **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed 28 July 2026.)*
+- **ReVanced** patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
+
+None of these are DNS-level fixes.
+They replace or modify the client instead, which is the only layer where YouTube's ads and content can still be told apart.
 
 #### Netflix, Max, Apple TV+
 
@@ -297,35 +326,81 @@ If thumbnails fail to load or playback fails, check the query log for blocked CD
 
 #### Samsung Smart TVs
 
+<Verified date="2026-04" method="community" />
+
 These domains are required for the Smart Hub, app downloads, and basic platform functionality.
 Blocking them can break the entire app ecosystem, not just one service.
+If the TV reports no internet connection or the Apps screen won't open, one of these is blocked.
 
 ```shell title="From the Pi"
-pihole allowlist samsungcloudsolution.com lcprd1.samsungcloudsolution.net time.samsungcloudsolution.com
+pihole allowlist cdn.samsungcloudsolution.com lcprd1.samsungcloudsolution.net time.samsungcloudsolution.net time.samsungcloudsolution.com osb.samsungqbe.com
 ```
 
 | Domain                            | Why it's needed |
 |-----------------------------------|-----------------|
-| `samsungcloudsolution.com`        | Smart Hub core service |
-| `lcprd1.samsungcloudsolution.net` | CDN for Smart Hub content |
-| `time.samsungcloudsolution.com`   | Platform time sync |
+| `cdn.samsungcloudsolution.com`    | General platform functionality |
+| `lcprd1.samsungcloudsolution.net` | App store access and Smart Hub content |
+| `time.samsungcloudsolution.net`   | Time sync. Without it the TV decides it has no internet |
+| `time.samsungcloudsolution.com`   | Same role, older sources cite this TLD. Allowlisting both is harmless |
+| `osb.samsungqbe.com`              | Required by some apps |
+
+Sources disagree on whether the time-sync domain is `.net` or `.com`, so the command above allows both.
+Note that this allowlists the specific subdomains, not the bare `samsungcloudsolution.com`.
+Blocking the bare domain without allowing these subdomains is what breaks the platform.
+
+Compiled from [techjunctions' Samsung TV ad blocker guide](https://techjunctions.com/samsung-tv-ad-blocker/) (updated April 2026) and [Perflyst/PiHoleBlocklist issue #10](https://github.com/Perflyst/PiHoleBlocklist/issues/10). *(Accessed 28 July 2026.)*
+Not tested on my own hardware.
 
 #### Amazon Fire TV / Fire Stick
 
+<Verified date="2025-01" method="community" />
+
+Fire TV uses a captive-portal check to decide whether it has internet.
+If that check is blocked, the device shows a network error or hangs on the home screen.
+
 ```shell title="From the Pi"
-pihole allowlist fireoscaptiveportal.com dp-discovery-na-ext.amazon.com
+pihole allowlist fireoscaptiveportal.com firetvcaptiveportal.com dp-discovery-na-ext.amazon.com
 ```
 
 | Domain                           | Why it's needed |
 |----------------------------------|-----------------|
-| `fireoscaptiveportal.com`        | Network connectivity check - blocks cause "no internet" errors |
+| `fireoscaptiveportal.com`        | Connectivity check. Blocks cause "no internet" errors |
+| `firetvcaptiveportal.com`        | Second connectivity-check domain, polled roughly every two minutes |
 | `dp-discovery-na-ext.amazon.com` | App discovery and store |
+
+Both captive-portal domains are real and separately registered to Amazon, and guidance differs on which one a given device generation uses.
+Allowing both costs nothing.
+
+Compiled from the [hkamran80 smart TV blocklist](https://gist.github.com/hkamran80/779019103fcd306979411d44c8d38459) comment history, where both domains were removed from the blocklist after users reported Fire Sticks failing. *(Accessed 28 July 2026.)*
+Not tested on my own hardware.
 
 #### Roku
 
-Roku devices are sensitive to blocked telemetry domains and apps might load but show no thumbnails, or video won't play.
-Specific blocked domains vary by region and Roku model.
-Use the query log method to identify what your device requests.
+<Verified date="2026-07" method="community" />
+
+Roku is the most awkward device on this list, because it fights back in two ways.
+
+**It hardcodes Google's DNS.** Roku ignores the DNS server your router hands out and talks to `8.8.8.8` and `8.8.4.4` directly, so Pi-hole never sees its queries.
+You have to intercept port 53 at the router or the Pi to bring it back under filtering.
+See [Force devices that ignore router DNS to use the Pi-hole](/docs/pi-hole/network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
+
+**Some ads aren't DNS-delivered at all.** The home screen banner and screensaver ads can be reduced but not removed, because parts of them ship with the platform rather than being fetched per-view.
+Roku's own Settings > Privacy options cut more of them than any blocklist does.
+
+What you can block and allow:
+
+| Domain               | Action  | Why |
+|----------------------|---------|-----|
+| `display.ravm.tv`    | Block   | Home screen banner and screensaver ads |
+| `api.roku.com`       | Allow   | Core system functionality |
+| `rokutime.com`       | Allow   | Time sync |
+| `therokuchannel.roku.com` | Allow | The Roku Channel, if you use it |
+
+Blocked telemetry domains are also what cause apps to load with no thumbnails, or video that won't start.
+If that happens, use the query log method above rather than guessing, because the exact domains vary by region and Roku model.
+
+Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [cybernews' Roku ad blocking guide](https://cybernews.com/best-ad-blockers/how-to-block-ads-on-roku-tv/). *(Accessed 28 July 2026.)*
+Not tested on my own hardware.
 
 ## Control Blocking Per Device with Groups
 
@@ -417,6 +492,6 @@ Pi-hole is now blocking ads across your network with a curated list configuratio
 - Gravity shows a domain count in the dashboard (run `sudo pihole -g` if it's empty)
 - Streaming services load without issues, or you've identified which devices need a bypass group
 - Any problem devices are in a skip group, and any restricted devices are in a group with extra lists
-- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#blocklists-and-allowlists).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#blocklists-and-allowlists).
 
 The next page covers configuring your router so every device on the network uses Pi-hole for DNS automatically.

@@ -4,10 +4,17 @@ import starlight from '@astrojs/starlight';
 import catppuccin from '@catppuccin/starlight';
 import starlightBlog from 'starlight-blog';
 import starlightFullViewMode from 'starlight-fullview-mode'
+import { remarkVerified } from './src/plugins/remark-verified.mjs';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://edwardangert.com',
+	markdown: {
+		// Collects <Verified> badges into page frontmatter and fails the build on
+		// future dates, bad methods, or a page that authors `last-verified` by hand
+		// while also carrying badges.
+		remarkPlugins: [remarkVerified],
+	},
 	redirects: {
 		'/about-me/resume': '/about/resume',
 		'/docs/gitlab-first-contribution': '/portfolio/gitlab-first-contribution',
@@ -19,6 +26,11 @@ export default defineConfig({
 		starlight({
 			title: 'Edward Angert',
 			favicon: '/favicon.ico',
+			// Page-level "last touched", derived from git. Distinct from the
+			// <Verified> badges, which are per-section claims about when the
+			// content was last confirmed and how. Editing a typo moves this;
+			// it does not move a badge.
+			lastUpdated: true,
 			tagline: 'Technical writer, team leader, relationship-builder',
 			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css'],
 			disable404Route: true,

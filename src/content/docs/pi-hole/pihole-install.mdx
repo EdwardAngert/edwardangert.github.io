@@ -2,7 +2,6 @@
 slug: docs/pi-hole/pihole-install
 title: "Install Pi-hole v6"
 description: "How to install Pi-hole v6 on Raspberry Pi with Cloudflare DNS, log in to the web interface, and optionally add unbound recursive DNS and Netdata monitoring."
-summary: "Pi-hole v6 installation guide. Covers running apt update and upgrade (can take 10-20 minutes on a fresh OS), then the Pi-hole curl installer with recommended choices: Cloudflare as upstream DNS, privacy level 0 (logs which domain was blocked on which device). Covers setting a permanent password with sudo pihole setpassword and bypassing the browser SSL warning for pi-hole.local in Chrome and Firefox. Optional: configuring unbound as a recursive DNS resolver on port 5335 with DNSSEC hardening and prefetch, keeping Cloudflare as a fallback in Pi-hole DNS settings; includes a caution about unbound grabbing port 53 before FTL if not stopped immediately after install. Optional: installing Netdata with telemetry disabled for real-time system and Pi-hole monitoring, opening UFW port 19999, and enabling the Fail2Ban collector in Netdata."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/install-configure/
@@ -250,4 +249,4 @@ Before you continue to blocklists and allowlists to control what gets blocked, c
 - DNS queries are appearing in the query log.
 - The default blocklist is active.
   You can check **Gravity** in the Pi-hole dashboard to confirm.
-- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#pi-hole-installation).

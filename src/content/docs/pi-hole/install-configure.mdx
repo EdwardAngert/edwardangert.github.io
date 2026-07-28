@@ -2,7 +2,6 @@
 slug: docs/pi-hole/install-configure
 title: "Set Up Raspberry Pi OS"
 description: "How to set up Raspberry Pi OS for Pi-hole v6: flash the SD card, harden with UFW and Fail2Ban, and set a static IP."
-summary: "Raspberry Pi OS setup guide for Pi-hole v6. Covers formatting the SD card with SD Card Formatter, flashing Raspberry Pi OS (64-bit, Bookworm) with Raspberry Pi Imager, and first SSH via mDNS hostname (pi-hole.local). Includes a rebuild note: Pi-hole v6 requires Debian 11 or later. Covers finding the Pi's IP via mDNS, nmap subnet scan, or router DHCP client list. Includes dedicated steps for TP-Link Omada controller users to locate the Pi and assign a fixed IP in the controller. Covers removing the passwordless sudo file that Raspberry Pi Imager creates, setting up UFW with a Pi-hole app profile (ports 53/tcp, 53/udp, 80/tcp, 443/tcp), configuring Fail2Ban with banaction=ufw to keep all firewall rules in one place, and setting a static IP via nmcli using a shell variable for the connection name."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/
@@ -140,7 +139,7 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 1. If you configured Wi-Fi and also plugged the Pi in via Ethernet, your Pi will have two IP addresses.
 
-   To make it easier to [enable network-wide blocking](./network-level-blocking/#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+   To make it easier to [enable network-wide blocking](/docs/pi-hole/network-level-blocking/#set-up-network-wide-pi-hole-on-a-tp-link-omada-controller) later, identify the Pi's Ethernet IP address.
 
    Confirm the Ethernet IP address from inside the SSH session on the Pi:
 
@@ -401,6 +400,6 @@ Before you continue, confirm the following:
 - UFW is active with Pi-hole rules: `sudo ufw status`.
 - Fail2Ban is protecting SSH: `sudo fail2ban-client status sshd`.
 - The Pi has a static IP that won't change on reboot.
-- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#pi-hole-installation).
 
 The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.
