@@ -13,15 +13,18 @@
     "lint": "pnpm lint:md && pnpm lint:vale"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.41.3",
+    "@astrojs/starlight": "^0.41.4",
     "@catppuccin/starlight": "^2.1.0",
-    "@expressive-code/plugin-line-numbers": "^0.44.0",
-    "astro": "^7.1.0",
+    "@expressive-code/plugin-line-numbers": "^0.44.1",
+    "astro": "^7.1.4",
     "sharp": "^0.35.3",
-    "starlight-blog": "^0.27.0",
+    "starlight-blog": "^0.28.0",
     "starlight-fullview-mode": "^0.2.6"
   },
   "devDependencies": {
-    "markdownlint-cli2": "^0.23.1"
+    "github-slugger": "^2.0.0",
+    "markdownlint-cli2": "^0.23.2",
+    "mdast-util-to-string": "^4.0.0",
+    "unist-util-visit": "^5.1.0"
   }
 }
