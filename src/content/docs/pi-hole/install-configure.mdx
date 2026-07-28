@@ -139,7 +139,7 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 1. If you configured Wi-Fi and also plugged the Pi in via Ethernet, your Pi will have two IP addresses.
 
-   To make it easier to [enable network-wide blocking](./network-level-blocking/#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+   To make it easier to [enable network-wide blocking](/docs/pi-hole/network-level-blocking/#set-up-network-wide-pi-hole-on-a-tp-link-omada-controller) later, identify the Pi's Ethernet IP address.
 
    Confirm the Ethernet IP address from inside the SSH session on the Pi:
 
@@ -400,6 +400,6 @@ Before you continue, confirm the following:
 - UFW is active with Pi-hole rules: `sudo ufw status`.
 - Fail2Ban is protecting SSH: `sudo fail2ban-client status sshd`.
 - The Pi has a static IP that won't change on reboot.
-- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#pi-hole-installation).
 
 The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.

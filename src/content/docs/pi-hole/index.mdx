@@ -33,7 +33,7 @@ It sees the domain name but not the URL or content, so it can't distinguish betw
 Some streaming services serve ads through the same domains as their content.
 Pi-hole cannot block Hulu or Disney+ ads on their ad-supported plans without breaking the service.
 
-For most other services, you can [add service-specific rules to the allowlists](./block-allow-lists/#fix-streaming-services-and-other-broken-sites) when you get to that page, or skip ahead if that's your main use case.
+For most other services, you can [add service-specific rules to the allowlists](/docs/pi-hole/block-allow-lists/#fix-streaming-services-and-other-broken-sites) when you get to that page, or skip ahead if that's your main use case.
 
 You can set up a Pi-hole to reduce the advertising noise of the Internet.
 But if you're looking for a way to remove the essay before a recipe, this isn't it.
@@ -55,7 +55,7 @@ The steps in this guide document how I set up Pi-hole v6 with:
   - [Unbound](https://docs.pi-hole.net/guides/dns/unbound/) recursive DNS with Cloudflare as fallback
   - [Netdata](https://www.netdata.cloud/) system and Pi-hole monitoring
   - [Tailscale](https://tailscale.com/) for remote admin access and to make the Pi-hole act as a personal VPN
-  - More restrictive [groups for specific devices](./block-allow-lists#block-youtube-and-social-media-for-a-specific-device)
+  - More restrictive [groups for specific devices](/docs/pi-hole/block-allow-lists#block-youtube-and-social-media-for-a-specific-device)
 
 Visit [the official Pi-hole documentation](https://docs.pi-hole.net/) for more use cases and details.
 
@@ -82,17 +82,17 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
 
 ## In This Guide
 
-- [Set Up Raspberry Pi OS](./install-configure/)
+- [Set Up Raspberry Pi OS](/docs/pi-hole/install-configure/)
   - Flash the SD card, harden the OS with UFW and Fail2Ban, set a static IP.
-- [Install Pi-hole v6](./pihole-install/)
+- [Install Pi-hole v6](/docs/pi-hole/pihole-install/)
   - Run the installer, set a password, optional unbound and Netdata, troubleshooting.
-- [Add Blocklists and Allowlists](./block-allow-lists/)
+- [Add Blocklists and Allowlists](/docs/pi-hole/block-allow-lists/)
   - Choose a blocklist tier, add supplementary lists, allowlist streaming services and smart TVs, and use groups to control blocking per device (including how to bypass Pi-hole for a specific device or apply stricter rules for a child's device).
-- [Enable Network-wide DNS Blocking with Pi-hole](./network-level-blocking/)
+- [Enable Network-wide DNS Blocking with Pi-hole](/docs/pi-hole/network-level-blocking/)
   - Configure router DHCP so every device uses Pi-hole for DNS.
-- [Use Pi-hole as a VPN to Block Ads On the Go with Tailscale](./tailscale/)
+- [Use Pi-hole as a VPN to Block Ads On the Go with Tailscale](/docs/pi-hole/tailscale/)
   - Block ads on your phone and laptop anywhere, remote admin access, no port forwarding required.
-- [Pi-hole Maintenance and Advanced Configuration](./maintenance/)
+- [Pi-hole Maintenance and Advanced Configuration](/docs/pi-hole/maintenance/)
   - Update Pi-hole, export/import backups with Teleporter, tune `pihole.toml`, offload logs to a USB drive.
-- [Troubleshooting](./troubleshooting/)
+- [Troubleshooting](/docs/pi-hole/troubleshooting/)
   - Fix common installation issues, DNS failures, broken streaming services, Gravity errors, and Tailscale DNS problems.

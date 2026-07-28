@@ -226,7 +226,7 @@ If you encounter an error with a website or service, check the query log at `htt
 Select **Advanced filtering** to filter by client or domain and sort by time.
 After you find the domain, select **Allow** to add the domain to the allowlist.
 
-See [Troubleshoot a Broken Service](./troubleshooting/#troubleshoot-a-broken-service) for tips.
+See [Troubleshoot a Broken Service](/docs/pi-hole/troubleshooting/#troubleshoot-a-broken-service) for tips.
 
 ### Fix Streaming Services and Other Broken Sites
 
@@ -382,7 +382,7 @@ Roku is the most awkward device on this list, because it fights back in two ways
 
 **It hardcodes Google's DNS.** Roku ignores the DNS server your router hands out and talks to `8.8.8.8` and `8.8.4.4` directly, so Pi-hole never sees its queries.
 You have to intercept port 53 at the router or the Pi to bring it back under filtering.
-See [Force devices that ignore router DNS to use the Pi-hole](./network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
+See [Force devices that ignore router DNS to use the Pi-hole](/docs/pi-hole/network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
 
 **Some ads aren't DNS-delivered at all.** The home screen banner and screensaver ads can be reduced but not removed, because parts of them ship with the platform rather than being fetched per-view.
 Roku's own Settings > Privacy options cut more of them than any blocklist does.
@@ -492,6 +492,6 @@ Pi-hole is now blocking ads across your network with a curated list configuratio
 - Gravity shows a domain count in the dashboard (run `sudo pihole -g` if it's empty)
 - Streaming services load without issues, or you've identified which devices need a bypass group
 - Any problem devices are in a skip group, and any restricted devices are in a group with extra lists
-- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#blocklists-and-allowlists).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#blocklists-and-allowlists).
 
 The next page covers configuring your router so every device on the network uses Pi-hole for DNS automatically.

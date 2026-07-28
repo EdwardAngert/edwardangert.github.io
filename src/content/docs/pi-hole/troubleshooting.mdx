@@ -52,7 +52,7 @@ sudo journalctl -u pihole-FTL | grep "port 53"
 
 Look for: `dnsmasq: failed to create listening socket for port 53: Address in use`
 
-**Fix**: Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](./pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
+**Fix**: Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](/docs/pi-hole/pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
 
 ```shell title="From the Pi"
 sudo systemctl restart unbound
@@ -218,7 +218,7 @@ maxDBdays = 91
 
 Lower this further if disk space is a concern.
 
-Refer to the [example pihole.toml](./maintenance/#reference-full-piholetoml) in the maintenance section for a full `pihole.toml` reference.
+Refer to the [example pihole.toml](/docs/pi-hole/maintenance/#reference-full-piholetoml) in the maintenance section for a full `pihole.toml` reference.
 
 ### NTP warnings in the Pi-hole dashboard
 
@@ -375,7 +375,7 @@ sudo pihole-FTL --config dns.listeningMode ALL
 sudo systemctl restart pihole-FTL
 ```
 
-See [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](./tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) for the full setup.
+See [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](/docs/pi-hole/tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) for the full setup.
 
 ### Pi-hole web interface loads but DNS isn't filtering
 

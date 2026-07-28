@@ -1,4 +1,6 @@
 ---
+import { getCollection } from 'astro:content';
+
 export interface Props {
   pathname: string;
 }
@@ -8,11 +10,31 @@ const { pathname } = Astro.props;
 interface BreadcrumbItem {
   label: string;
   href: string;
+  /** False for structural path segments that have no page of their own. */
+  linkable: boolean;
 }
+
+/**
+ * Every route the docs collection actually renders, normalised to a leading
+ * and trailing slash.
+ *
+ * Breadcrumbs are built by splitting the URL, so intermediate segments like
+ * `/docs` get an entry even though no page exists there. Linking those
+ * produces a 404. Checking against the real routes means a segment becomes
+ * linkable the moment someone adds an index page for it, and stops being
+ * linkable if that page goes away.
+ */
+const docsEntries = await getCollection('docs');
+const realRoutes = new Set(
+  docsEntries.map((entry) => {
+    const slug = (entry.data as { slug?: string }).slug ?? entry.id;
+    return `/${slug.replace(/^\/+|\/+$/g, '')}/`;
+  })
+);
 
 function generateBreadcrumbs(path: string): BreadcrumbItem[] {
   const breadcrumbs: BreadcrumbItem[] = [
-    { label: 'Home', href: '/' }
+    { label: 'Home', href: '/', linkable: true }
   ];
 
   // Remove leading/trailing slashes and split
@@ -51,7 +73,8 @@ function generateBreadcrumbs(path: string): BreadcrumbItem[] {
     
     breadcrumbs.push({
       label,
-      href: currentPath
+      href: currentPath,
+      linkable: realRoutes.has(`${currentPath}/`),
     });
   }
   
@@ -68,7 +91,11 @@ const breadcrumbs = generateBreadcrumbs(pathname);
         <li>
           {index < breadcrumbs.length - 1 ? (
             <>
-              <a href={item.href}>{item.label}</a>
+              {item.linkable ? (
+                <a href={item.href}>{item.label}</a>
+              ) : (
+                <span class="not-a-page">{item.label}</span>
+              )}
               <svg 
                 width="16" 
                 height="16" 
