@@ -93,7 +93,8 @@
       "LinkCard",
       "Steps",
       "TabItem",
-      "Tabs"
+      "Tabs",
+      "Verified"
     ]
   },
   // MD034 - No bare URLs; wrap them in angle brackets or link syntax.

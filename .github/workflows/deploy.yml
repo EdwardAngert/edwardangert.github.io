@@ -20,6 +20,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          # Starlight derives each page's "Last updated" from git history.
+          # The default shallow clone would date every page to the same commit.
+          fetch-depth: 0
       
       - name: Setup Node.js
         uses: actions/setup-node@v6

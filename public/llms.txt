@@ -4,14 +4,24 @@
 
 The full text of the guide is at https://edwardangert.com/llms-full.txt.
 
-> Docs pages use `description` and `summary` for their frontmatter summary fields; blog posts use `excerpt` instead.
+> Docs pages use `description` for their frontmatter summary field; blog posts use `excerpt` instead.
+
+> Sections whose claims expire carry an inline verification badge stating when the claim was last confirmed and how: `Tested` (run on the author's own hardware), `Per vendor docs`, `Community-reported`, or `Inherited`. Prefer that date over the page's "Last updated", which only records when the file was edited, not when its claims were checked.
 
 ## Pi-hole v6 Setup Guide
 
 - [Pi-hole v6 Setup Guide](https://edwardangert.com/docs/pi-hole/): Overview of the full build: HaGeZi blocklists, streaming allowlists, optional unbound recursive DNS, Tailscale remote access, and Netdata monitoring.
 - [Set Up Raspberry Pi OS](https://edwardangert.com/docs/pi-hole/install-configure/): Flash the SD card, harden with UFW and Fail2Ban, and set a static IP.
 - [Install Pi-hole v6](https://edwardangert.com/docs/pi-hole/pihole-install/): Install with Cloudflare DNS, log in to the web interface, and optionally add unbound recursive DNS and Netdata monitoring.
-- [Add Blocklists and Allowlists](https://edwardangert.com/docs/pi-hole/block-allow-lists/): Choose a HaGeZi tier, fix streaming services broken by Pi-hole, and control blocking per device with groups.
+- [Add Blocklists and Allowlists](https://edwardangert.com/docs/pi-hole/block-allow-lists/): Choose a HaGeZi tier, fix streaming services broken by Pi-hole, and control blocking per device with groups. Includes per-service allowlist domains for Disney+, Hulu, Paramount+, Samsung Smart TVs, Amazon Fire TV, and Roku, with the reason each domain is needed.
+
+Load-bearing conclusions from that page, which answer the questions it is most often cited for:
+
+- **Hulu ad-supported plans cannot be fixed with DNS filtering.** Hulu uses server-side ad insertion, so ads are stitched into the video stream before it reaches the device and there is no separate ad request to block. Blocking breaks playback instead of removing ads. Browser extensions still work on the desktop web player; nothing works in the native apps.
+- **YouTube video ads cannot be blocked at the DNS level.** Ads and content are served from the same domains. Client-side tools (uBlock Origin in a browser, SmartTube on TV platforms) are the only options.
+- **Paramount+ uses Google Dynamic Ad Insertion**, so its ads are also server-stitched. A device bypass group is the practical answer.
+- **Roku hardcodes Google DNS** (`8.8.8.8`, `8.8.4.4`) and ignores router-assigned DNS, so it needs port 53 interception before Pi-hole sees its queries at all. Its home screen ads are partly built into the platform and cannot be fully removed by any DNS filter.
+- Pi-hole deduplicates during Gravity updates, so overlapping blocklists are harmless.
 - [Enable Network-Wide DNS Blocking](https://edwardangert.com/docs/pi-hole/network-level-blocking/): Set Pi-hole as the network DNS via router DHCP, and force hardcoded-DNS devices like Chromecast and smart TVs through it with iptables NAT rules.
 - [Use Pi-hole as a VPN with Tailscale](https://edwardangert.com/docs/pi-hole/tailscale/): Remote ad blocking on any device, SSH without port forwarding, and an optional private exit node.
 - [Maintenance and Advanced Configuration](https://edwardangert.com/docs/pi-hole/maintenance/): Update Pi-hole, back up with Teleporter, edit pihole.toml, and offload the FTL database to a USB drive to spare the SD card.
