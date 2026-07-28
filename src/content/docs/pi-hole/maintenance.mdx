@@ -2,7 +2,6 @@
 slug: docs/pi-hole/maintenance
 title: "Pi-hole Maintenance and Advanced Configuration"
 description: "How to update Pi-hole, back up your configuration with Teleporter, edit pihole.toml for advanced settings, and offload the FTL database to a USB drive to extend SD card lifespan."
-summary: "Maintenance reference for Pi-hole v6. Covers the update workflow (pihole -up for software, pihole -g for Gravity blocklist refresh) and using Teleporter (Settings > Teleporter) to export and restore full configuration including blocklists, allowlists, groups, and DNS settings. Covers editing pihole.toml directly for advanced DNS configuration, with examples for switching upstream DNS and a full pihole.toml from a working setup (comments stripped, changed values marked). Covers moving the FTL database (pihole-FTL.db) and log to a USB drive to reduce SD card write wear: finding the device with lsblk, getting UUID with blkid, auto-mounting via fstab, updating the [files] section of pihole.toml to point to the new paths, and setting database retention with maxDBdays."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/tailscale/

@@ -2,7 +2,6 @@
 slug: docs/pi-hole
 title: "Pi-hole v6 Setup Guide"
 description: "Complete setup guide for Pi-hole v6 on Raspberry Pi - network-level ad blocking with HaGeZi blocklists, streaming service allowlists, optional unbound recursive DNS, Tailscale remote access, and Netdata monitoring."
-summary: "Entry point for a complete Pi-hole v6 setup guide. Pi-hole is a DNS-based network ad blocker that works on almost every device without per-device installation — unlike browser extensions. It blocks ads, trackers, malware domains, and phishing sites at the DNS level. Key limitation: it blocks by domain, not content, so youtube.com is all-or-nothing; Hulu and Disney+ ads on ad-supported plans cannot be blocked without breaking the service. This guide covers a specific opinionated stack: Raspberry Pi OS (Bookworm), UFW firewall, HaGeZi tiered blocklists with supplementary lists, streaming service allowlists, Omada controller DHCP for network-wide blocking, optional Unbound recursive DNS with Cloudflare fallback, Tailscale for remote access and ad blocking on the go, and Netdata for monitoring. Prerequisites: router admin access (required for network-wide blocking, optional for single-device use), Raspberry Pi or always-on device, microSD card, basic terminal comfort. Guide is v6-only; links to archived v5 version on GitHub. Sections: OS setup and hardening, Pi-hole installation, blocklists and allowlists, network-wide DNS via DHCP, Tailscale integration, maintenance and backups, troubleshooting."
 icon: "laptop"
 category: "Personal Reference Documentation"
 next:

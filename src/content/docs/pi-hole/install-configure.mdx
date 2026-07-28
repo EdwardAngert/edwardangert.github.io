@@ -2,7 +2,6 @@
 slug: docs/pi-hole/install-configure
 title: "Set Up Raspberry Pi OS"
 description: "How to set up Raspberry Pi OS for Pi-hole v6: flash the SD card, harden with UFW and Fail2Ban, and set a static IP."
-summary: "Raspberry Pi OS setup guide for Pi-hole v6. Covers formatting the SD card with SD Card Formatter, flashing Raspberry Pi OS (64-bit, Bookworm) with Raspberry Pi Imager, and first SSH via mDNS hostname (pi-hole.local). Includes a rebuild note: Pi-hole v6 requires Debian 11 or later. Covers finding the Pi's IP via mDNS, nmap subnet scan, or router DHCP client list. Includes dedicated steps for TP-Link Omada controller users to locate the Pi and assign a fixed IP in the controller. Covers removing the passwordless sudo file that Raspberry Pi Imager creates, setting up UFW with a Pi-hole app profile (ports 53/tcp, 53/udp, 80/tcp, 443/tcp), configuring Fail2Ban with banaction=ufw to keep all firewall rules in one place, and setting a static IP via nmcli using a shell variable for the connection name."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/

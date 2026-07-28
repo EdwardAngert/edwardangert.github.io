@@ -2,7 +2,6 @@
 slug: docs/pi-hole/network-level-blocking
 title: "Enable Network-Wide DNS Blocking with Pi-hole"
 description: "How to set Pi-hole as the DNS server for your whole network by configuring router DHCP, and how to force devices with hardcoded DNS (Chromecast, smart TVs) to use Pi-hole with iptables NAT rules."
-summary: "Guide to enabling network-wide DNS blocking via router DHCP. Covers configuring the primary DNS server to the Pi-hole IP with Cloudflare as fallback, with step-by-step instructions specific to TP-Link Omada controller (site > Network Config > LAN > Advanced Settings > DHCP Server > DNS Server > Manual). Explains DHCP lease renewal timing and how to force it, including a full power cycle for smart TVs. Covers devices that ignore router DNS with hardcoded servers (Google Chromecast hardcodes 8.8.8.8; Samsung Smart TVs may bypass assigned DNS; Android and iOS support DoH on port 443) and how to intercept their port 53 traffic with iptables DNAT rules, make rules persistent with netfilter-persistent, and verify with iptables -t nat -L PREROUTING and the Pi-hole query log. Notes that DoH on port 443 cannot be caught by port 53 NAT rules."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/block-allow-lists/
