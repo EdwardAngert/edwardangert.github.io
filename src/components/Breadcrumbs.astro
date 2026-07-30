@@ -109,7 +109,9 @@ const breadcrumbs = generateBreadcrumbs(pathname);
  * Skipped on blog posts: starlight-blog already emits its own BreadcrumbList
  * there, and two competing trails for one page is worse than one.
  * `item` is omitted for entries that are not real pages, which is what
- * schema.org expects for a crumb with nothing to link to.
+ * schema.org expects for a crumb with nothing to link to. The current page
+ * still gets an `item` pointing at its own URL: Google Search Console flags
+ * a trailing crumb without one as a missing required field.
  */
 const site = Astro.site?.origin ?? '';
 const emitStructuredData = !pathname.startsWith('/blog/');
@@ -120,7 +122,7 @@ const breadcrumbJsonLd = {
     '@type': 'ListItem',
     position: index + 1,
     name: item.label,
-    ...(item.linkable && index < breadcrumbs.length - 1
+    ...(item.linkable
       ? { item: `${site}${item.href === '/' ? '/' : `${item.href}/`}` }
       : {}),
   })),
