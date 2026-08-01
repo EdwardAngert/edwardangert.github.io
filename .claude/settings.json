@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
-    "documentation-agent@documentation-agent-marketplace": true
+    "documentation-agent@documentation-agent-marketplace": true,
+    "docs-assist@docs-assist-marketplace": true
   }
 }
