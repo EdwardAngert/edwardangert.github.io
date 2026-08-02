@@ -88,11 +88,41 @@ This is the full `pihole.toml` from my setup, with comments stripped and the pas
 Values marked `### CHANGED` were modified from the Pi-hole default.
 
 <details>
-<summary>pihole.toml (v6.5, comments stripped)</summary>
+<summary>pihole.toml (v6.7, comments stripped)</summary>
 
 <Code code={piholeToml} lang="toml" />
 
 </details>
+
+## Prevent Disk Space Issues
+
+An SD card can fill up from things that have nothing to do with Pi-hole itself.
+`apt` caches every package it downloads in `/var/cache/apt/archives` and never cleans up superseded versions on its own.
+If you installed [Netdata](/docs/pi-hole/pihole-install/#optional-monitor-pi-hole-with-netdata) without the `--stable-channel` flag, this is a real risk: the nightly channel ships a new build every day, `apt-daily-upgrade.timer` installs it automatically, and the old one just sits in the cache. That's roughly 100-150MB accumulating per day with no ceiling, which can fill an SD card in a few weeks.
+
+<Steps>
+
+1. Check how much the apt cache is currently using:
+
+   ```shell title="From the Pi"
+   sudo du -sh /var/cache/apt/archives
+   ```
+
+1. Clear what's already there:
+
+   ```shell title="From the Pi"
+   sudo apt-get clean
+   ```
+
+1. Configure apt to clean up superseded packages weekly on its own:
+
+   ```ini title="/etc/apt/apt.conf.d/00-autoclean"
+   APT::Periodic::AutocleanInterval "7";
+   ```
+
+</Steps>
+
+If you're already on Netdata's nightly channel and want to switch, see [Monitor Pi-hole with Netdata](/docs/pi-hole/pihole-install/#optional-monitor-pi-hole-with-netdata) - reinstalling with `--stable-channel --reinstall` moves you over without losing your dashboard configuration.
 
 ## Offload Logs to a USB Drive
 

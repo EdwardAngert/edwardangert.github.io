@@ -22,6 +22,12 @@ sudo systemctl restart pihole-FTL
 
 Change `true` to `false` when you're done troubleshooting.
 
+### Sharing a Debug Log for Support
+
+`pihole -d` collects a debug log and asks before uploading it anywhere.
+`pihole -d -a` runs in automated mode, which skips that prompt and uploads straight to `tricorder.pi-hole.net` for developer support.
+The log auto-deletes after 48 hours and isn't tied to any account, but it's still your query and network data leaving the device - use plain `pihole -d` if you want to review the log first.
+
 ## Pi-hole Installation
 
 ### SSH host key mismatch after rebuild
@@ -176,9 +182,10 @@ If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
 
 **Fix - refresh root hints**:
 
+`unbound-anchor` isn't included when you `apt install unbound` - install it separately first:
+
 ```shell title="From the Pi"
-sudo unbound-anchor -a /var/lib/unbound/root.key
-sudo systemctl restart unbound
+sudo apt install unbound-anchor && sudo unbound-anchor -a /var/lib/unbound/root.key && sudo systemctl restart unbound
 ```
 
 **Fix - check unbound logs**:
@@ -219,6 +226,21 @@ maxDBdays = 91
 Lower this further if disk space is a concern.
 
 Refer to the [example pihole.toml](/docs/pi-hole/maintenance/#reference-full-piholetoml) in the maintenance section for a full `pihole.toml` reference.
+
+### Disk fills up and it's not the FTL database
+
+**Symptom**: Disk usage climbs toward 100% over days or weeks, but `pihole-FTL.db` is nowhere near large enough to explain it.
+
+**Common cause**: Netdata installed on the nightly release channel instead of stable.
+Nightly ships a new build daily, `apt-daily-upgrade.timer` installs it automatically, and apt never cleans up the superseded packages in `/var/cache/apt/archives` on its own - roughly 100-150MB accumulates per day with no ceiling.
+
+**Check**:
+
+```shell title="From the Pi"
+sudo du -sh /var/cache/apt/archives && apt list --installed 2>/dev/null | grep nightly
+```
+
+**Fix**: see [Prevent Disk Space Issues](/docs/pi-hole/maintenance/#prevent-disk-space-issues) to clear the cache, stop it from recurring, and optionally move Netdata to the stable channel.
 
 ### NTP warnings in the Pi-hole dashboard
 
@@ -360,6 +382,15 @@ If a source goes dark, replace it.
 Projects rename tiers and reorganize files.
 For example, 1Hosts renamed `Pro` to `Xtra` in 2025, breaking old URLs.
 If a URL 404s, check the project's README for current links before assuming the project is dead.
+
+#### "List ID was inaccessible during last gravity run" warning won't go away
+
+If you previously added a bare domain name as a list URL (see "Invalid protocol" above) and later fixed it by moving the domain to **Domains** > **Allowlist**, FTL can keep showing the old warning for that list ID until it restarts, even though a fresh `sudo pihole -g` runs clean.
+
+**Check**: run `sudo pihole -g` and confirm no errors appear for the current run.
+If it's clean, the warning is stale.
+
+**Fix**: `sudo systemctl restart pihole-FTL` clears it.
 
 ## Tailscale
 
