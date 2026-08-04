@@ -13,6 +13,7 @@ next:
 
 import { Steps, Code } from '@astrojs/starlight/components';
 import piholeToml from './pihole.toml.example?raw';
+export const highlights = ["<redacted>", "### CHANGED"];
 
 After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, or to [use a USB drive to store logs](#offload-logs-to-a-usb-drive).
 
@@ -88,9 +89,9 @@ This is the full `pihole.toml` from my setup, with comments stripped and the pas
 Values marked `### CHANGED` were modified from the Pi-hole default.
 
 <details>
-<summary>pihole.toml (v6.5, comments stripped)</summary>
+<summary>pihole.toml (v6.7, comments stripped)</summary>
 
-<Code code={piholeToml} lang="toml" />
+<Code code={piholeToml} lang="toml" mark={highlights} />
 
 </details>
 

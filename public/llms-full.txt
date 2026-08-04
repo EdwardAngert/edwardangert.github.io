@@ -477,7 +477,7 @@ Before you continue, confirm the following:
 - UFW is active with Pi-hole rules: `sudo ufw status`.
 - Fail2Ban is protecting SSH: `sudo fail2ban-client status sshd`.
 - The Pi has a static IP that won't change on reboot.
-- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#troubleshoot-pi-hole-installation-issues).
 
 The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.
 
@@ -720,7 +720,7 @@ Before you continue to blocklists and allowlists to control what gets blocked, c
 - DNS queries are appearing in the query log.
 - The default blocklist is active.
   You can check **Gravity** in the Pi-hole dashboard to confirm.
-- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#troubleshoot-pi-hole-installation-issues).
 
 
 ---

@@ -1,4 +1,4 @@
-# Pi-hole configuration file (v6.5)
+# Pi-hole configuration file (v6.7)
 # Reference config - comments stripped, default values preserved for reference.
 # Values marked ### CHANGED were modified from the Pi-hole default.
 # To apply: copy to /etc/pihole/pihole.toml, then sudo systemctl restart pihole-FTL
@@ -10,7 +10,7 @@
   ] ### CHANGED, default = []
   CNAMEdeepInspect = true
   blockESNI = true
-  EDNS0ECS = true
+  EDNS0ECS = false ### CHANGED, default = true
   ignoreLocalhost = false
   showDNSSEC = true
   analyzeOnlyAandAAAA = false
@@ -24,7 +24,7 @@
   dnssec = false
   interface = "eth0" ### CHANGED, default = ""
   hostRecord = ""
-  listeningMode = "LOCAL"
+  listeningMode = "ALL" ### CHANGED, default = "LOCAL"
   queryLogging = true
   cnameRecords = []
   port = 53
@@ -91,7 +91,7 @@
     address = ""
 
   [ntp.sync]
-    active = true
+    active = false ### CHANGED, default = true
     server = "pool.ntp.org"
     interval = 3600
     count = 8
@@ -104,6 +104,7 @@
 [resolver]
   resolveIPv4 = true
   resolveIPv6 = true
+  macNames = true
   networkNames = true
   refreshNames = "IPV4_ONLY"
 
@@ -125,7 +126,7 @@
   threads = 50
   headers = [
     "X-DNS-Prefetch-Control: off",
-    "Content-Security-Policy: default-src 'none'; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; img-src 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'",
+    "Content-Security-Policy: default-src 'none'; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; img-src 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; form-action 'self'",
     "X-Frame-Options: DENY",
     "X-XSS-Protection: 0",
     "X-Content-Type-Options: nosniff",
@@ -154,7 +155,7 @@
   [webserver.api]
     max_sessions = 16
     prettyJSON = false
-    pwhash = "" ### CHANGED from default (use `sudo pihole setpassword` to set)
+    pwhash = "<redacted>" ### CHANGED from default (use `sudo pihole setpassword` to set)
     totp_secret = ""
     app_pwhash = ""
     app_sudo = false
@@ -171,7 +172,6 @@
       unit = "C"
 
 [files]
-  pid = "/run/pihole-FTL.pid"
   database = "/etc/pihole/pihole-FTL.db"
   tmp_db = "/etc/pihole/pihole-tmp.db"
   gravity = "/etc/pihole/gravity.db"
@@ -233,4 +233,5 @@
   ntp = false
   netlink = false
   timing = false
+  performance = false
   all = false

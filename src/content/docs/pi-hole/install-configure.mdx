@@ -313,6 +313,58 @@ This helps minimize the risk of brute-force attacks.
 
 </Steps>
 
+### Disable X11 Forwarding
+
+SSH supports X11 forwarding, which lets a remote graphical app display on your local machine over the SSH connection.
+The Pi doesn't need this if you already have a display attached, or if you don't run graphical apps over SSH.
+
+<Steps>
+
+1. Create a drop-in config to disable it:
+
+   ```ini title="/etc/ssh/sshd_config.d/60-disable-x11-forwarding.conf"
+   X11Forwarding no
+   ```
+
+1. Reload SSH to apply the change:
+
+   ```shell title="From the Pi"
+   sudo systemctl reload sshd
+   ```
+
+</Steps>
+
+### Enable Automatic Security Updates
+
+Pi-hole is DNS infrastructure for your whole network, so it's worth patching promptly rather than waiting until you remember to run `apt upgrade`.
+`unattended-upgrades` installs security patches automatically.
+
+<Steps>
+
+1. Install `unattended-upgrades`:
+
+   ```shell title="From the Pi"
+   sudo apt install -y unattended-upgrades
+   ```
+
+1. Debian's package defaults already enable security-origin updates and leave automatic reboots off.
+   Confirm both:
+
+   ```shell title="From the Pi"
+   grep -A2 "Allowed-Origins" /etc/apt/apt.conf.d/50unattended-upgrades && grep "Automatic-Reboot \"" /etc/apt/apt.conf.d/50unattended-upgrades
+   ```
+
+   Leave automatic reboot commented out (disabled) unless you specifically want the Pi to reboot itself after a kernel update.
+   For a DNS server, rebooting on your own schedule is usually safer.
+
+1. Confirm the service is enabled, then do a dry run to see what it would install:
+
+   ```shell title="From the Pi"
+   systemctl is-enabled unattended-upgrades && sudo unattended-upgrade --dry-run --debug
+   ```
+
+</Steps>
+
 ### Set a Static IP Address
 
 Pi-hole needs a stable IP address.
@@ -399,7 +451,8 @@ Before you continue, confirm the following:
 - SSH access works: `ssh pi-admin@pi-hole.local`.
 - UFW is active with Pi-hole rules: `sudo ufw status`.
 - Fail2Ban is protecting SSH: `sudo fail2ban-client status sshd`.
+- Automatic security updates are enabled: `systemctl is-enabled unattended-upgrades`.
 - The Pi has a static IP that won't change on reboot.
-- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#troubleshoot-pi-hole-installation-issues).
 
 The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.

@@ -180,6 +180,7 @@ To fix: configure unbound on port 5335 as above, then restart both:
 sudo systemctl restart unbound
 sudo systemctl restart pihole-FTL
 ```
+
 :::
 
 ## Optional: Monitor Pi-hole with Netdata
@@ -192,10 +193,10 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
 
 <Steps>
 
-1. Install Netdata:
+1. Install Netdata on the stable release channel:
 
    ```shell title="From the Pi"
-   curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && sh /tmp/netdata-kickstart.sh --disable-telemetry
+   curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && sh /tmp/netdata-kickstart.sh --stable-channel --disable-telemetry
    ```
 
    The installer takes a few minutes.
@@ -249,4 +250,4 @@ Before you continue to blocklists and allowlists to control what gets blocked, c
 - DNS queries are appearing in the query log.
 - The default blocklist is active.
   You can check **Gravity** in the Pi-hole dashboard to confirm.
-- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#troubleshoot-pi-hole-installation-issues).
