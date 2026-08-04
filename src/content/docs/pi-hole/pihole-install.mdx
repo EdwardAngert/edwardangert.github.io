@@ -180,6 +180,7 @@ To fix: configure unbound on port 5335 as above, then restart both:
 sudo systemctl restart unbound
 sudo systemctl restart pihole-FTL
 ```
+
 :::
 
 ## Optional: Monitor Pi-hole with Netdata
@@ -192,7 +193,7 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
 
 <Steps>
 
-1. Install Netdata on the **stable** release channel:
+1. Install Netdata on the stable release channel:
 
    ```shell title="From the Pi"
    curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && sh /tmp/netdata-kickstart.sh --stable-channel --disable-telemetry
@@ -201,13 +202,6 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
    The installer takes a few minutes.
 
    When it finishes, Netdata starts automatically and auto-discovers Pi-hole.
-
-   :::caution["Use --stable-channel, not the default"]
-   Without this flag, the kickstart script defaults to the **nightly** channel, which ships a new build daily.
-   `apt-daily-upgrade.timer` installs each one automatically, and apt never cleans up the superseded packages on its own - on an SD card, that's roughly 100-150MB of accumulated cache per day with no ceiling.
-   Left unchecked, this alone can fill the SD card over a few weeks.
-   See [Prevent Disk Space Issues](/docs/pi-hole/maintenance/#prevent-disk-space-issues) to also clean up whatever nightly packages may have already accumulated, and to stop apt's cache from growing unbounded regardless of release channel.
-   :::
 
 1. Allow the dashboard port through UFW if you want access from other devices on your network:
 
@@ -256,4 +250,4 @@ Before you continue to blocklists and allowlists to control what gets blocked, c
 - DNS queries are appearing in the query log.
 - The default blocklist is active.
   You can check **Gravity** in the Pi-hole dashboard to confirm.
-- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#troubleshoot-pi-hole-installation-issues).

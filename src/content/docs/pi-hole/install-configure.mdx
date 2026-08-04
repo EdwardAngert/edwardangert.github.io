@@ -313,10 +313,10 @@ This helps minimize the risk of brute-force attacks.
 
 </Steps>
 
-### Disable Unused SSH Features
+### Disable X11 Forwarding
 
 SSH supports X11 forwarding, which lets a remote graphical app display on your local machine over the SSH connection.
-The Pi doesn't need this if you already have a screen attached, or if you don't run graphical apps over SSH.
+The Pi doesn't need this if you already have a display attached, or if you don't run graphical apps over SSH.
 
 <Steps>
 
@@ -453,6 +453,6 @@ Before you continue, confirm the following:
 - Fail2Ban is protecting SSH: `sudo fail2ban-client status sshd`.
 - Automatic security updates are enabled: `systemctl is-enabled unattended-upgrades`.
 - The Pi has a static IP that won't change on reboot.
-- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#pi-hole-installation).
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#troubleshoot-pi-hole-installation-issues).
 
 The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.

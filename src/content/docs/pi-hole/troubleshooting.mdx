@@ -22,13 +22,39 @@ sudo systemctl restart pihole-FTL
 
 Change `true` to `false` when you're done troubleshooting.
 
-### Sharing a Debug Log for Support
+### How to Create and Share a Pi-hole Debug Log for Support
 
-`pihole -d` collects a debug log and asks before uploading it anywhere.
-`pihole -d -a` runs in automated mode, which skips that prompt and uploads straight to `tricorder.pi-hole.net` for developer support.
-The log auto-deletes after 48 hours and isn't tied to any account, but it's still your query and network data leaving the device - use plain `pihole -d` if you want to review the log first.
+This diagnoses Pi-hole configuration and errors that appear in the admin dashboard's **Tools** > **Pi-hole diagnosis** (<https://pi-hole.local/admin/messages>).
+It does not diagnose errors in your operating system or networking configuration.
 
-## Pi-hole Installation
+Your Pi-hole device and installation need to be functional for the command to work.
+
+<Steps>
+
+1. Collect a debug log for your Pi-hole:
+
+   ```shell title="From the Pi"
+   sudo pihole -d
+   ```
+
+1. After `pihole -d` collects the diagnostics, it asks if you want to upload the log to the official Pi-hole support server at `tricorder.pi-hole.net`:
+
+   ```shellsession title="From the Pi"
+   [?] Would you like to upload the log? [y/N]
+   ```
+
+   Enter <kbd>y</kbd> to upload the log.
+   The server automatically deletes the log file after 48 hours and isn't tied to any account.
+
+1. Log in to your account on the Pi-hole forum or create a new account then go to the [Help category](https://discourse.pi-hole.net/c/bugs-problems-issues/11) and select **New Topic**.
+
+1. Read and follow the template in the popup, and include a description of the problem you're seeing and the debug token.
+
+</Steps>
+
+For more information about Pi-hole debugging, visit the [official Pi-hole forum](https://discourse.pi-hole.net/t/how-do-i-debug-my-pi-hole-installation/3104).
+
+## Troubleshoot Pi-hole Installation Issues
 
 ### SSH host key mismatch after rebuild
 
@@ -101,7 +127,7 @@ sudo systemctl status pihole-FTL
 sudo journalctl -u pihole-FTL -n 50
 ```
 
-The most common reason on a fresh install is a port 53 conflict - see above.
+The most common reason on a fresh install is a port 53 conflict - see [Port 53 conflict between Pi-hole and unbound](#port-53-conflict-between-pi-hole-and-unbound).
 
 ### Gravity fails to update
 
@@ -180,6 +206,14 @@ dig google.com @127.0.0.1 -p 5335
 
 If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
 
+**Check - unbound logs**:
+
+```shell title="From the Pi"
+sudo journalctl -u unbound -n 100
+```
+
+Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
+
 **Fix - refresh root hints**:
 
 `unbound-anchor` isn't included when you `apt install unbound` - install it separately first:
@@ -187,14 +221,6 @@ If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
 ```shell title="From the Pi"
 sudo apt install unbound-anchor && sudo unbound-anchor -a /var/lib/unbound/root.key && sudo systemctl restart unbound
 ```
-
-**Fix - check unbound logs**:
-
-```shell title="From the Pi"
-sudo journalctl -u unbound -n 100
-```
-
-Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
 
 ### FTL database grows too large and FTL fails to start
 
@@ -227,12 +253,12 @@ Lower this further if disk space is a concern.
 
 Refer to the [example pihole.toml](/docs/pi-hole/maintenance/#reference-full-piholetoml) in the maintenance section for a full `pihole.toml` reference.
 
-### Disk fills up and it's not the FTL database
+### "Disk shortage ahead" - Netdata fills up disk space
 
-**Symptom**: Disk usage climbs toward 100% over days or weeks, but `pihole-FTL.db` is nowhere near large enough to explain it.
+**Symptom**: Netdata is installed and disk usage climbs unexpectedly.
 
 **Common cause**: Netdata installed on the nightly release channel instead of stable.
-Nightly ships a new build daily, `apt-daily-upgrade.timer` installs it automatically, and apt never cleans up the superseded packages in `/var/cache/apt/archives` on its own - roughly 100-150MB accumulates per day with no ceiling.
+Nightly ships a new build daily, `apt-daily-upgrade.timer` installs it automatically, and apt never cleans up the superseded packages in `/var/cache/apt/archives` on its own.
 
 **Check**:
 
@@ -240,7 +266,30 @@ Nightly ships a new build daily, `apt-daily-upgrade.timer` installs it automatic
 sudo du -sh /var/cache/apt/archives && apt list --installed 2>/dev/null | grep nightly
 ```
 
-**Fix**: see [Prevent Disk Space Issues](/docs/pi-hole/maintenance/#prevent-disk-space-issues) to clear the cache, stop it from recurring, and optionally move Netdata to the stable channel.
+**Fix**: Clear the cache, stop it from recurring, and move Netdata to the stable channel.
+
+<Steps>
+
+1. Clear the apt cache:
+
+   ```shell title="From the Pi"
+   sudo apt clean
+   ```
+
+1. Configure apt to clean up superseded packages weekly on its own:
+
+   ```ini title="/etc/apt/apt.conf.d/00-autoclean"
+   APT::Periodic::AutocleanInterval "7";
+   ```
+
+1. Switch to the Netdata stable channel:
+
+   ```shell title="From the Pi"
+   wget -O /tmp/netdata-kickstart.sh https://get.netdata.cloud/kickstart.sh && \
+   sh /tmp/netdata-kickstart.sh --reinstall --stable-channel --disable-telemetry
+   ```
+
+</Steps>
 
 ### NTP warnings in the Pi-hole dashboard
 
@@ -385,7 +434,7 @@ If a URL 404s, check the project's README for current links before assuming the 
 
 #### "List ID was inaccessible during last gravity run" warning won't go away
 
-If you previously added a bare domain name as a list URL (see "Invalid protocol" above) and later fixed it by moving the domain to **Domains** > **Allowlist**, FTL can keep showing the old warning for that list ID until it restarts, even though a fresh `sudo pihole -g` runs clean.
+If you previously added a bare domain name as a list URL (see [Invalid protocol](#gravity-shows-invalid-protocol-errors-for-domain-names) above) and later fixed it by moving the domain to **Domains** > **Allowlist**, FTL can keep showing the old warning for that list ID until it restarts, even though a fresh `sudo pihole -g` runs clean.
 
 **Check**: run `sudo pihole -g` and confirm no errors appear for the current run.
 If it's clean, the warning is stale.
