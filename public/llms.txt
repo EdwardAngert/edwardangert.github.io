@@ -13,7 +13,7 @@ The full text of the guide is at https://edwardangert.com/llms-full.txt.
 - [Pi-hole v6 Setup Guide](https://edwardangert.com/docs/pi-hole/): Overview of the full build: HaGeZi blocklists, streaming allowlists, optional unbound recursive DNS, Tailscale remote access, and Netdata monitoring.
 - [Set Up Raspberry Pi OS](https://edwardangert.com/docs/pi-hole/install-configure/): Flash the SD card, harden with UFW and Fail2Ban, and set a static IP.
 - [Install Pi-hole v6](https://edwardangert.com/docs/pi-hole/pihole-install/): Install with Cloudflare DNS, log in to the web interface, and optionally add unbound recursive DNS and Netdata monitoring.
-- [Add Blocklists and Allowlists](https://edwardangert.com/docs/pi-hole/block-allow-lists/): Choose a HaGeZi tier, fix streaming services broken by Pi-hole, and control blocking per device with groups. Includes per-service allowlist domains for Disney+, Hulu, Paramount+, Samsung Smart TVs, Amazon Fire TV, and Roku, with the reason each domain is needed.
+- [Add Blocklists and Allowlists](https://edwardangert.com/docs/pi-hole/block-allow-lists/): Choose a HaGeZi tier, fix streaming services broken by Pi-hole, and control blocking per device with groups. Includes per-service allowlist domains for Disney+, Hulu, Paramount+, Samsung Smart TVs, Amazon Fire TV, Roku, and Monday.com, with the reason each domain is needed.
 
 Load-bearing conclusions from that page, which answer the questions it is most often cited for:
 

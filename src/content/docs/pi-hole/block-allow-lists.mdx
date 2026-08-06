@@ -249,7 +249,7 @@ If a service breaks again after you've already allowlisted it, check the query l
 <Verified date="2026-07" method="tested" />
 
 ```shell title="From the Pi"
-pihole allowlist geolocation.onetrust.com registerdisney.go.com global.edge.bamgrid.com disney.demdex.net
+sudo pihole allowlist geolocation.onetrust.com registerdisney.go.com global.edge.bamgrid.com disney.demdex.net
 ```
 
 | Domain                     | Why it's needed |
@@ -278,7 +278,7 @@ That only helps if you watch in a browser.
 For the native apps, the ad-free tier is the only reliable option.
 
 ```shell title="From the Pi"
-pihole allowlist geolocation.onetrust.com
+sudo pihole allowlist geolocation.onetrust.com
 ```
 
 | Domain                     | Why it's needed |
@@ -333,7 +333,7 @@ Blocking them can break the entire app ecosystem, not just one service.
 If the TV reports no internet connection or the Apps screen won't open, one of these is blocked.
 
 ```shell title="From the Pi"
-pihole allowlist cdn.samsungcloudsolution.com lcprd1.samsungcloudsolution.net time.samsungcloudsolution.net time.samsungcloudsolution.com osb.samsungqbe.com
+sudo pihole allowlist cdn.samsungcloudsolution.com lcprd1.samsungcloudsolution.net time.samsungcloudsolution.net time.samsungcloudsolution.com osb.samsungqbe.com
 ```
 
 | Domain                            | Why it's needed |
@@ -359,7 +359,7 @@ Fire TV uses a captive-portal check to decide whether it has internet.
 If that check is blocked, the device shows a network error or hangs on the home screen.
 
 ```shell title="From the Pi"
-pihole allowlist fireoscaptiveportal.com firetvcaptiveportal.com dp-discovery-na-ext.amazon.com
+sudo pihole allowlist fireoscaptiveportal.com firetvcaptiveportal.com dp-discovery-na-ext.amazon.com
 ```
 
 | Domain                           | Why it's needed |
@@ -401,6 +401,26 @@ If that happens, use the query log method above rather than guessing, because th
 
 Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [cybernews' Roku ad blocking guide](https://cybernews.com/best-ad-blockers/how-to-block-ads-on-roku-tv/). *(Accessed 28 July 2026.)*
 Not tested on my own hardware.
+
+#### Monday.com
+
+<Verified date="2026-08" method="tested" />
+
+HaGeZi Pro blocks two real monday.com domains: `ei.monday.com` and `track-visit.monday.com`.
+Both are tracking endpoints, but `ei.monday.com` also carries in-app signaling the app depends on, such as marking an export job as finished.
+Blocking it can make features like PDF export hang instead of failing with a clear error.
+
+```shell title="From the Pi"
+sudo pihole allowlist ei.monday.com
+```
+
+| Domain             | Why it's needed |
+|--------------------|------------------|
+| `ei.monday.com`    | Event-ingestion endpoint the app also uses for in-app signaling (for example, marking an export job complete). Blocking it can hang features like PDF export rather than erroring cleanly |
+
+`track-visit.monday.com` is also blocked by HaGeZi Pro but never appeared in the query log during normal use.
+It's likely marketing/referral tracking rather than something the app itself needs, so it wasn't allowlisted here.
+If you hit a different broken feature, check the query log before assuming you need it too.
 
 ## Control Blocking Per Device with Groups
 
