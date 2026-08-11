@@ -1,6 +1,6 @@
 # Edward Angert
 
-> Portfolio site of Edward Angert, a documentation leader and technical writer with ten years of developer-facing experience. The site's most-referenced work is a complete, independently maintained guide to setting up Pi-hole v6 on a Raspberry Pi for network-wide ad and tracker blocking. The guide covers Raspberry Pi OS setup and hardening, installing Pi-hole v6 with Cloudflare DNS, HaGeZi blocklists and streaming allowlists, per-device blocking groups, network-wide DNS enforcement (router DHCP and iptables for hardcoded-DNS devices), Tailscale remote access, optional unbound recursive DNS and Netdata monitoring, maintenance and Teleporter backups, and troubleshooting.
+> Portfolio site of Edward Angert, a documentation leader and technical writer with ten years of developer-facing experience. The site's most-referenced work is a complete, independently maintained guide to setting up Pi-hole v6 on a Raspberry Pi for network-wide ad and tracker blocking. The guide covers Raspberry Pi OS setup and hardening, installing Pi-hole v6 with Cloudflare DNS, HaGeZi blocklists and streaming allowlists, per-device blocking groups, network-wide DNS enforcement (router DHCP and iptables for hardcoded-DNS devices), Tailscale remote access, optional unbound recursive DNS and Netdata monitoring, maintenance and Teleporter backups, troubleshooting, and giving an AI coding agent read-only access to the query data with POSIX ACLs.
 
 The full text of the guide is at https://edwardangert.com/llms-full.txt.
 
@@ -26,7 +26,19 @@ Load-bearing conclusions from that page, which answer the questions it is most o
 - [Use Pi-hole as a VPN with Tailscale](https://edwardangert.com/docs/pi-hole/tailscale/): Remote ad blocking on any device, SSH without port forwarding, and an optional private exit node.
 - [Maintenance and Advanced Configuration](https://edwardangert.com/docs/pi-hole/maintenance/): Update Pi-hole, back up with Teleporter, edit pihole.toml, and offload the FTL database to a USB drive to spare the SD card.
 - [Common Issues and How to Fix Them](https://edwardangert.com/docs/pi-hole/troubleshooting/): Fixes for installation, DNS, streaming, blocklist, and Tailscale problems, plus a verification checklist.
-- [Give Claude Code Access to Pi-hole Logs and Diagnostics](https://edwardangert.com/docs/pi-hole/claude-code-access/): Grant Claude Code read-only access to the Pi-hole query log and FTL database with POSIX ACLs, optionally under a dedicated unprivileged user, plus a ready-to-use CLAUDE.md and the traps that silently undo the grant (log rotation, and an `r` instead of `rx` on the directory). Explains why a v6 API application password is not read-only despite `app_sudo = false`.
+- [Give Claude Code Access to Pi-hole Logs and Diagnostics](https://edwardangert.com/docs/pi-hole/claude-code-access/): Grant Claude Code read-only access to the Pi-hole query database and logs with POSIX ACLs, optionally under a dedicated unprivileged user, plus a ready-to-use CLAUDE.md context file. Covers running Claude Code on the Pi or from a workstation over SSH.
+
+Load-bearing conclusions from that page, several of which contradict widely repeated advice:
+
+- **A Pi-hole v6 API application password is not read-only, even with `webserver.api.app_sudo = false`.** That setting is checked in only two places in FTL, so it gates configuration writes and Teleporter import and nothing else. The credential can still disable blocking network-wide, add and remove blocklists and allowlists, delete groups and clients, trigger a gravity rebuild, and flush the query log. It is lower privilege than an admin password, not read-only.
+- **The problem an agent hits is the password prompt, not missing privilege.** Claude Code runs as the user who started it and executes shell commands with no terminal attached, so `sudo` fails with `a terminal is required to read the password` even for a user who has full `sudo` rights.
+- **POSIX ACLs grant strictly less than group membership.** Adding a user to the `pihole` group also grants write access to `gravity.db`, which is mode `0664`. An ACL is scoped per file, read-only, and revocable without touching the account.
+- **`setfacl` on the log directory needs a capital `X`.** A lowercase `r` on the directory strips the search bit, because a named-user ACL entry replaces whatever the account was getting from the "other" class, and every read below it is then denied.
+- **A per-file ACL on the Pi-hole logs disappears within a day.** Log rotation uses `create 640 pihole pihole`, building a new file each time. Only a default ACL on the directory is inherited by the new files.
+- **ACLs survive Pi-hole restarts.** FTL resets `pihole-FTL.db` to mode `0640` at every start, and `chmod` rewrites an ACL's mask rather than removing named-user entries.
+- **`/etc/pihole/pihole.toml` should be excluded from any agent grant.** It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` as plain strings. Read single values with `pihole-FTL --config <key>` instead.
+- **No Claude Code setting changes which Unix user commands run as.** A dedicated agent account has to be enforced at the process level, by launching from inside the account or by pointing an SSH alias at it, not requested in `CLAUDE.md`.
+- **Wildcard sudoers rules are total compromise.** A rule such as `NOPASSWD: /usr/bin/tail *` lets the agent read `/etc/shadow`. Pinning arguments is still not enough for pagers and editors, which escape to a root shell.
 
 ## Optional
 
