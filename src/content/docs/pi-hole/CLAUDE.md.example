@@ -1,6 +1,6 @@
 # Pi-hole environment
 
-Context for AI coding agents working on this Pi-hole install.
+Context for Claude Code working on this Pi-hole install.
 Replace the placeholder values with your own before you use this.
 
 ## Host
@@ -8,56 +8,68 @@ Replace the placeholder values with your own before you use this.
 - Pi-hole host: `pi-hole` at `192.168.0.153`, interface `eth0`
 - Router and gateway: `192.168.0.1`
 - Versions: Core v6.4.3, Web v6.6, FTL v6.7
-- Login account: `pi-admin`
+- My login account: `pi-admin`
 
 ## Privileges
 
-`sudo` prompts for a password on this host.
-Don't try to run privileged commands yourself.
-Print the command and ask me to run it, and tell me to prefix it with `!` so the output lands back in the session.
+You have no `sudo` access, and `sudo` cannot prompt for a password in your shell.
+Don't try privileged commands. They will fail with `a terminal is required to read the password`.
 
-## What you can read without sudo
+If something genuinely needs root, print the command and ask me to run it.
+Tell me to prefix it with `!` so the output lands back in the session.
 
-- `/etc/pihole/gravity.db` (mode 0664): blocklists, groups, clients, adlists
-- `/etc/pihole/pihole.toml` (mode 0644): the full configuration
-- `dig @127.0.0.1 example.com`: how Pi-hole resolves a domain right now
-- `pihole status`, `ip neigh`, `ip route`, `tailscale status`
+<!-- If you set up the diagnostic wrapper, uncomment this and delete the line above:
+One exception: `sudo -n /usr/local/sbin/pihole-agent-diag` runs without a password
+and prints FTL service status plus the last 100 FTL log lines. It takes no arguments.
+-->
 
-The standalone `sqlite3` binary isn't installed.
-Use the one built into FTL:
 
-```shell
-pihole-FTL sqlite3 /etc/pihole/gravity.db "SELECT id, address, enabled FROM adlist;"
-```
+## What you can read
 
-## What you can't read without sudo
+Granted explicitly by ACL:
 
-- `/var/log/pihole/pihole.log` and `/var/log/pihole/FTL.log` (mode 0640, owner `pihole`)
-- `/etc/pihole/pihole-FTL.db`, the query database (mode 0640, owner `pihole`)
+- `/var/log/pihole/pihole.log`: raw dnsmasq query log
+- `/var/log/pihole/FTL.log`: FTL engine log, for startup and DNSSEC errors
+- `/etc/pihole/pihole-FTL.db`: long-term query database
 
-Don't ask me to loosen these permissions.
-Use the API below for query data.
+World-readable, no grant needed:
 
-## API access
+- `/etc/pihole/gravity.db`: blocklists, groups, clients, adlists
 
-A read-only application password lives at `~/.config/pihole/agent-app-password` (mode 0600).
-`webserver.api.app_sudo` is `false`, so this credential can read everything and change nothing.
-Don't ask me to set it to `true`.
+## What you must not read
 
-Authenticate, then query:
+`/etc/pihole/pihole.toml` is off limits.
+It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` in plain text, and reading the file pulls my password hashes into this transcript.
+
+To read a single config value, read only that value:
 
 ```shell
-SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
-  | curl -s -X POST http://127.0.0.1/api/auth --data @- \
-  | jq -r .session.sid)
-
-curl -s -H "X-FTL-SID: $SID" \
-  'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
+pihole-FTL --config webserver.api.app_sudo
 ```
 
-`/api/queries` filters on `client_ip`, `client_name`, `domain`, `status`, `upstream`, `from`, and `until`.
-Add `disk=true` for anything older than the last few hours.
-Sessions last 30 minutes and every authenticated request extends the window.
+## Querying the data
+
+The standalone `sqlite3` binary isn't installed. Use the one built into FTL, always with `--readonly`:
+
+```shell
+pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+   FROM queries
+   WHERE client = '192.168.0.22'
+   ORDER BY timestamp DESC LIMIT 20;"
+```
+
+The `queries` view resolves internal integer IDs to real domain and client strings, so no joins are needed.
+`status` is numeric: `1` blocked by blocklist, `2` forwarded, `3` from cache, `4` blocked by regex, `5` blocked by denylist.
+
+The database lags live traffic by up to 60 seconds (`database.DBinterval`).
+If a query you just made is missing, wait a minute before concluding it didn't happen.
+
+Read `gravity.db` the same way:
+
+```shell
+pihole-FTL sqlite3 --readonly /etc/pihole/gravity.db "SELECT id, address, enabled FROM adlist;"
+```
 
 ## Gotchas that have cost time before
 
@@ -76,6 +88,7 @@ Pi-hole matches clients by MAC address, and MAC lookups depend on ARP, which doe
 A device connected over Tailscale can't be matched to a client entry created by MAC, so it falls back to the `Default` group no matter what group I assigned it.
 
 Check which group a client actually resolves to before explaining its blocking behavior.
+FTL also matches clients by interface and prefers the interface queries actually arrive on, so a single client entry of `:tailscale0` covers every tailnet device at once.
 
 ### Blocklists are split across group bundles
 
@@ -83,7 +96,7 @@ Adlists are grouped into reusable bundles rather than assigned per device.
 Read the current mapping instead of assuming:
 
 ```shell
-pihole-FTL sqlite3 /etc/pihole/gravity.db \
+pihole-FTL sqlite3 --readonly /etc/pihole/gravity.db \
   "SELECT g.name, group_concat(a.id) FROM 'group' g
    LEFT JOIN adlist_by_group abg ON abg.group_id = g.id
    LEFT JOIN adlist a ON a.id = abg.adlist_id

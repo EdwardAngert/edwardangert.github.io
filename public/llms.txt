@@ -26,7 +26,7 @@ Load-bearing conclusions from that page, which answer the questions it is most o
 - [Use Pi-hole as a VPN with Tailscale](https://edwardangert.com/docs/pi-hole/tailscale/): Remote ad blocking on any device, SSH without port forwarding, and an optional private exit node.
 - [Maintenance and Advanced Configuration](https://edwardangert.com/docs/pi-hole/maintenance/): Update Pi-hole, back up with Teleporter, edit pihole.toml, and offload the FTL database to a USB drive to spare the SD card.
 - [Common Issues and How to Fix Them](https://edwardangert.com/docs/pi-hole/troubleshooting/): Fixes for installation, DNS, streaming, blocklist, and Tailscale problems, plus a verification checklist.
-- [Give Claude Code Access to Pi-hole Logs and Diagnostics](https://edwardangert.com/docs/pi-hole/claude-code-access/): Grant an AI agent read-only access to Pi-hole query data with a v6 API application password instead of filesystem permissions, with a ready-to-use CLAUDE.md context file and the environment gotchas that most often produce confident wrong answers.
+- [Give Claude Code Access to Pi-hole Logs and Diagnostics](https://edwardangert.com/docs/pi-hole/claude-code-access/): Grant Claude Code read-only access to the Pi-hole query log and FTL database with POSIX ACLs, optionally under a dedicated unprivileged user, plus a ready-to-use CLAUDE.md and the traps that silently undo the grant (log rotation, and an `r` instead of `rx` on the directory). Explains why a v6 API application password is not read-only despite `app_sudo = false`.
 
 ## Optional
 
