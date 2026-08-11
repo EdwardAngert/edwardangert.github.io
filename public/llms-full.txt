@@ -3147,7 +3147,7 @@ The two sections that pay for themselves fastest are **Privileges**, which stops
 <details>
 <summary>CLAUDE.md</summary>
 
-````markdown
+~~~markdown
 # Pi-hole environment
 
 Context for Claude Code working on this Pi-hole install.
@@ -3270,7 +3270,7 @@ Only adlist changes need `pihole -g`, which takes several minutes and rewrites t
 
 `pihole allow --comment` accepts only `[a-zA-Z0-9_#:/.,\ -]`.
 A `+` in a comment fails the whole command.
-````
+~~~
 
 </details>
 
