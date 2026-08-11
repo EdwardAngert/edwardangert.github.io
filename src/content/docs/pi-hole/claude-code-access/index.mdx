@@ -71,7 +71,25 @@ Setting up SSH keys doesn't change this either way.
 Key-based login authenticates you to the *host* and hands you a shell as your own account. It grants no root at all.
 Passwordless `sudo` is a separate setting, and it is the one that removes the gate.
 
-You can turn it off in `raspi-config` under **System Options**, or in the Control Centre **System** tab on Raspberry Pi OS Desktop.
+It is also just a file, so you can find and remove it directly:
+
+```shell title="From the Pi"
+sudo grep -rl NOPASSWD /etc/sudoers.d/
+```
+
+Raspberry Pi OS names it after the account, such as `/etc/sudoers.d/010_pi-admin-nopasswd`.
+Removing that file makes `sudo` prompt normally:
+
+```shell title="From the Pi"
+sudo rm /etc/sudoers.d/010_pi-admin-nopasswd
+```
+
+:::caution[Know your account password before you remove it]
+Once the file is gone, `sudo` asks for that account's password.
+If it was set up by the Raspberry Pi Imager and you have never typed it, set one you know first with `passwd`, in a session where you still have `sudo`.
+:::
+
+`raspi-config` also carries this setting on releases that ship the toggle, but the file is the mechanism, and removing it works on every version.
 
 ### Either Way, the Fix Is the Same
 
