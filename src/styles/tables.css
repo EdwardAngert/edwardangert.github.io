@@ -33,20 +33,33 @@ td {
   overflow-wrap: break-word;
 }
 
-/* Smart column sizing for typical resume tables */
-th:last-child,
-td:last-child {
-  width: 15%;
-}
+/*
+ * No column widths here on purpose.
+ *
+ * This file used to set 35% on the first column, 50% on the second, and 15%
+ * on the last. Those were picked for the resume tables (role, long
+ * description, date) and applied to every table on the site, so any table
+ * with a different shape got the wrong proportions:
+ *
+ *   - a four-column table left its third column with 0% and wrapped that
+ *     cell one character per line, since 35 + 50 + 15 already totals 100
+ *   - a "domain / action / why" table gave 50% to cells reading "Block" and
+ *     squeezed the explanation into 15%
+ *
+ * Any fixed percentage is a guess about content the stylesheet cannot see.
+ * `table-layout: auto` on the rule above sizes each column from what is
+ * actually in it, which is what these overrides were fighting.
+ *
+ * If one table ever genuinely needs a hint, scope it to that table rather
+ * than reintroducing a site-wide rule.
+ */
 
-th:first-child,
-td:first-child {
-  width: 35%;
-}
-
-th:nth-child(2),
-td:nth-child(2) {
-  width: 50%;
+/*
+ * Long paths, domains, and commands still need to wrap, or a single cell can
+ * force its column wide enough to squeeze the others.
+ */
+td code {
+  overflow-wrap: anywhere;
 }
 
 /* Remove border from last row */
