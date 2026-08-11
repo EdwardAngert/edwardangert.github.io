@@ -34,36 +34,29 @@ td {
 }
 
 /*
- * Column sizing for the three-column resume and portfolio tables.
+ * No column widths here on purpose.
  *
- * Scoped to tables that actually have three columns. Unscoped, the widths
- * total 100% across the first, second, and last columns, so a four-column
- * table leaves its third column with nothing and wraps that cell one
- * character per line. Two-column tables size better from their content than
- * from a 35/50 split.
+ * This file used to set 35% on the first column, 50% on the second, and 15%
+ * on the last. Those were picked for the resume tables (role, long
+ * description, date) and applied to every table on the site, so any table
+ * with a different shape got the wrong proportions:
  *
- * Browsers without `:has()` support fall back to automatic sizing, which is
- * the safe direction.
+ *   - a four-column table left its third column with 0% and wrapped that
+ *     cell one character per line, since 35 + 50 + 15 already totals 100
+ *   - a "domain / action / why" table gave 50% to cells reading "Block" and
+ *     squeezed the explanation into 15%
+ *
+ * Any fixed percentage is a guess about content the stylesheet cannot see.
+ * `table-layout: auto` on the rule above sizes each column from what is
+ * actually in it, which is what these overrides were fighting.
+ *
+ * If one table ever genuinely needs a hint, scope it to that table rather
+ * than reintroducing a site-wide rule.
  */
-table:has(th:nth-child(3)):not(:has(th:nth-child(4))) th:last-child,
-table:has(th:nth-child(3)):not(:has(th:nth-child(4))) td:last-child {
-  width: 15%;
-}
-
-table:has(th:nth-child(3)):not(:has(th:nth-child(4))) th:first-child,
-table:has(th:nth-child(3)):not(:has(th:nth-child(4))) td:first-child {
-  width: 35%;
-}
-
-table:has(th:nth-child(3)):not(:has(th:nth-child(4))) th:nth-child(2),
-table:has(th:nth-child(3)):not(:has(th:nth-child(4))) td:nth-child(2) {
-  width: 50%;
-}
 
 /*
- * Keep file paths and commands in a cell from forcing a column wide enough to
- * squeeze its neighbours. They still wrap on the separators rather than
- * mid-word.
+ * Long paths, domains, and commands still need to wrap, or a single cell can
+ * force its column wide enough to squeeze the others.
  */
 td code {
   overflow-wrap: anywhere;
