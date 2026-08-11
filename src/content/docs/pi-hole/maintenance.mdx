@@ -60,11 +60,13 @@ sudo systemctl restart pihole-FTL
 It needs to be restarted when you make core configuration changes.
 
 :::note[Back up the file before you make changes]
+
 Editing `pihole.toml` directly can break Pi-hole if you introduce syntax errors.
 
 ```shell title="From the Pi"
 sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
 ```
+
 :::
 
 ### Example: change upstream DNS
