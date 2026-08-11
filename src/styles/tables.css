@@ -33,20 +33,40 @@ td {
   overflow-wrap: break-word;
 }
 
-/* Smart column sizing for typical resume tables */
-th:last-child,
-td:last-child {
+/*
+ * Column sizing for the three-column resume and portfolio tables.
+ *
+ * Scoped to tables that actually have three columns. Unscoped, the widths
+ * total 100% across the first, second, and last columns, so a four-column
+ * table leaves its third column with nothing and wraps that cell one
+ * character per line. Two-column tables size better from their content than
+ * from a 35/50 split.
+ *
+ * Browsers without `:has()` support fall back to automatic sizing, which is
+ * the safe direction.
+ */
+table:has(th:nth-child(3)):not(:has(th:nth-child(4))) th:last-child,
+table:has(th:nth-child(3)):not(:has(th:nth-child(4))) td:last-child {
   width: 15%;
 }
 
-th:first-child,
-td:first-child {
+table:has(th:nth-child(3)):not(:has(th:nth-child(4))) th:first-child,
+table:has(th:nth-child(3)):not(:has(th:nth-child(4))) td:first-child {
   width: 35%;
 }
 
-th:nth-child(2),
-td:nth-child(2) {
+table:has(th:nth-child(3)):not(:has(th:nth-child(4))) th:nth-child(2),
+table:has(th:nth-child(3)):not(:has(th:nth-child(4))) td:nth-child(2) {
   width: 50%;
+}
+
+/*
+ * Keep file paths and commands in a cell from forcing a column wide enough to
+ * squeeze its neighbours. They still wrap on the separators rather than
+ * mid-word.
+ */
+td code {
+  overflow-wrap: anywhere;
 }
 
 /* Remove border from last row */
