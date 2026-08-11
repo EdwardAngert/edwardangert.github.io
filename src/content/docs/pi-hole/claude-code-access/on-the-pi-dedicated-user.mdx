@@ -31,16 +31,25 @@ Use the steps on this page to decide how you access your Pi-hole and how you'll 
 
 The access you give Claude Code with these steps is read-only, and limited in scope to Pi-hole-specific files.
 
-## Why sudo Doesn't Work for an Agent
+## Why sudo Isn't the Answer
 
 <Verified date="2026-08" method="tested" />
 
 Claude Code runs as whatever user starts it.
-No separate service account exists to add to a group.
+No separate service account exists to add to a group, and no setting changes which Unix user its commands run as.
 
-If that user already has `sudo`, you might expect privileged reads to just work.
-They don't.
-Claude Code runs shell commands without a terminal attached, and `sudo` needs a terminal to prompt for a password:
+So if that account already has `sudo`, why not let it use it?
+The answer depends on something you should check first:
+
+```shell title="From the Pi"
+sudo -n true && echo "passwordless sudo: ENABLED" || echo "sudo asks for a password"
+```
+
+Both results lead to the same conclusion, by opposite routes.
+
+### If sudo Asks for a Password
+
+Claude Code runs shell commands with no terminal attached, and `sudo` needs one to prompt:
 
 ```shell title="How Claude Code's shell sees it"
 sudo cat /var/log/pihole/pihole.log
@@ -51,10 +60,34 @@ sudo: a terminal is required to read the password; either use the -S option to r
 sudo: a password is required
 ```
 
-The problem isn't that you lack privilege.
-It's that an agent can't answer a password prompt.
-That leaves two honest fixes: make the data readable without escalation, or allow specific commands without a password.
-This page does the first, because it grants less.
+The problem isn't that you lack privilege. It's that an agent can't answer a password prompt.
+
+### If sudo Is Passwordless
+
+This is the more common case on a Pi-hole box.
+Raspberry Pi OS enabled passwordless `sudo` by default until the 6.2 release in April 2026, and **that release only changed the default for new installations**.
+An older Pi, or one that has been upgraded rather than reimaged, still has it unless someone turned it off.
+
+Here the command works. That is the problem.
+
+Passwordless `sudo` doesn't give Claude Code access to your Pi-hole logs.
+It gives it unrestricted root on the Pi, non-interactively, for every command it decides to run.
+Reading the query log, yes, and equally `pihole -g`, restarting DNS, rewriting `pihole.toml`, or deleting something you needed.
+Nothing sits between a misread instruction and the machine.
+
+Setting up SSH keys doesn't change this either way.
+Key-based login authenticates you to the *host* and hands you a shell as your own account. It grants no root at all.
+Passwordless `sudo` is a separate setting, and it is the one that removes the gate.
+
+You can turn it off in `raspi-config` under **System Options**, or in the Control Centre **System** tab on Raspberry Pi OS Desktop.
+
+### Either Way, the Fix Is the Same
+
+If `sudo` prompts, the agent can't do the reads you want.
+If `sudo` doesn't prompt, it can do everything you don't.
+
+That leaves two honest fixes: make the specific data readable without escalation, or allow specific commands without a password.
+This page does the first, because it grants less, and because it works the same whichever answer you got above.
 
 ## What This Lets Claude Code Do
 
@@ -68,6 +101,14 @@ It cannot allow or deny a domain, update gravity, restart DNS, or edit any confi
 That boundary is firmer than it might look.
 `pihole allow` and `pihole deny` don't need root, but they authenticate to Pi-hole's API by reading `/etc/pihole/cli_pw`, which is mode `0640` and owned by `pihole`.
 Without that file, the command falls back to an interactive password prompt, which an agent can no more answer than a `sudo` prompt.
+
+:::caution[The boundary only holds if sudo asks for a password]
+Everything above describes what the ACL grant allows.
+It says nothing about what `sudo` allows.
+
+If the account Claude Code runs as still has passwordless `sudo`, it can bypass all of this by prefixing any command with `sudo`, and the grant on this page becomes decoration.
+Turn passwordless `sudo` off for that account, or run Claude Code as a [dedicated agent user](/docs/pi-hole/claude-code-access/#choose-your-setup) that never had it.
+:::
 
 ### How You Apply the Fixes
 
