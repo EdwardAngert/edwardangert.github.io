@@ -107,7 +107,8 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 
 DNS queries from any device on your tailnet now go to your Pi-hole, regardless of where you are.
 
-Traffic from devices on your tailnet will show the device's Tailscale IP in the query log under **Client**.
+Each device on your tailnet is reachable at its `100.x.x.x` address, or by its MagicDNS name if you've enabled MagicDNS.
+That tailnet address is also what appears in the Pi-hole query log under **Client** while the device is connected, rather than the device's LAN IP.
 
 ## Optional: Use the Pi as an Exit Node for a Private VPN
 

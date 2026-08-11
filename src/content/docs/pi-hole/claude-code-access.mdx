@@ -1,0 +1,162 @@
+---
+slug: docs/pi-hole/claude-code-access
+title: "Give Claude Code Access to Pi-hole Logs and Diagnostics"
+description: "Give Claude Code or another AI agent read-only access to Pi-hole query logs with a Pi-hole v6 API application password, plus a CLAUDE.md context file and the environment gotchas that cost agents the most time."
+category: "Personal Reference Documentation"
+prev:
+  link: /docs/pi-hole/troubleshooting/
+  label: Common Pi-hole Issues and How to Fix Them
+---
+
+import { Steps, Code } from '@astrojs/starlight/components';
+import Verified from '../../../components/Verified.astro';
+import claudeMd from './CLAUDE.md.example?raw';
+
+An AI coding agent such as Claude Code can help diagnose Pi-hole problems, but only if it can read your query data.
+The query log and the FTL database are both owned by `pihole` and readable only by that user, so an agent running under your login account can't open either one.
+
+Grant that access with a read-only API application password.
+Pi-hole enforces read-only on application passwords, you can revoke one without touching your own login, and it needs no filesystem permission changes at all.
+
+The alternative, adding your user to the `pihole` group, is worse on every count.
+It can't be revoked without affecting your own account, and because `gravity.db` is mode `0664` it hands out write access to your blocklist database to do a job that needs no writes.
+
+## What an Agent Can Read Without Any Setup
+
+<Verified date="2026-08" method="tested" />
+
+These need no configuration:
+
+- `/etc/pihole/gravity.db`, the blocklist database, through `pihole-FTL sqlite3`
+- `/etc/pihole/pihole.toml`, the full Pi-hole configuration
+- `dig @127.0.0.1 example.com`, to see how Pi-hole resolves a domain right now
+- `pihole status`, `ip neigh`, `ip route`, and `tailscale status`
+
+That covers which lists are active, which group a client belongs to, and whether a given domain is blocked.
+It does not cover which domains a device actually requested, which is what most diagnosis needs.
+
+## Grant Read-Only API Access
+
+### Confirm application passwords are read-only
+
+<Verified date="2026-08" method="tested" />
+
+Pi-hole controls this with `webserver.api.app_sudo`, which is `false` by default.
+While it stays false, an application password can read everything and change nothing.
+Write requests return `403 Forbidden`.
+
+```shell title="From the Pi"
+grep -A1 'app_sudo' /etc/pihole/pihole.toml
+```
+
+If it returns `app_sudo = true`, set it back before you create the password:
+
+```shell title="From the Pi"
+sudo pihole-FTL --config webserver.api.app_sudo false
+```
+
+### Create the application password
+
+<Steps>
+
+1. In the Pi-hole web interface, go to **Settings** > **Web interface / API**.
+   Switch to **Expert** mode if the application password section isn't visible.
+
+1. Generate an application password and copy it.
+
+1. On the Pi, create a file only your user can read:
+
+   ```shell title="From the Pi"
+   mkdir -p ~/.config/pihole
+   install -m 600 /dev/null ~/.config/pihole/agent-app-password
+   ```
+
+1. Paste the password into that file as a single line.
+
+</Steps>
+
+Generating a new application password invalidates every existing API session, including any the agent still holds.
+
+:::caution[Keep the password out of your repositories]
+Don't put the application password in `CLAUDE.md`, a dotfiles repo, or anything else you commit.
+Store it only in the `0600` file above and let the agent read it from there.
+:::
+
+### Query the query log
+
+<Verified date="2026-08" method="vendor-docs" />
+
+Authenticate to get a session ID, then use that ID to read the query log:
+
+```shell title="From the Pi"
+SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
+  | curl -s -X POST http://127.0.0.1/api/auth --data @- \
+  | jq -r .session.sid)
+
+curl -s -H "X-FTL-SID: $SID" \
+  'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
+```
+
+`/api/queries` filters server-side on `client_ip`, `client_name`, `domain`, `status`, `upstream`, `from`, and `until`.
+Add `disk=true` to read the long-term database instead of the in-memory buffer, which you need for anything older than the last few hours.
+
+Sessions last 30 minutes by default, and each authenticated request extends the window.
+
+Keep these calls on `127.0.0.1`.
+The application password is a network credential, and there's no reason to expose the API off the Pi to use it.
+
+## Give the Agent a Context File
+
+Access alone isn't enough.
+An agent that doesn't know how your network is put together will search for the wrong thing and report a confident non-answer.
+
+The file below is a working `CLAUDE.md` for this setup.
+Copy it to your home directory, or to the directory you run the agent from, and replace the host details with your own.
+
+The sections that earn their keep fastest are **Privileges**, which stops an agent from burning turns on `sudo` commands it can't run, and **Gotchas that have cost time before**, which encodes the failures that look like real findings: a query log filter that returns nothing because the device is on the tailnet, a blocklist grep that misses because the lists use Adblock Plus syntax, a client that ignores its group assignment because MAC matching doesn't work over Tailscale.
+
+<details>
+<summary>CLAUDE.md</summary>
+
+<Code code={claudeMd} lang="markdown" title="~/CLAUDE.md" />
+
+</details>
+
+## Read Raw Log Files When the API Isn't Enough
+
+<Verified date="2026-08" method="tested" />
+
+The API exposes no raw `dnsmasq` log lines and no `FTL.log`.
+For DNSSEC failures, upstream forwarding chains, or FTL startup errors, an agent has to read `/var/log/pihole/` directly.
+
+Treat that as a temporary grant rather than part of your setup:
+
+```shell title="From the Pi"
+sudo usermod -aG pihole $USER
+```
+
+Log out and back in for it to take effect.
+Remove it when you're finished:
+
+```shell title="From the Pi"
+sudo gpasswd -d $USER pihole
+```
+
+While that membership is active, your account can also write to `gravity.db`, which is mode `0664`.
+
+## Revoke Agent Access
+
+To revoke API access, generate a new application password in the web interface.
+The old one stops working immediately.
+
+To remove agent access entirely, delete the application password in the same settings page and delete the credential file:
+
+```shell title="From the Pi"
+rm ~/.config/pihole/agent-app-password
+```
+
+:::note[Read-only is not the same as private]
+A read-only credential still exposes every DNS query from every device on your network, including which sites each device reached and when.
+That exposure is identical whether you use the API or group membership.
+Least privilege limits what an agent can change, not what it can see.
+:::

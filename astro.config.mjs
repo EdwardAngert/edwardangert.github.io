@@ -101,6 +101,7 @@ export default defineConfig({
 								{ label: 'VPN with Tailscale', link: '/docs/pi-hole/tailscale/' },
 								{ label: 'Maintenance', link: '/docs/pi-hole/maintenance/' },
 								{ label: 'Troubleshooting', link: '/docs/pi-hole/troubleshooting/' },
+								{ label: 'Claude Code Access', link: '/docs/pi-hole/claude-code-access/' },
 							],
 						},
 					],

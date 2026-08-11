@@ -6,6 +6,9 @@ category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/maintenance/
   label: Pi-hole Maintenance and Advanced Configuration
+next:
+  link: /docs/pi-hole/claude-code-access/
+  label: Give Claude Code Access to Pi-hole Logs and Diagnostics
 ---
 
 import { Steps } from '@astrojs/starlight/components';
@@ -494,6 +497,38 @@ sudo systemctl restart pihole-FTL
 ```
 
 See [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](/docs/pi-hole/tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) for the full setup.
+
+### A device's queries appear under an unexpected IP address
+
+**Symptom**: You filter the query log by a device's LAN IP and see nothing, even though the device is online and browsing.
+
+While a device is connected to your tailnet, its DNS queries reach Pi-hole over the Tailscale interface.
+The query log records the device's `100.x.x.x` address instead of its LAN address.
+The same laptop appears under either one depending on how it's connected at the time.
+
+Find the device's Tailscale IP on the Pi:
+
+```shell title="From the Pi"
+tailscale status
+```
+
+Each device is listed with its `100.x.x.x` address.
+Active peers also show the LAN address they connected from, such as `direct 192.168.0.22:41641`, which is how you match a tailnet address back to a device you know by its LAN IP.
+
+Filter the query log by the `100.x.x.x` address instead.
+
+### A device on the tailnet ignores its group assignment
+
+**Symptom**: You put a device in a group with different blocklists, but while it's connected over Tailscale it gets the `Default` group's blocking instead.
+
+Pi-hole identifies clients by MAC address, and MAC lookups depend on ARP, which only works on your local network.
+A Tailscale connection has no ARP, so Pi-hole can't match a tailnet device to a client entry you created by MAC.
+Unmatched clients fall back to the `Default` group.
+
+**Fix**: Add a second client entry for the device's `100.x.x.x` address and put that entry in the same group as the MAC entry.
+Run `tailscale status` on the Pi to find the address.
+
+See [Control Blocking Per Device with Groups](/docs/pi-hole/block-allow-lists/#control-blocking-per-device-with-groups).
 
 ### Pi-hole web interface loads but DNS isn't filtering
 
