@@ -16,11 +16,23 @@ You have no `sudo` access, and `sudo` cannot prompt for a password in your shell
 Don't try privileged commands. They will fail with `a terminal is required to read the password`.
 
 If something genuinely needs root, print the command and ask me to run it.
-Tell me to prefix it with `!` so the output lands back in the session.
+Tell me to run it in shell mode by typing `!` followed by the command at the Claude Code
+prompt, for example `! sudo pihole -g`. That runs it in my terminal, where a password
+prompt can actually reach me, and puts the output back into your context so you can
+keep going.
 
-<!-- If you set up the diagnostic wrapper, uncomment this and delete the line above:
-One exception: `sudo -n /usr/local/sbin/pihole-agent-diag` runs without a password
-and prints FTL service status plus the last 100 FTL log lines. It takes no arguments.
+You also can't change lists. `pihole allow` and `pihole deny` don't need root, but they
+authenticate by reading `/etc/pihole/cli_pw`, which you can't read, so they fall back to
+an interactive password prompt. Hand those commands to me the same way.
+
+<!-- If you granted read access to /etc/pihole/cli_pw, uncomment this:
+You can run `pihole allow`, `pihole deny`, `pihole enable`, and `pihole disable` directly,
+with no sudo. Ask me first before disabling blocking or removing a list.
+-->
+
+<!-- If you set up the diagnostic wrapper, uncomment this:
+`sudo -n /usr/local/sbin/pihole-agent-diag` runs without a password and prints FTL service
+status plus the last 100 FTL log lines. It takes no arguments.
 -->
 
 

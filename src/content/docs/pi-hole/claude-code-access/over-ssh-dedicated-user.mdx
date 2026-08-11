@@ -1,0 +1,606 @@
+---
+slug: docs/pi-hole/claude-code-access/over-ssh-dedicated-user
+title: "Give Claude Code Pi-hole Access Over SSH With a Dedicated User"
+description: "Run Claude Code on your laptop and reach Pi-hole over SSH as a dedicated unprivileged account, enforced by sshd. Works with any Raspberry Pi. Complete single-page setup."
+category: "Personal Reference Documentation"
+applies-to:
+  pihole: "v6"
+head:
+  - tag: link
+    attrs:
+      rel: canonical
+      href: https://edwardangert.com/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/
+---
+
+import { Steps, Tabs, TabItem, Code } from '@astrojs/starlight/components';
+import Verified from '../../../../components/Verified.astro';
+import claudeMd from '../CLAUDE.md.example?raw';
+
+{/*GENERATED FILE. Do not edit.
+   Source: index.mdx, set-up.mdx, extend.mdx in this directory.
+   Regenerate with `pnpm build:onepagers`.*/}
+
+This page covers running Claude Code **on your workstation**, reaching the Pi over SSH as a **dedicated unprivileged account** that sshd enforces for every command.
+
+It is complete on its own. For the other setups, or to work through this in stages, see
+[Give Claude Code Access to Pi-hole](/docs/pi-hole/claude-code-access/).
+
+Give Claude Code limited access to Pi-hole logs and the query database so that it can help you diagnose issues with your Pi-hole setup.
+
+Use the steps on this page to decide how you access your Pi-hole and how you'll interact with Claude Code in order to diagnose and resolve the Pi-hole issues.
+
+The access you give Claude Code with these steps is read-only, and limited in scope to Pi-hole-specific files.
+
+## Why sudo Doesn't Work for an Agent
+
+<Verified date="2026-08" method="tested" />
+
+Claude Code runs as whatever user starts it.
+No separate service account exists to add to a group.
+
+If that user already has `sudo`, you might expect privileged reads to just work.
+They don't.
+Claude Code runs shell commands without a terminal attached, and `sudo` needs a terminal to prompt for a password:
+
+```shell title="How Claude Code's shell sees it"
+sudo cat /var/log/pihole/pihole.log
+```
+
+```text
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+```
+
+The problem isn't that you lack privilege.
+It's that an agent can't answer a password prompt.
+That leaves two honest fixes: make the data readable without escalation, or allow specific commands without a password.
+This page does the first, because it grants less.
+
+## What This Lets Claude Code Do
+
+<Verified date="2026-08" method="vendor-docs" />
+
+The grant on this page is read-only, so Claude Code can **investigate on its own but cannot change anything**.
+
+It can read the query database and the logs, work out which client asked for what and when, find which list blocked a domain, and tell you what to change.
+It cannot allow or deny a domain, update gravity, restart DNS, or edit any configuration.
+
+That boundary is firmer than it might look.
+`pihole allow` and `pihole deny` don't need root, but they authenticate to Pi-hole's API by reading `/etc/pihole/cli_pw`, which is mode `0640` and owned by `pihole`.
+Without that file, the command falls back to an interactive password prompt, which an agent can no more answer than a `sudo` prompt.
+
+### How You Apply the Fixes
+
+Claude Code tells you the command, and you run it yourself using **shell mode**.
+
+Typing `!` at the start of the Claude Code prompt runs the rest of the line as a shell command in your own terminal:
+
+```shell title="At the Claude Code prompt"
+! sudo pihole allow ads.example.com
+```
+
+Shell mode runs the command directly, without Claude interpreting or approving it, and adds both the command and its output to the conversation.
+Claude then reads the result and carries on.
+
+This works precisely because **you have a terminal and the agent does not**, which is the same asymmetry the previous section describes.
+A `sudo` prompt can ask you for a password. It cannot ask Claude Code.
+
+The loop is: Claude diagnoses, gives you a command, you run it with `!`, and Claude picks up from the output.
+
+If you would rather Claude Code apply list changes itself, see [Optional: Give Claude Code Write Access](#optional-give-claude-code-write-access).
+
+## Which Pi-hole Files Need Access
+
+<Verified date="2026-08" method="vendor-docs" />
+
+Two things need a grant: the query database, and the log files.
+
+| File                        | Mode             | Holds                                      | Needs access? |
+|-----------------------------|------------------|--------------------------------------------|---------------|
+| `/etc/pihole/gravity.db`    | `0664`           | Blocklists, groups, clients                | No, already world-readable |
+| `/etc/pihole/pihole-FTL.db` | `0640`           | Query history                              | **Yes**       |
+| `/var/log/pihole/*.log`     | `0640`           | Raw dnsmasq and FTL logs                   | **Yes**       |
+| `/etc/pihole/pihole.toml`   | `0640` or `0644` | Full config, **including password hashes** | No, deliberately excluded |
+
+Leave `pihole.toml` alone.
+It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` as plain strings, so an agent that reads the file pulls your password hashes into its transcript.
+When you need one value from it, read that value on its own:
+
+```shell title="From the Pi"
+pihole-FTL --config webserver.api.app_sudo
+```
+
+## Create the Agent User
+
+<Verified date="2026-08" method="tested" />
+
+<Steps>
+
+1. Create the user with a home directory and no `sudo` group membership:
+
+   ```shell title="From the Pi"
+   sudo useradd -m -s /bin/bash claude-agent
+   ```
+
+1. Tighten its home directory so other accounts can't read its session data:
+
+   ```shell title="From the Pi"
+   sudo chmod 750 /home/claude-agent
+   ```
+
+1. Give it a working directory, since Claude Code needs somewhere it can write:
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent mkdir -p /home/claude-agent/pihole
+   ```
+
+1. Set up access to the account:
+
+   Give the account its own SSH key so your workstation can reach it directly:
+
+   ```shell title="From your workstation"
+   ssh-keygen -t ed25519 -f ~/.ssh/claude-agent -C "claude-agent@pi-hole"
+   ```
+
+   Add a second host alias for it, alongside the `pi-hole-admin` one you defined earlier:
+
+   ```text title="~/.ssh/config"
+   Host pi-hole-agent
+       HostName 192.168.0.153
+       User claude-agent
+       IdentityFile ~/.ssh/claude-agent
+       IdentitiesOnly yes
+   ```
+
+   `ssh-copy-id` won't install the key: `useradd` leaves the account password-locked, so there is no password login to authenticate against.
+   Install it through your administrative session instead:
+
+   ```shell title="From your workstation"
+   PUBKEY="$(cat ~/.ssh/claude-agent.pub)" && \
+     ssh -t pi-hole-admin "
+     sudo -u claude-agent mkdir -p -m 700 /home/claude-agent/.ssh
+     echo '$PUBKEY' | sudo -u claude-agent tee -a /home/claude-agent/.ssh/authorized_keys >/dev/null
+     sudo -u claude-agent chmod 600 /home/claude-agent/.ssh/authorized_keys"
+   ```
+
+   The key goes into a shell variable rather than through a pipe on purpose.
+   Piping into `ssh -t` suppresses the terminal it just asked for, and `sudo` on the far end fails with the same password prompt error this page opened with.
+
+   Leaving the account password-locked is the point.
+   The key is the only way in, and it opens a shell with no `sudo` behind it.
+
+   Confirm the alias lands in the right account:
+
+   ```shell title="From your workstation"
+   ssh pi-hole-agent 'id'
+   ```
+
+   That should report `uid=... (claude-agent)`, which is sshd enforcing the identity rather than Claude Code choosing it.
+
+   Setup commands on the rest of this page use `pi-hole-admin`, because they need `sudo`.
+   Claude Code only ever uses `pi-hole-agent`.
+
+</Steps>
+
+## Install Claude Code
+
+Install Claude Code on your workstation using the [instructions for your platform](https://code.claude.com/docs/en/setup), then confirm it reaches the Pi:
+
+```shell title="From your workstation"
+claude --version
+```
+
+You already confirmed `ssh pi-hole-agent 'id'` lands in the agent account when you created it.
+
+Nothing gets installed on the Pi.
+
+## Grant Read Access
+
+<Verified date="2026-08" method="tested" />
+
+POSIX ACLs grant one account read access to one file.
+Unlike group membership, an ACL can be scoped per file, is revocable without touching the account, and grants no write access anywhere.
+
+Every command in this section runs with `sudo` on the Pi.
+
+<Steps>
+
+1. Install the ACL tools. They aren't present by default:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo apt install acl'
+   ```
+
+1. Apply the grant. Three `setfacl` calls, chained so the run stops if any one fails:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo setfacl -R -m u:claude-agent:rX /var/log/pihole && \
+     sudo setfacl -m d:u:claude-agent:r /var/log/pihole && \
+     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db'
+   ```
+
+</Steps>
+
+Each line earns its place, and two of them are easy to get subtly wrong:
+
+**`-R -m u:...:rX` on the log directory.** The capital `X` is load-bearing. It means "execute only on directories," so the directory gets `r-x` and every log file gets `r--`.
+
+Writing a lowercase `r` here instead breaks the whole grant, and it fails in a way that looks like the ACL never applied. A named-user entry replaces whatever the account was getting from the directory's "other" class, so `u:agent:r--` on the directory strips the execute bit it needs to enter the directory at all, and every read below it is denied.
+
+**`d:u:...:r` sets a *default* ACL, which is what survives log rotation.** Pi-hole rotates `pihole.log` daily and `FTL.log` weekly with `create 640 pihole pihole`, building a brand new file each time. An ACL set only on today's file is gone tomorrow. A default ACL is inherited by every file created in the directory afterward, including the compressed `.1` and `.2` archives.
+
+**The query database needs no directory ACL.** `/etc/pihole` is already world-traversable. This grant also survives Pi-hole restarts: FTL resets the database to mode `0640` every time it starts, and `chmod` rewrites an ACL's mask rather than removing named-user entries, so the read stays effective.
+
+:::note[If you ever delete the FTL database]
+FTL creates a fresh `pihole-FTL.db` when the file is missing, and the new file has no ACL.
+Re-run the third command if you delete or restore that database.
+:::
+
+## Read Query History
+
+<Verified date="2026-08" method="vendor-docs" />
+
+`pihole-FTL` ships an embedded SQLite shell, so no separate `sqlite3` package is needed.
+Always pass `--readonly`, which makes writes impossible at the connection level.
+
+Run this as the account you just granted access to. It doubles as proof the grant works:
+
+```shell title="From your workstation"
+ssh pi-hole-agent "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  \"SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+    FROM queries ORDER BY timestamp DESC LIMIT 20;\""
+```
+
+The `queries` view resolves the internal integer IDs back to real domain and client strings, so you don't need to join anything.
+`status` stays numeric. The values worth knowing:
+
+| Status | Meaning |
+|---|---|
+| `1` | Blocked by a blocklist (gravity) |
+| `2` | Forwarded upstream |
+| `3` | Answered from cache |
+| `4` | Blocked by a regex filter |
+| `5` | Blocked by the denylist |
+
+The database lags live traffic by up to 60 seconds, because FTL flushes its in-memory buffer on `database.DBinterval`, which defaults to `60`.
+
+## Verify the Boundaries
+
+<Verified date="2026-08" method="tested" />
+
+Confirming what the account *can't* do matters more than confirming what it can, and it has to be checked as that account rather than as yourself.
+
+Each of these should report `Permission denied`.
+Run them one at a time, since each is expected to fail and chaining them would stop at the first:
+
+```shell title="From the Pi"
+sudo -u claude-agent bash -c 'echo test >> /var/log/pihole/pihole.log'
+```
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /home/pi-admin/.ssh/id_ed25519
+```
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /etc/shadow
+```
+
+Replace `/home/pi-admin` with your own home directory.
+
+Then check `pihole.toml`:
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /etc/pihole/pihole.toml
+```
+
+The result depends on your Pi-hole version, and both outcomes are expected:
+
+- `Permission denied` means the file is mode `0640`, and the exclusion holds.
+- A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.
+
+To see the grant itself:
+
+```shell title="From your workstation"
+ssh pi-hole-admin 'getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db'
+```
+
+## Configure Claude Code
+
+<Verified date="2026-08" method="vendor-docs" />
+
+Permission rules are enforced by Claude Code, not the kernel.
+Claude's own documentation notes that Bash patterns constraining arguments are fragile, so these rules are defense in depth: they stop an honest mistake, and the ACL is what holds when a rule is bypassed.
+
+That ordering matters most for `pihole.toml`, since on a `0644` host the deny rule is the only thing standing between an agent and your password hashes.
+
+Add to `.claude/settings.json` in the project directory you run Claude Code from:
+
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "deny": [
+      "Bash(ssh pi-hole-admin:*)",
+      "Bash(ssh -t pi-hole-admin:*)"
+    ],
+    "allow": [
+      "Bash(ssh pi-hole-agent:*)"
+    ]
+  }
+}
+```
+
+The deny rules are the useful part: they keep Claude Code off the administrative alias, so it can't reach the account that has `sudo`.
+What restricts the agent alias itself is the `claude-agent` account's own permissions on the Pi, not anything in this file.
+
+## Give the Agent a Context File
+
+Access alone isn't enough.
+An agent that doesn't know how your network is put together will search for the wrong thing and report a confident non-answer.
+
+The file below is a working `CLAUDE.md` for this setup.
+Copy it to the directory you run Claude Code from and replace the host details with your own.
+
+The two sections that pay for themselves fastest are **Privileges**, which stops the agent from burning turns on `sudo` commands it can never run, and **Gotchas**, which encodes the failures that look like real findings rather than mistakes.
+
+The **Privileges** section carries two commented-out blocks. Uncomment the matching one if you add either optional grant below.
+
+<details>
+<summary>CLAUDE.md</summary>
+
+<Code code={claudeMd} lang="markdown" title="CLAUDE.md" />
+
+</details>
+
+## Optional: Give Claude Code Write Access
+
+<Verified date="2026-08" method="vendor-docs" />
+
+Skip this unless you want Claude Code to apply fixes itself rather than hand them to you.
+
+Granting read access to one file, `/etc/pihole/cli_pw`, lets Claude Code run `pihole allow`, `pihole deny`, `pihole enable`, and `pihole disable` with no `sudo` involved at all.
+It also gives it more than those four commands, which the caution below spells out.
+That file holds the password Pi-hole generates for its own `pihole` commands to authenticate against the API.
+
+:::caution[This grants more than the four commands above]
+Those four commands are the intended use, but the grant hands over a credential, not a command list.
+Anything that credential can do, Claude Code can do, by calling the API directly.
+
+In practice that means it can also rebuild gravity, restart DNS, delete DHCP leases and network device records, and **flush the query log**, which destroys the history you granted read access to in the first place.
+It can remove lists as well as add them, and `pihole disable` turns off blocking for your whole network.
+
+Grant this if you want an agent that fixes things. Don't grant it if you want an agent that only reports.
+:::
+
+```shell title="From the Pi"
+sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw
+```
+
+Confirm it works by allowing a domain as that account, with no `sudo`:
+
+```shell title="From the Pi"
+pihole allow ads.example.com
+```
+
+If you grant this, uncomment the matching block in the **Privileges** section of your `CLAUDE.md`, so the agent knows it can run these commands directly.
+
+### Where the Limit Sits
+
+The credential cannot change configuration or import a Teleporter backup.
+FTL enforces both, unconditionally, with no setting to turn them off:
+
+```text
+The current CLI session is not allowed to modify Pi-hole config settings
+```
+
+That is the entire restriction. Everything else the API offers stays available, which is why the caution above lists more than the four commands.
+It's still a stronger guarantee than an application password, where that same config restriction disappears the moment `webserver.api.app_sudo` is set to `true`.
+
+Two practical limits are worth knowing before you rely on this.
+
+**It assumes the default DNS port.**
+`pihole allow` locates the API by asking FTL which port DNS runs on, and that lookup reads `pihole.toml`, which the agent account deliberately cannot read.
+It falls back to the default of `53`, so a stock install works.
+If you changed `dns.port`, these commands fail for the agent and warn that `pihole.toml` could not be read.
+Don't solve that by granting access to `pihole.toml`, which holds your password hashes. Run those commands yourself with `!` instead.
+
+**The grant survives restarts.**
+FTL rewrites `cli_pw` every time it starts, but truncates the existing file rather than replacing it, so the ACL rides through exactly as the query database grant does.
+If you delete the file outright, re-run the grant above.
+
+To take this back, remove that one entry. Everything else on this page keeps working:
+
+```shell title="From the Pi"
+sudo setfacl -x "u:$USER" /etc/pihole/cli_pw
+```
+
+## Optional: Run Diagnostics That Need Root
+
+<Verified date="2026-08" method="tested" />
+
+A few things have no read-only path: `pihole debug`, `systemctl status pihole-FTL`, `journalctl`.
+If you want the agent to run those unattended, grant a password-free rule for a **wrapper script that takes no arguments**.
+
+Skip this section unless you need it. Nothing later depends on it.
+
+:::caution[Never use a wildcard sudoers rule]
+A rule like `agent ALL=(root) NOPASSWD: /usr/bin/tail *` looks narrow and is total compromise.
+The wildcard accepts any path, so the agent can read anything on the system:
+
+```shell
+sudo -n tail -n 2 /etc/shadow
+```
+
+```text
+pihole:!:20676::::::
+agent:!:20676:0:99999:7:::
+```
+
+Pinning the arguments isn't enough either.
+`sudo less <one fixed file>` still escapes to a root shell by typing `!/bin/sh` at the pager, and the same applies to `more`, `man`, `vi`, `awk`, and `find`.
+:::
+
+<Steps>
+
+1. Write a script that takes no input at all:
+
+   ```shell title="From the Pi"
+   sudo tee /usr/local/sbin/pihole-agent-diag >/dev/null <<'EOF'
+   #!/bin/bash
+   set -euo pipefail
+   echo "=== FTL service ==="
+   systemctl status pihole-FTL --no-pager
+   echo "=== last 100 FTL log lines ==="
+   tail -n 100 /var/log/pihole/FTL.log
+   EOF
+   ```
+
+1. Make it root-owned and unwritable by anyone else.
+
+   If the agent can edit this script, a password-free rule on it is a root shell:
+
+   ```shell title="From the Pi"
+   sudo chown root:root /usr/local/sbin/pihole-agent-diag && \
+     sudo chmod 755 /usr/local/sbin/pihole-agent-diag
+   ```
+
+1. Allow exactly that script, with no arguments. The `""` pins it to zero arguments:
+
+   ```shell title="From the Pi"
+   echo 'claude-agent ALL=(root) NOPASSWD: /usr/local/sbin/pihole-agent-diag ""' \
+     | sudo tee /etc/sudoers.d/pihole-agent && \
+     sudo chmod 440 /etc/sudoers.d/pihole-agent && \
+     sudo visudo -c -f /etc/sudoers.d/pihole-agent
+   ```
+
+1. Confirm the pin holds. Run these separately, since the second is meant to be refused.
+
+   This should print the diagnostics:
+
+   ```shell title="From the Pi"
+   sudo -n /usr/local/sbin/pihole-agent-diag
+   ```
+
+   This should be rejected, because the rule allows no arguments:
+
+   ```shell title="From the Pi"
+   sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow
+   ```
+
+</Steps>
+
+If you add this, uncomment the matching block in the **Privileges** section of your `CLAUDE.md` so the agent knows the wrapper exists.
+Otherwise it will keep asking you to run diagnostics by hand.
+
+## Revoke Access
+
+Deleting the account removes its access everywhere at once:
+
+```shell title="From the Pi"
+sudo rm -f /etc/sudoers.d/pihole-agent /etc/sudoers.d/claude-agent-switch && \
+  sudo userdel -r claude-agent
+```
+
+Then clear the now-orphaned ACL entries, which otherwise linger as a bare numeric UID:
+
+```shell title="From the Pi"
+sudo setfacl -R -b /var/log/pihole && \
+  sudo setfacl -b /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -b /etc/pihole/cli_pw
+```
+
+The `cli_pw` entry only exists if you granted it. The `|| true` keeps the chain going when you didn't.
+
+Confirm nothing is left. No `user:` line should name the account you revoked:
+
+```shell title="From your workstation"
+ssh pi-hole-admin "getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db /etc/pihole/cli_pw | grep '^user:'"
+```
+
+## Alternative: The Pi-hole v6 API
+
+<Verified date="2026-08" method="tested" />
+
+Pi-hole v6 exposes query data over an HTTP API authenticated with an application password.
+It needs no filesystem changes at all, which makes it the right choice in two cases:
+
+- You administer Pi-hole but don't have shell root on the box, so you can't set ACLs.
+- Pi-hole runs in Docker, where the logs and database live inside the container and the ACL recipe above doesn't apply as written.
+
+:::caution[An application password is not read-only]
+This is the important part, and it's widely misreported.
+The `webserver.api.app_sudo` setting is `false` by default, but it only blocks two things: changing configuration, and importing a Teleporter backup.
+
+An application password can still disable blocking network-wide, add or remove blocklists and allowlists, delete groups and clients, trigger a gravity rebuild, and flush the query log that you granted access to read.
+It's a lower-privilege credential than your administrator password, not a read-only one.
+
+If you have root on the Pi, the ACL method above grants strictly less.
+:::
+
+<Steps>
+
+1. Confirm which port the API is on.
+
+   Port `80` is the default, but it's marked optional, so FTL falls back silently, often to `8080`, when something else holds it:
+
+   ```shell title="From the Pi"
+   pihole-FTL --config webserver.port
+   ```
+
+   Use that port in the commands below.
+
+1. In the web interface, go to **Settings** > **Web interface / API**, switch to **Expert** mode, and generate an application password.
+
+1. Store it in a file only your user can read:
+
+   ```shell title="From the Pi"
+   mkdir -p ~/.config/pihole && \
+     install -m 600 /dev/null ~/.config/pihole/agent-app-password
+   ```
+
+   Paste the password in as a single line.
+   Never put it in `CLAUDE.md`, a dotfiles repo, or anything else you commit.
+
+1. Install `jq`, which isn't present by default:
+
+   ```shell title="From the Pi"
+   sudo apt install jq
+   ```
+
+1. Authenticate and query. Piping the password through stdin keeps it out of the process list:
+
+   ```shell title="From the Pi"
+   SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
+     | curl -s -X POST http://127.0.0.1/api/auth --data @- \
+     | jq -r .session.sid) && \
+   curl -s -H "X-FTL-SID: $SID" \
+     'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
+   ```
+
+</Steps>
+
+`/api/queries` filters server-side on `client_ip`, `client_name`, `domain`, `status`, `upstream`, `type`, `reply`, `dnssec`, `from`, and `until`.
+Unlike the database, the API takes status names such as `GRAVITY` rather than the numeric codes.
+Add `disk=true` to read the long-term database rather than the in-memory buffer.
+
+Sessions last 30 minutes, and each authenticated request extends the window.
+Generating a new application password invalidates every active session, including your web interface login. That is also how you revoke it.
+
+## What the Agent Can Still See
+
+<Verified date="2026-08" method="vendor-docs" />
+
+Read-only is not the same as private.
+Any of the methods on this page expose every DNS query from every device on your network, including which sites each device reached and when.
+Least privilege limits what an agent can change, not what it can see.
+
+If some of that shouldn't leave the Pi, Pi-hole can filter it out of API results before anything reads them.
+Both settings take arrays of **regular expressions**, not plain strings, so anchor them and escape the dots:
+
+```shell title="From the Pi"
+sudo pihole-FTL --config webserver.api.excludeClients '["^192\\.168\\.0\\.50$"]' && \
+  sudo pihole-FTL --config webserver.api.excludeDomains '["^example\\.com$"]'
+```
+
+Those filters reach only two API responses, `/api/queries` and `/api/stats/top_clients`.
+They do nothing for an agent reading `pihole-FTL.db` through the ACL grant, which sees the unfiltered database.
+If a device's traffic genuinely shouldn't be visible, the query log is the wrong place to fix that.
