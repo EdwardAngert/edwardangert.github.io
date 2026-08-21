@@ -27,15 +27,23 @@ It is complete on its own. For the other setups, or to work through this in stag
 
 Give Claude Code limited access to Pi-hole logs and the query database so that it can help you diagnose issues with your Pi-hole setup.
 
-Use the steps on this page to decide how you access your Pi-hole and how you'll interact with Claude Code in order to diagnose and resolve the Pi-hole issues.
-
 The access you give Claude Code with these steps is read-only, and limited in scope to Pi-hole-specific files.
 
-## Why sudo Isn't the Answer
+To do this, we configure Access Control List (ACL) grants based on how you access your Pi and Claude Code (outlined in [Choose Your Setup](/docs/pi-hole/claude-code-access/#choose-your-setup)).
+In this case, ACL is basically a finer-grain way to grant or restrict Linux user and group, file access.
+You can learn more about ACL in the [Red Hat documentation](https://docs.redhat.com/en/documentation/red_hat_gluster_storage/3/html/administration_guide/sect-posix_access_control_lists).
 
-<Verified date="2026-08" method="tested" />
+Skip to [Choose Your Setup](/docs/pi-hole/claude-code-access/#choose-your-setup) for the commands and configuration.
 
-Claude Code runs as whatever user starts it.
+## Should Claude Code Have Root or Use sudo?
+
+No.
+For the most part, to limit the risk of vulnerability an application or agent running on your device shouldn't have root or non-root `sudo` access.
+This helps keep the application or agent from running commands that could compromise your device's security, and if the account itself is compromised by a malicious actor or code, the limited access can help mitigate the amount of damage that actor or code could do.
+
+Two things can go wrong: `sudo` can fail outright inside Claude Code, or it can succeed silently because of a cached authentication from earlier in the same terminal.
+
+Claude Code runs as whichever user starts it.
 No separate service account exists to add to a group, and no setting changes which Unix user its commands run as.
 
 If that account already has `sudo`, why not let it use that?
@@ -45,11 +53,19 @@ The answer depends on something you should check first:
 sudo -n true && echo "passwordless sudo: ENABLED" || echo "sudo asks for a password"
 ```
 
-Both results lead to the same conclusion, by opposite routes.
+Depending on your operating system version, if you entered your `sudo` password in this terminal within the last 15 minutes, this can report `ENABLED` even on an account that normally prompts.
 
-### If sudo Asks for a Password
+By default, `sudo` caches that authentication for 15 minutes (5 minutes as of Raspberry Pi OS 6.2), and if you check during that window, it looks the same as passwordless `sudo`.
 
-Claude Code runs shell commands with no terminal attached, and `sudo` needs one to prompt:
+If you type your `sudo` password in a terminal and then start `claude` in that same terminal, Claude Code's commands inherit the cached ticket.
+For the rest of that time window, every `sudo` command it runs succeeds without a password prompt.
+
+### If sudo Says a Password Is Required inside Claude Code
+
+A command that needs `sudo` fails immediately, with the error below, instead of pausing to ask you for a password.
+
+Claude Code runs shell commands with no terminal attached.
+That means that it looks like a terminal, but it's not running in the way the shell session expects, and `sudo` needs a terminal to prompt:
 
 ```shell title="How Claude Code's shell sees it"
 sudo cat /var/log/pihole/pihole.log
@@ -60,79 +76,75 @@ sudo: a terminal is required to read the password; either use the -S option to r
 sudo: a password is required
 ```
 
-The problem isn't that you lack privilege. It's that an agent can't answer a password prompt.
+Claude Code can't display or prompt for the password.
+
+The error message above suggests two fixes: `-S`, or "configure an askpass helper."
+Neither works here.
+
+An askpass helper still has to produce your real password non-interactively, which means that password would need to live somewhere Claude Code's user account (current user) can read it, like a file, an environment variable, or a secrets store it shells out to.
 
 ### If sudo Is Passwordless
 
-This is the more common case on a Pi-hole box.
-Raspberry Pi OS enabled passwordless `sudo` by default until the 6.2 release in April 2026, and **that release only changed the default for new installations**.
-An older Pi, or one that has been upgraded rather than reimaged, still has it unless someone turned it off.
+Raspberry Pi OS disabled default passwordless `sudo` with the 6.2 release in April 2026.
 
-Here the command works. That is the problem.
+If you upgraded Raspberry Pi OS from an older version or you're still on an older version, passwordless `sudo` might still be enabled.
 
-Passwordless `sudo` doesn't give Claude Code access to your Pi-hole logs.
-It gives it unrestricted root on the Pi, non-interactively, for every command it decides to run.
-Reading the query log, yes, and equally `pihole -g`, restarting DNS, rewriting `pihole.toml`, or deleting something you needed.
-Nothing sits between a misread instruction and the machine.
+That means that all `sudo` commands will run with unrestricted root access on the Pi, without any prompting.
 
-Setting up SSH keys doesn't change this either way.
-Key-based login authenticates you to the *host* and hands you a shell as your own account. It grants no root at all.
-Passwordless `sudo` is a separate setting, and it is the one that removes the gate.
+The setting is stored in a file that you can find and remove.
 
-It is also just a file, so you can find and remove it directly:
+Make sure you know the password before you start.
+After you remove the file, `sudo` asks for that account's password.
 
-```shell title="From the Pi"
-sudo grep -rl NOPASSWD /etc/sudoers.d/
-```
+<Steps>
 
-Raspberry Pi OS names it after the account, such as `/etc/sudoers.d/010_pi-admin-nopasswd`.
-Removing that file makes `sudo` prompt normally:
+1. Raspberry Pi OS names the file after the account, such as `/etc/sudoers.d/010_pi-admin-nopasswd`.
 
-```shell title="From the Pi"
-sudo rm /etc/sudoers.d/010_pi-admin-nopasswd
-```
+   ```shell title="From the Pi"
+   sudo grep -rl NOPASSWD /etc/sudoers.d/
+   ```
 
-:::caution[Know your account password before you remove it]
-Once the file is gone, `sudo` asks for that account's password.
-If it was set up by the Raspberry Pi Imager and you have never typed it, set one you know first with `passwd`, in a session where you still have `sudo`.
-:::
+1. Optional: If the password was set up by the Raspberry Pi Imager and you have never typed it, set one you know first with `passwd`.
 
-`raspi-config` also carries this setting on releases that ship the toggle, but the file is the mechanism, and removing it works on every version.
+   You can skip this step if you know the password:
 
-### Either Way, the Fix Is the Same
+   ```shell
+   sudo passwd pi-admin
+   ```
 
-If `sudo` prompts, the agent can't do the reads you want.
-If `sudo` doesn't prompt, it can do everything you don't.
+1. Remove the file if it exists:
 
-That leaves two honest fixes: make the specific data readable without escalation, or allow specific commands without a password.
-This page does the first, because it grants less, and because it works the same whichever answer you got above.
+   ```shell title="From the Pi"
+   sudo rm /etc/sudoers.d/010_pi-admin-nopasswd
+   ```
 
-## What This Lets Claude Code Do
+</Steps>
+
+## What ACL Grants Allow Claude Code to Do
 
 <Verified date="2026-08" method="vendor-docs" />
 
-The grant on this page is read-only, so Claude Code can **investigate on its own but cannot change anything**.
+The grant on this page is read-only, so Claude Code can investigate on its own but cannot change anything.
 
-It can read the query database and the logs, work out which client asked for what and when, find which list blocked a domain, and tell you what to change.
-It cannot allow or deny a domain, update gravity, restart DNS, or edit any configuration.
+This allows it to:
 
-That boundary is firmer than it might look.
-`pihole allow` and `pihole deny` don't need root, but they authenticate to Pi-hole's API by reading `/etc/pihole/cli_pw`, which is mode `0640` and owned by `pihole`.
-Without that file, the command falls back to an interactive password prompt, which an agent can no more answer than a `sudo` prompt.
+- Read the query database and the logs.
+- Work out which client asked for what and when.
+- Find which list blocked a domain.
+- Suggest changes.
 
-:::caution[The boundary only holds if sudo asks for a password]
-Everything above describes what the ACL grant allows.
-It says nothing about what `sudo` allows.
+It cannot allow or deny a domain, update gravity, restart DNS, edit any configuration, or run any `sudo pihole` commands.
 
-If the account Claude Code runs as still has passwordless `sudo`, it can bypass all of this by prefixing any command with `sudo`, and the grant on this page becomes decoration.
-Turn passwordless `sudo` off for that account, or run Claude Code as a [dedicated agent user](/docs/pi-hole/claude-code-access/#choose-your-setup) that never had it.
-:::
+`pihole allow` and `pihole deny` don't need `sudo` to run, but they won't work until you [give Claude Code write access](#optional-give-claude-code-write-access).
 
-### How You Apply the Fixes
+Keep in mind that this is only effective if passwordless `sudo` is off.
+If the account still has passwordless `sudo`, all `sudo` commands will be allowed.
 
-Claude Code tells you the command, and you run it yourself using **shell mode**.
+### Run a sudo Command with Claude Code's Shell Mode
 
-Typing `!` at the start of the Claude Code prompt runs the rest of the line as a shell command in your own terminal:
+After Claude Code tells you the command, you can run it from inside Claude Code using **shell mode** or manually in a separate terminal session.
+
+Enter <kbd>!</kbd> at the start of the Claude Code prompt to run the rest of the line as a shell command in your own terminal from inside Claude Code:
 
 ```shell title="At the Claude Code prompt"
 ! sudo pihole allow ads.example.com
@@ -141,33 +153,65 @@ Typing `!` at the start of the Claude Code prompt runs the rest of the line as a
 Shell mode runs the command directly, without Claude interpreting or approving it, and adds both the command and its output to the conversation.
 Claude then reads the result and carries on.
 
-This works precisely because **you have a terminal and the agent does not**, which is the same asymmetry the previous section describes.
-A `sudo` prompt can ask you for a password. It cannot ask Claude Code.
-
 The loop is: Claude diagnoses, gives you a command, you run it with `!`, and Claude picks up from the output.
 
 If you would rather Claude Code apply list changes itself, see [Optional: Give Claude Code Write Access](#optional-give-claude-code-write-access).
 
-## Which Pi-hole Files Need Access
+## What Pi-hole Files Does Claude Code Need Access to?
+
+Every file has attributes that dictate who can access the file and what they can do with the file.
+This group of values is called a mode.
+
+The files need to be set so that owners can both read and write the file, and so that groups (or a single group) can read the file.
 
 <Verified date="2026-08" method="vendor-docs" />
 
 Two things need a grant: the query database, and the log files.
 
-| File                        | Mode             | Holds                                      | Needs access? |
-|-----------------------------|------------------|--------------------------------------------|---------------|
-| `/etc/pihole/gravity.db`    | `0664`           | Blocklists, groups, clients                | No, already world-readable |
-| `/etc/pihole/pihole-FTL.db` | `0640`           | Query history                              | **Yes**       |
-| `/var/log/pihole/*.log`     | `0640`           | Raw dnsmasq and FTL logs                   | **Yes**       |
-| `/etc/pihole/pihole.toml`   | `0640` or `0644` | Full config, **including password hashes** | No, deliberately excluded |
+| File                        | Mode             | Reason                                                                                                  | Needs access? |
+|-----------------------------|------------------|---------------------------------------------------------------------------------------------------------|---------------|
+| `/etc/pihole/pihole-FTL.db` | `0640`           | Holds the query history Claude Code reads                                                               | Yes           |
+| `/var/log/pihole/`          | `0640`           | Logs rotate daily and weekly, so the grant has to be a default ACL on the directory, not a per-file one | Yes           |
+| `/etc/pihole/gravity.db`    | `0664`           | Already world-readable                                                                                  | No, already readable |
+| `/etc/pihole/pihole.toml`   | `0640` or `0644` | Holds password hashes in plain text                                                                     | No, [deliberately excluded](#why-piholetoml-is-excluded) |
+| `/etc/pihole/cli_pw`        | `0640`           | A readable copy would let `pihole allow`/`deny` open a write session                                    | No, [deliberately excluded](#why-cli_pw-is-excluded) |
 
-Leave `pihole.toml` alone.
-It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` as plain strings, so an agent that reads the file pulls your password hashes into its transcript.
-When you need one value from it, read that value on its own:
+### Why pihole.toml Is Excluded
+
+Don't change the mode for `pihole.toml`.
+
+It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` as plain strings, so an agent that reads the file can pull your password hashes into its transcript.
+
+If you need a single value from it, read that value on its own:
 
 ```shell title="From the Pi"
 pihole-FTL --config webserver.api.app_sudo
 ```
+
+### Why cli_pw Is Excluded
+
+Don't grant access to `cli_pw`.
+
+Without it, `pihole allow` and `pihole deny` don't fail with an error, they hang.
+
+Both commands read `cli_pw` to open an API session, and a session opened this way can still manage lists.
+Granting it would hand back exactly the write access this page's ACLs are built to withhold.
+
+:::note[GHSA-r7g8-3fj7-m5qq: cli_pw bypassed config protections on FTL 6.0-6.5]
+On unpatched installs, `/api/config` correctly rejected configuration changes from a `cli_pw` session, but `/api/teleporter` didn't get the same check until FTL 6.6.
+That means a `cli_pw` session could import a Teleporter archive and overwrite `pihole.toml` outright, including DNS settings, blocking status, DHCP config, upstream servers.
+
+<details>
+<summary>Update to Pi-hole FTL 6.6 or later if you haven't already.</summary>
+
+```shell title="From the Pi"
+sudo pihole -up
+```
+
+</details>
+:::
+
+Left unreadable, the wait is for a password prompt on a terminal Claude Code doesn't have, the same wall as `sudo` above.
 
 ## Create the Agent User
 
@@ -582,7 +626,6 @@ It needs no filesystem changes at all, which makes it the right choice in two ca
 - Pi-hole runs in Docker, where the logs and database live inside the container and the ACL recipe above doesn't apply as written.
 
 :::caution[An application password is not read-only]
-This is the important part, and it's widely misreported.
 The `webserver.api.app_sudo` setting is `false` by default, but it only blocks two things: changing configuration, and importing a Teleporter backup.
 
 An application password can still disable blocking network-wide, add or remove blocklists and allowlists, delete groups and clients, trigger a gravity rebuild, and flush the query log that you granted access to read.

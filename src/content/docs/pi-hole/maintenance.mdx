@@ -19,6 +19,8 @@ After the Pi is set up and running, use this page as a reference for [running ma
 
 All of these sections are optional.
 
+Want Claude Code to help diagnose issues using these logs? See [Give Claude Code Access to Pi-hole Logs and Diagnostics](/docs/pi-hole/claude-code-access/).
+
 ## Update Pi-hole
 
 Update the Pi-hole software and refresh the Gravity database with updated lists.
@@ -69,7 +71,7 @@ sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
 
 :::
 
-### Example: change upstream DNS
+### Example: Change Upstream DNS
 
 In the `[dns]` section of `pihole.toml`:
 
@@ -85,7 +87,7 @@ Or for Cloudflare directly:
 upstreams = ["1.1.1.1", "1.0.0.1"]
 ```
 
-### Reference: full pihole.toml
+### Reference: Full pihole.toml
 
 This is the full `pihole.toml` from my setup, with comments stripped and the password hash redacted.
 Values marked `### CHANGED` were modified from the Pi-hole default.
@@ -102,12 +104,12 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
 The Pi-hole FTL database (`pihole-FTL.db`) grows continuously and can wear out an SD card over months.
 Move the database and log file to a USB drive to protect the SD card and extend its life.
 
-### What you need
+### What You Need
 
 - A USB flash drive
 - The Pi running with Pi-hole installed
 
-### Mount the USB drive
+### Mount the USB Drive
 
 <Steps>
 
@@ -146,11 +148,30 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    <details>
    <summary>If you need to format the drive first</summary>
 
-   This will delete everything on the drive:
+   This will delete everything on the drive.
 
-   ```shell title="From the Pi"
-   sudo mkfs.ext4 /dev/sda1
-   ```
+   <Steps>
+
+   1. Confirm which device is the USB drive, not an internal disk:
+
+      ```shell title="From the Pi"
+      lsblk -o NAME,SIZE,LABEL,MOUNTPOINT
+      ```
+
+      Match the size and label to your USB drive.
+      Don't guess: an internal disk can share the same `/dev/sdX` naming scheme, and `mkfs` won't ask for confirmation before it formats.
+
+      It will delete everything on the drive.
+
+   1. Format the partition.
+
+      This example is intentionally set to fail if you don't adjust `YOUR-USB-PARTITION`:
+
+      ```shell "YOUR-USB-PARTITION" title="From the Pi"
+      sudo mkfs.ext4 /dev/YOUR-USB-PARTITION
+      ```
+
+   </Steps>
 
    </details>
 
@@ -170,7 +191,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
 </Steps>
 
-### Point Pi-hole to the USB drive
+### Point Pi-hole to the USB Drive
 
 <Steps>
 
@@ -227,10 +248,11 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
    The FTL service won't start if it can't find the database file.
    DNS queries from all network devices will fail until the mount is fixed.
+   See [FTL database grows too large and FTL fails to start](/docs/pi-hole/troubleshooting/#ftl-database-grows-too-large-and-ftl-fails-to-start) if FTL won't come back up.
 
 </Steps>
 
-### Optional: Set Pi-hole database retention
+### Optional: Set Pi-hole Database Retention
 
 By default, Pi-hole keeps 91 days of query history.
 
@@ -238,7 +260,7 @@ If you want to change the database size:
 
 <Steps>
 
-1. Set a the number of days to keep the database in `pihole.toml`:
+1. Set the number of days to keep the database in `pihole.toml`:
 
    ```toml title="pihole.toml"
    [database]

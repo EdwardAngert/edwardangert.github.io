@@ -22,8 +22,8 @@ prompt can actually reach me, and puts the output back into your context so you 
 keep going.
 
 You also can't change lists. `pihole allow` and `pihole deny` don't need root, but they
-authenticate by reading `/etc/pihole/cli_pw`, which you can't read, so they fall back to
-an interactive password prompt. Hand those commands to me the same way.
+authenticate by reading `/etc/pihole/cli_pw`, which you can't read, so instead of failing
+they hang waiting for a password prompt you can't see. Hand those commands to me the same way.
 
 <!-- If you granted read access to /etc/pihole/cli_pw, uncomment this:
 You can run `pihole allow`, `pihole deny`, `pihole enable`, and `pihole disable` directly,

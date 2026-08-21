@@ -12,6 +12,9 @@ next:
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import Verified from '../../../components/Verified.astro';
+
+<Verified date="2026-08" method="tested" />
 
 Install Pi-hole and configure it with a secure DNS resolver.
 
@@ -25,6 +28,8 @@ If you installed Pi-hole on an existing device or skipped to this section, these
 - The Pi's hostname is `pi-hole` throughout this guide.
 
 </details>
+
+## Install Pi-hole
 
 <Steps>
 

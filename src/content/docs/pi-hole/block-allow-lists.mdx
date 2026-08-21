@@ -63,7 +63,7 @@ As of Pi-hole v6, Pi-hole uses the words `blocklist` and `allowlist` instead of 
 Some list maintainers still use some of the outdated languages in their descriptions and in the list URLs.
 :::
 
-### Choose a HaGeZi tier
+### Choose a HaGeZi Tier
 
 - **HaGeZi Normal**
   - Balanced blocking with minimal false positives.
@@ -82,7 +82,7 @@ Some list maintainers still use some of the outdated languages in their descript
 For quick reference, the full tier progression is: Light > Normal > Pro > Pro++ > Ultimate.
 See [HaGeZi's README](https://github.com/hagezi/dns-blocklists) for descriptions of each.
 
-### Recommended blocklists
+### Recommended Blocklists
 
 If you enabled the default blocklist or previously used [The Firebog](https://firebog.net/), [StevenBlack/hosts](https://github.com/StevenBlack/hosts), or [1Hosts](https://github.com/badmojr/1Hosts), you can disable them in favor of the lists on this page.
 
@@ -185,14 +185,14 @@ To add a list:
 
 ## Add Allowlists and Domains to Pi-hole
 
-There are two ways to allowlist in Pi-hole v6:
+Pi-hole v6 offers two ways to allowlist:
 
 - **List subscriptions**: Subscribe to a URL and Pi-hole manages it automatically, like a blocklist.
   Best for maintained collections of domains.
 - **Individual domain entries**: Add a single domain directly in **Domains** > **Allowlist** in the web interface.
   Best for one-off fixes when a specific service breaks.
 
-### Subscribe to a referral allowlist
+### Subscribe to a Referral Allowlist
 
 The HaGeZi Referral Allowlist is a maintained collection of domains that blocklists commonly block but that services legitimately need.
 Adding it as a subscription prevents a large category of false positives before they happen.
@@ -270,7 +270,7 @@ On Hulu's ad-supported plan, ad-serving domains share infrastructure with conten
 This is server-side ad insertion (SSAI): the ads are stitched into the video stream before it reaches your device, so there is no separate ad request for Pi-hole to answer.
 Blocking at the DNS level breaks playback entirely rather than removing the ads.
 
-There is no domain you can allowlist to block the ads on the Hulu app.
+No domain exists that you can allowlist to block the ads on the Hulu app.
 DNS filtering cannot fix this on a smart TV, a Roku, a Fire Stick, or a phone, because the ads and the show arrive as one stream.
 
 **What does work:** on the desktop web player, browser extensions can still strip Hulu's ads, because they operate on the page rather than on DNS.
@@ -299,7 +299,7 @@ See [Skip Pi-hole for a Specific Device](#skip-pi-hole-for-a-specific-device) be
 If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback, while `saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
 This is partial at best: the server-stitched ads still get through.
 
-Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed 28 July 2026.)*
+Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed July 28, 2026.)*
 
 #### YouTube
 
@@ -314,7 +314,7 @@ This is a fundamental limitation of DNS-based blocking, not a configuration prob
 **What does work,** depending on where you watch:
 
 - **In a browser:** an extension like [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo).
-- **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed 28 July 2026.)*
+- **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed July 28, 2026.)*
 - **ReVanced** patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
 
 None of these are DNS-level fixes.
@@ -349,7 +349,7 @@ Sources disagree on whether the time-sync domain is `.net` or `.com`, so the com
 Note that this allowlists the specific subdomains, not the bare `samsungcloudsolution.com`.
 Blocking the bare domain without allowing these subdomains is what breaks the platform.
 
-Compiled from [techjunctions' Samsung TV ad blocker guide](https://techjunctions.com/samsung-tv-ad-blocker/) (updated April 2026) and [Perflyst/PiHoleBlocklist issue #10](https://github.com/Perflyst/PiHoleBlocklist/issues/10). *(Accessed 28 July 2026.)*
+Compiled from [techjunctions' Samsung TV ad blocker guide](https://techjunctions.com/samsung-tv-ad-blocker/) (updated April 2026) and [Perflyst/PiHoleBlocklist issue #10](https://github.com/Perflyst/PiHoleBlocklist/issues/10). *(Accessed July 28, 2026.)*
 Not tested on my own hardware.
 
 #### Amazon Fire TV / Fire Stick
@@ -372,7 +372,7 @@ sudo pihole allowlist fireoscaptiveportal.com firetvcaptiveportal.com dp-discove
 Both captive-portal domains are real and separately registered to Amazon, and guidance differs on which one a given device generation uses.
 Allowing both costs nothing.
 
-Compiled from the [hkamran80 smart TV blocklist](https://gist.github.com/hkamran80/779019103fcd306979411d44c8d38459) comment history, where both domains were removed from the blocklist after users reported Fire Sticks failing. *(Accessed 28 July 2026.)*
+Compiled from the [hkamran80 smart TV blocklist](https://gist.github.com/hkamran80/779019103fcd306979411d44c8d38459) comment history, where both domains were removed from the blocklist after users reported Fire Sticks failing. *(Accessed July 28, 2026.)*
 Not tested on my own hardware.
 
 #### Roku
@@ -400,7 +400,7 @@ What you can block and allow:
 Blocked telemetry domains are also what cause apps to load with no thumbnails, or video that won't start.
 If that happens, use the query log method above rather than guessing, because the exact domains vary by region and Roku model.
 
-Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [cybernews' Roku ad blocking guide](https://cybernews.com/best-ad-blockers/how-to-block-ads-on-roku-tv/). *(Accessed 28 July 2026.)*
+Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [cybernews' Roku ad blocking guide](https://cybernews.com/best-ad-blockers/how-to-block-ads-on-roku-tv/). *(Accessed July 28, 2026.)*
 Not tested on my own hardware.
 
 #### Monday.com

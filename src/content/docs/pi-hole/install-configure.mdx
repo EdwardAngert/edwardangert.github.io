@@ -13,6 +13,9 @@ next:
 
 import { Steps } from '@astrojs/starlight/components';
 import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Verified from '../../../components/Verified.astro';
+
+<Verified date="2026-08" method="tested" />
 
 ## Install Software Locally
 
@@ -53,7 +56,7 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 <Steps>
 
 1. Open Raspberry Pi Imager.
-1. **Select your Raspberry Pi Device**: Raspberry Pi 4.
+1. **Select your Raspberry Pi Device**: Raspberry Pi 4 (select your own board if it's different).
 1. **Choose operating system**: Raspberry Pi OS (64-bit).
 1. **Select your storage device**: Select the SD card.
 1. **Customisation: Choose hostname**: `pi-hole`.
@@ -149,7 +152,7 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 </Steps>
 
-### TP-Link Omada-specific steps to find and fix the Pi's IP
+### TP-Link Omada-Specific Steps to Find and Fix the Pi's IP
 
 <details>
 <summary>Find the Pi and set a fixed IP on a TP-Link Omada controller</summary>
@@ -205,7 +208,7 @@ SSH is allowed for remote administration.
 1. Install UFW:
 
    ```shell title="From the Pi"
-   sudo apt install ufw
+   sudo apt install -y ufw
    ```
 
 1. Allow SSH immediately to avoid getting locked out later:
@@ -279,7 +282,7 @@ This helps minimize the risk of brute-force attacks.
 1. Install Fail2Ban:
 
    ```shell title="From the Pi"
-   sudo apt install fail2ban
+   sudo apt install -y fail2ban
    ```
 
 1. Create `/etc/fail2ban/jail.local`:
@@ -371,8 +374,82 @@ Pi-hole needs a stable IP address.
 If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the Internet.
 
 These steps use `nmcli` to lock the IP.
-They set the Ethernet connection name as a temporary shell variable.
+They set the connection name as a temporary shell variable.
 The variable is cleared when you exit the session.
+
+<Tabs>
+<TabItem label="Wi-Fi">
+
+<Steps>
+
+1. Set the static IP, gateway, and DNS.
+
+   This example is intentionally set to fail if you don't adjust `YOUR-PI-IP` and `YOUR-GATEWAY-IP`.
+   This way you're less likely to get locked out if you don't change the example first:
+
+   ```shell "YOUR-PI-IP" "YOUR-GATEWAY-IP" title="From the Pi"
+   CON=$(nmcli -t -f NAME,DEVICE con show | grep wlan0 | cut -d: -f1) && \
+   echo $CON && \
+   sudo nmcli con mod "$CON" \
+     ipv4.addresses YOUR-PI-IP/24 \
+     ipv4.gateway YOUR-GATEWAY-IP \
+     ipv4.dns "1.1.1.1" \
+     ipv4.method manual
+   ```
+
+   <details>
+   <summary>Help with this step</summary>
+
+   - This setting uses the shell variable `CON` to make it easier to copy and paste the command consistently.
+     The first line finds the Wi-Fi connection's name, and sets it as the variable.
+     `echo $CON` on the second line displays it in the terminal for your information.
+   - Replace `YOUR-PI-IP` with the Pi's IP you found in [step 1 of Configure Raspberry Pi OS](#configure-raspberry-pi-os).
+   - Replace `YOUR-GATEWAY-IP` with your router's IP (or your gateway if you already know it).
+
+   For more about these settings, see the
+   [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
+   </details>
+
+   - If you do get locked out, you'll need to access the Pi directly.
+     Then run this same command in the terminal with the correct IPs.
+
+1. Apply the changes:
+
+   ```shell title="From the Pi"
+   sudo nmcli con up "$CON"
+   ```
+
+1. If you changed the IP address, your SSH session will drop.
+
+   Still in the terminal, but on your local machine, remove the old cached keys and reconnect at the new IP:
+
+   ```shell "YOUR-OLD-PI-IP" "YOUR-PI-IP" title="From your device"
+   ssh-keygen -R YOUR-OLD-PI-IP
+   ssh pi-admin@YOUR-PI-IP
+   ```
+
+   Accept the new host key when prompted.
+
+1. Verify the settings persisted on the Pi:
+
+   ```shell title="From the Pi"
+   ip addr show wlan0
+   ```
+
+   Confirm your static IP is listed.
+
+1. Reboot the Pi:
+
+   ```shell title="From the Pi"
+   sudo reboot now
+   ```
+
+   Wait a few minutes before you SSH back in.
+
+</Steps>
+
+</TabItem>
+<TabItem label="Ethernet">
 
 <Steps>
 
@@ -395,7 +472,7 @@ The variable is cleared when you exit the session.
    <summary>Help with this step</summary>
 
    - This setting uses the shell variable `CON` to make it easier to copy and paste the command consistently.
-     The first line finds the device's name, and sets it as the variable.
+     The first line finds the Ethernet connection's name, and sets it as the variable.
      `echo $CON` on the second line displays it in the terminal for your information.
    - Replace `YOUR-PI-IP` with the Pi's IP you found in [step 1 of Configure Raspberry Pi OS](#configure-raspberry-pi-os).
    - Replace `YOUR-GATEWAY-IP` with your router's IP (or your gateway if you already know it).
@@ -441,6 +518,9 @@ The variable is cleared when you exit the session.
    Wait a few minutes before you SSH back in.
 
 </Steps>
+
+</TabItem>
+</Tabs>
 
 ## Checkpoint
 

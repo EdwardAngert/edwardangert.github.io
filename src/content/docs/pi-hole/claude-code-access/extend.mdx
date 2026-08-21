@@ -17,7 +17,6 @@ prev:
 
 import { Steps, Tabs, TabItem, Code, LinkCard, CardGrid } from '@astrojs/starlight/components';
 import Verified from '../../../../components/Verified.astro';
-import claudeMd from '../CLAUDE.md.example?raw';
 
 Everything on this page is optional, apart from [Revoke Access](#revoke-access).
 Start at [Give Claude Code Access to Pi-hole](/docs/pi-hole/claude-code-access/) if you haven't set up access yet.
@@ -264,7 +263,6 @@ It needs no filesystem changes at all, which makes it the right choice in two ca
 - Pi-hole runs in Docker, where the logs and database live inside the container and the ACL recipe above doesn't apply as written.
 
 :::caution[An application password is not read-only]
-This is the important part, and it's widely misreported.
 The `webserver.api.app_sudo` setting is `false` by default, but it only blocks two things: changing configuration, and importing a Teleporter backup.
 
 An application password can still disable blocking network-wide, add or remove blocklists and allowlists, delete groups and clients, trigger a gravity rebuild, and flush the query log that you granted access to read.

@@ -5,7 +5,7 @@ description: "How to set Pi-hole as the DNS server for your whole network by con
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/block-allow-lists/
-  label: Add Block & Allowlists to the Pi-hole
+  label: Add Blocklists and Allowlists to Pi-hole
 next:
   link: /docs/pi-hole/tailscale/
   label: VPN with Tailscale
@@ -94,7 +94,14 @@ Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server y
    sudo iptables -t nat -L PREROUTING --line-numbers
    ```
 
-   You should see two rules with `DNAT` and `to:YOUR-PI-IP` — one for `udp dpt:domain` and one for `tcp dpt:domain`.
+   You should see two rules with `DNAT` and `to:YOUR-PI-IP`: one for `udp dpt:domain` and one for `tcp dpt:domain`.
+
+   ```shellsession "192.168.1.25" title="Example output, with YOUR-PI-IP replaced"
+   Chain PREROUTING (policy ACCEPT)
+   num  target     prot opt source               destination
+   1    DNAT       udp  --  anywhere             anywhere             udp dpt:domain to:192.168.1.25
+   2    DNAT       tcp  --  anywhere             anywhere             tcp dpt:domain to:192.168.1.25
+   ```
 
 </Steps>
 
