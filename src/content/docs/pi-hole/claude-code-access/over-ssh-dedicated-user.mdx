@@ -201,8 +201,11 @@ Granting it would hand back exactly the write access this page's ACLs are built 
 On unpatched installs, `/api/config` correctly rejected configuration changes from a `cli_pw` session, but `/api/teleporter` didn't get the same check until FTL 6.6.
 That means a `cli_pw` session could import a Teleporter archive and overwrite `pihole.toml` outright, including DNS settings, blocking status, DHCP config, upstream servers.
 
+The 6.6.x line has its own separate advisories, including a session-hijacking bug and two RCEs, plus a session-expiration bypass that reaches back to 6.0.
+All are fixed in **6.7**, so update there, not just to 6.6.
+
 <details>
-<summary>Update to Pi-hole FTL 6.6 or later if you haven't already.</summary>
+<summary>Update to Pi-hole FTL 6.7 or later if you haven't already.</summary>
 
 ```shell title="From the Pi"
 sudo pihole -up
@@ -624,10 +627,10 @@ ssh pi-hole-admin "getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db /etc/pi
 <Verified date="2026-08" method="tested" />
 
 Pi-hole v6 exposes query data over an HTTP API authenticated with an application password.
-It needs no filesystem changes at all, which makes it the right choice in two cases:
+It needs no filesystem changes at all, which makes it the right choice if:
 
-- You administer Pi-hole but don't have shell root on the box, so you can't set ACLs.
-- Pi-hole runs in Docker, where the logs and database live inside the container and the ACL recipe above doesn't apply as written.
+- You administer Pi-hole but don't have shell root on the Pi device itself, so you can't set ACLs.
+- Pi-hole runs in Docker (such as on TrueNAS), where the logs and database live inside the container and the ACL recipe above doesn't apply as written.
 
 :::caution[An application password is not read-only]
 The `webserver.api.app_sudo` setting is `false` by default, but it only blocks two things: changing configuration, and importing a Teleporter backup.
@@ -668,7 +671,8 @@ If you have root on the Pi, the ACL method above grants strictly less.
    sudo apt install jq
    ```
 
-1. Authenticate and query. Piping the password through stdin keeps it out of the process list:
+1. Authenticate and query.
+   Piping the password through stdin keeps it out of the process list:
 
    ```shell title="From the Pi"
    SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
@@ -681,11 +685,18 @@ If you have root on the Pi, the ACL method above grants strictly less.
 </Steps>
 
 `/api/queries` filters server-side on `client_ip`, `client_name`, `domain`, `status`, `upstream`, `type`, `reply`, `dnssec`, `from`, and `until`.
+
 Unlike the database, the API takes status names such as `GRAVITY` rather than the numeric codes.
 Add `disk=true` to read the long-term database rather than the in-memory buffer.
 
-Sessions last 30 minutes, and each authenticated request extends the window.
-Generating a new application password invalidates every active session, including your web interface login. That is also how you revoke it.
+Update to 6.7 or later if you haven't already.
+
+On FTL 6.7 and later, sessions last 30 minutes.
+Each authenticated request extends the window.
+
+Before the release of FTL 6.7, a logic bug ([GHSA-w8cr-2cwg-92cg](https://github.com/pi-hole/FTL/security/advisories/GHSA-w8cr-2cwg-92cg)) kept the expiry check from running, so a session would periodically never expire.
+
+Generate a new application password to revoke active sessions, including your web interface login.
 
 ## What the Agent Can Still See
 
