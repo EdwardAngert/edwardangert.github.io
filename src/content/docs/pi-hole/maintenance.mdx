@@ -48,6 +48,9 @@ To restore after a rebuild or SD card failure, use the **Import** option on the 
 Re-export after making significant changes to lists or settings.
 Store the backup file somewhere other than the Pi, such as on your local computer, a NAS, or cloud storage.
 
+Treat the file as sensitive.
+It includes your full configuration, so store it like any config backup that might hold credentials: never in a shared or public folder.
+
 ## Advanced Pi-hole Configuration with pihole.toml
 
 If you need to configure Pi-hole's DNS behavior outside the web interface, edit `/etc/pihole/pihole.toml` directly.
@@ -121,10 +124,12 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
    Look for a `/dev/` that wasn't there before, such as `/dev/sda` with a partition at `/dev/sda1`.
 
-1. Get the partition's UUID:
+1. Get the partition's UUID.
 
-   ```shell title="From the Pi"
-   sudo blkid /dev/sda1
+   This example is intentionally set to fail if you don't adjust `YOUR-USB-PARTITION` to the device you found in the previous step:
+
+   ```shell "YOUR-USB-PARTITION" title="From the Pi"
+   sudo blkid /dev/YOUR-USB-PARTITION
    ```
 
    Copy the UUID value from the output.
@@ -214,10 +219,14 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
    ```toml title="pihole.toml"
    [files]
-   database = "/mnt/pihole-logs/pihole-FTL.db"
-   log = "/mnt/pihole-logs/pihole.log"
+     database = "/mnt/pihole-logs/pihole-FTL.db"
+
+     [files.log]
+       dnsmasq = "/mnt/pihole-logs/pihole.log"
    ```
 
+   `log` is a subsection (`[files.log]`), not a single value.
+   Only `dnsmasq` needs to change here; `ftl` and `webserver` can stay on the SD card.
    If there is no `[files]` section, add it at the end of the file.
 
 1. Start FTL and verify it comes up cleanly:

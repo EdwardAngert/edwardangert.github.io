@@ -71,6 +71,33 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
    - Select **Next** if you will connect using Ethernet.
 1. **Customisation: SSH authentication**: Enable SSH and select **Use password authentication**.
    - Optionally, [use public key authentication](https://www.raspberrypi.com/documentation/computers/remote-access.html#configure-ssh-without-a-password) for more secure access.
+
+     <details>
+     <summary>Set up a key instead of a password</summary>
+
+     Imager lets you paste a public key directly into this screen, so you don't need a separate setup step on the Pi.
+
+     1. Check whether you already have a key on this device:
+
+        ```shell title="From your device"
+        ls ~/.ssh/id_ed25519.pub
+        ```
+
+     1. If that file doesn't exist, generate one:
+
+        ```shell title="From your device"
+        ssh-keygen -t ed25519 -C "pi-hole"
+        ```
+
+        Accept the default file location, then set a passphrase or leave it blank.
+
+     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste in the contents of the `.pub` file (find it with `cat ~/.ssh/id_ed25519.pub`).
+
+     This closes the gap between first boot and Fail2Ban's installation later in this guide, when password auth would otherwise be your only protection for SSH.
+
+     </details>
+
+1. **Raspberry Pi Connect**: select **Next** to skip it. This guide doesn't use it.
 1. **Write image**: select **Write**.
 1. In the popup, review the warning, then select **I understand, erase and write** to continue.
 1. When the write completes, remove the SD card from your computer and insert it into the Raspberry Pi.
@@ -81,7 +108,7 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 <details>
 <summary>Rebuilds and Upgrades: Confirm Your Linux Version</summary>
 
-Pi-hole v6 requires Debian 11 (Bullseye) or later.
+Pi-hole v6 needs Debian 11 (Bullseye) or later in practice, because FTL requires glibc 2.28 or newer, which older releases don't have.
 
 If you're on an existing Pi, use `cat /etc/os-release | grep PRETTY_NAME` to confirm the release version before you continue:
 
@@ -149,6 +176,8 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
    ```shell title="From the Pi"
    ip addr show eth0
    ```
+
+   If you're running Wi-Fi only, use `ip addr show wlan0` instead, and use that address later on.
 
 </Steps>
 
@@ -259,6 +288,9 @@ SSH is allowed for remote administration.
 
 </Steps>
 
+The `Pi-hole` rule above isn't scoped to an interface, so it applies to whatever can route to the Pi, not just your LAN.
+That's intentional: later, [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](/docs/pi-hole/tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) depends on the same ports being reachable from the Tailscale interface too.
+
 <details>
 <summary>If you plan to use Pi-hole as a DHCP server</summary>
 
@@ -297,6 +329,10 @@ This helps minimize the risk of brute-force attacks.
    ```
 
    `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables (an alternative way to manage network access to the Pi) rules directly, keeping all firewall rules in one place.
+
+   This ban is flat: an attacker who fails 4 attempts waits out the same 1-hour ban and can try again.
+   That's deliberate here, because an escalating ban risks locking you out if you mistype your own password a few times.
+   If you want repeat offenders banned for longer each time, add `bantime.increment = true` to the `[sshd]` block instead.
 
    Remember to use `sudo` to edit the file (`sudo nano /etc/fail2ban/jail.local` if you're new to this).
 
@@ -354,7 +390,7 @@ Pi-hole is DNS infrastructure for your whole network, so it's worth patching pro
    Confirm both:
 
    ```shell title="From the Pi"
-   grep -A2 "Allowed-Origins" /etc/apt/apt.conf.d/50unattended-upgrades && grep "Automatic-Reboot \"" /etc/apt/apt.conf.d/50unattended-upgrades
+   grep -A5 "Origins-Pattern" /etc/apt/apt.conf.d/50unattended-upgrades && grep "Automatic-Reboot \"" /etc/apt/apt.conf.d/50unattended-upgrades
    ```
 
    Leave automatic reboot commented out (disabled) unless you specifically want the Pi to reboot itself after a kernel update.
@@ -376,6 +412,10 @@ If the router reassigns the Pi's IP after a reboot, all your DHCP clients will p
 These steps use `nmcli` to lock the IP.
 They set the connection name as a temporary shell variable.
 The variable is cleared when you exit the session.
+
+The `ipv4.dns` value below sets the Pi's own OS-level resolver, which it uses to look things up before Pi-hole is installed.
+It's not what Pi-hole will serve to the rest of your network.
+That's a separate setting you'll choose on the [next page](/docs/pi-hole/pihole-install/) when you pick Pi-hole's upstream DNS provider.
 
 <Tabs>
 <TabItem label="Wi-Fi">

@@ -208,22 +208,29 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
 
    When it finishes, Netdata starts automatically and auto-discovers Pi-hole.
 
-1. Allow the dashboard port through UFW if you want access from other devices on your network:
+1. Access the dashboard over an SSH tunnel:
+
+   ```shell title="From your device"
+   ssh -L 19999:localhost:19999 pi-admin@pi-hole.local
+   ```
+
+   Netdata's local dashboard has no login of its own.
+   Anyone who can reach the port can see it: CPU, memory, and (once you enable the collector below) the Fail2Ban jail status.
+   A tunnel keeps the dashboard reachable only from the device you connect from, with no extra port open on the Pi.
+
+   <details>
+   <summary>If you want it reachable from other devices on your network instead</summary>
 
    ```shell title="From the Pi"
    sudo ufw allow 19999/tcp comment 'Netdata dashboard'
    ```
 
-   <details>
-   <summary>If you'll only access Netdata over an SSH tunnel</summary>
-
-   ```shell title="From the Pi"
-   ssh -L 19999:localhost:19999 pi-admin@pi-hole.local
-   ```
+   This opens the dashboard, unauthenticated, to every device that can reach the Pi.
+   Only open it if you accept that tradeoff.
 
    </details>
 
-1. Open the dashboard at `http://pi-hole.local:19999`
+1. Open the dashboard at `http://localhost:19999` (over the tunnel) or `http://pi-hole.local:19999` (if you opened the port instead).
    Scroll down to the **Pi-hole** section to see query rate, cache, and blocking stats alongside system metrics.
 
 1. Enable the Fail2Ban collector to see banned IPs per jail.
