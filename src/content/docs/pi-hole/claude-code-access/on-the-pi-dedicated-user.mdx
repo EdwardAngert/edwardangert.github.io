@@ -610,7 +610,7 @@ sudo setfacl -R -b /var/log/pihole && \
   sudo setfacl -b /etc/pihole/cli_pw
 ```
 
-The `cli_pw` entry only exists if you granted it. The `|| true` keeps the chain going when you didn't.
+`setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
 
 Confirm nothing is left. No `user:` line should name the account you revoked:
 

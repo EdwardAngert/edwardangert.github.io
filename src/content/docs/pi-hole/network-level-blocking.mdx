@@ -12,6 +12,9 @@ next:
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import Verified from '../../../components/Verified.astro';
+
+<Verified date="2026-08" method="tested" />
 
 Before your device connects to anything, whether it's a page you visit or ads and trackers running in the background of that page, your device asks your DNS server for the address by name first.
 By default, this is handled by your router and ISP.
@@ -110,3 +113,15 @@ You should see its DNS requests appearing there.
 
 These rules won't catch encrypted DNS (DNS-over-HTTPS) traffic on port 443.
 Blocking DoH requires blocking the IP addresses of known DoH providers, which is more aggressive and can break legitimate HTTPS traffic.
+
+## Checkpoint
+
+At this point every device on your network uses Pi-hole for DNS, including ones that previously ignored it.
+
+Before you continue, confirm the following:
+
+- A device that renewed its DHCP lease shows up as a client in the Pi-hole query log.
+- If you added the iptables rules, `sudo iptables -t nat -L PREROUTING --line-numbers` still lists both DNAT rules.
+- If you run into issues, see [Common Pi-hole Issues](/docs/pi-hole/troubleshooting/#verify-pi-hole-is-working).
+
+The next page covers using Tailscale for remote access and ad blocking away from home.

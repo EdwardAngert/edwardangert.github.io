@@ -28,7 +28,7 @@ Update the Pi-hole software and refresh the Gravity database with updated lists.
 Run these whenever Pi-hole releases a new version, or after adding or changing blocklists.
 
 ```shell title="From the Pi"
-sudo pihole -up
+sudo pihole -up && \
 sudo pihole -g
 ```
 
@@ -209,8 +209,8 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Move the existing database to the USB drive (so you don't lose query history):
 
    ```shell title="From the Pi"
-   sudo systemctl stop pihole-FTL
-   sudo mv /etc/pihole/pihole-FTL.db /mnt/pihole-logs/
+   sudo systemctl stop pihole-FTL && \
+   sudo mv /etc/pihole/pihole-FTL.db /mnt/pihole-logs/ && \
    sudo mv /var/log/pihole/pihole.log /mnt/pihole-logs/ 2>/dev/null || true
    ```
 

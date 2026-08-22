@@ -91,7 +91,7 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 1. Allow Pi-hole to accept DNS queries from devices connected to the tailnet:
 
    ```shell title="From the Pi"
-   sudo pihole-FTL --config dns.listeningMode ALL
+   sudo pihole-FTL --config dns.listeningMode ALL && \
    sudo systemctl restart pihole-FTL
    ```
 
@@ -128,8 +128,8 @@ This is useful for accessing local resources or creating another layer of privac
    This is required for the Pi to route packets on behalf of other devices:
 
    ```shell title="From the Pi"
-   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
-   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf && \
+   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf && \
    sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
    ```
 

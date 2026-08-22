@@ -15,7 +15,7 @@ prev:
   label: Give Claude Code Access to Pi-hole
 next:
   link: /docs/pi-hole/claude-code-access/extend/
-  label: Extend, Revoke, and Alternatives
+  label: Extend, Revoke, and Alternatives for Pi-hole Access
 ---
 
 import { Steps, Tabs, TabItem, Code, LinkCard, CardGrid } from '@astrojs/starlight/components';
@@ -397,6 +397,9 @@ The database lags live traffic by up to 60 seconds, because FTL flushes its in-m
 
 Confirming what the account *can't* do matters more than confirming what it can, and it has to be checked as that account rather than as yourself.
 
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
 <Tabs syncKey="cc-identity">
 <TabItem label="Your login user">
 
@@ -449,6 +452,68 @@ The result depends on your Pi-hole version, and both outcomes are expected:
 
 - `Permission denied` means the file is mode `0640`, and the exclusion holds.
 - A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Writing to the log should fail, because the ACL grants read only:
+
+```shell title="From your workstation"
+ssh pi-hole-admin 'echo test >> /var/log/pihole/pihole.log'
+```
+
+That should report `Permission denied`.
+
+Then check `pihole.toml`:
+
+```shell title="From your workstation"
+ssh pi-hole-admin 'head -n 1 /etc/pihole/pihole.toml'
+```
+
+The result depends on your Pi-hole version, and both outcomes are expected:
+
+- `Permission denied` means the file is mode `0640`, and the exclusion holds.
+- A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+Each of these should report `Permission denied`.
+Run them one at a time, since each is expected to fail and chaining them would stop at the first:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin "sudo -u claude-agent bash -c 'echo test >> /var/log/pihole/pihole.log'"
+```
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /home/pi-admin/.ssh/id_ed25519'
+```
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /etc/shadow'
+```
+
+Replace `/home/pi-admin` with your own home directory on the Pi.
+
+Then check `pihole.toml`:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /etc/pihole/pihole.toml'
+```
+
+The result depends on your Pi-hole version, and both outcomes are expected:
+
+- `Permission denied` means the file is mode `0640`, and the exclusion holds.
+- A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.
+
+</TabItem>
+</Tabs>
 
 </TabItem>
 </Tabs>

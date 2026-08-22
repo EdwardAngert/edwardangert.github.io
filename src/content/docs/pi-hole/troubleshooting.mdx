@@ -21,7 +21,7 @@ The Pi-hole debug tool turns on verbose logging flags when run.
 You can leave it on while you troubleshoot and turn it off when you're done:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config debug.all true
+sudo pihole-FTL --config debug.all true && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -146,8 +146,8 @@ before the first restart - the DNS lookup for list URLs fails.
 **Fix**: Wait 30 seconds after install completes, confirm FTL is running, then re-run:
 
 ```shell title="From the Pi"
-sudo systemctl status pihole-FTL
-pihole -g
+sudo systemctl status pihole-FTL && \
+sudo pihole -g
 ```
 
 If Gravity still fails, verify outbound connectivity:
@@ -242,8 +242,8 @@ If you have Pi-hole v5 or upgraded from it, check your `maxDBdays` setting.
 **Quick fix (loses query history)**:
 
 ```shell title="From the Pi"
-sudo systemctl stop pihole-FTL
-sudo rm /etc/pihole/pihole-FTL.db
+sudo systemctl stop pihole-FTL && \
+sudo rm /etc/pihole/pihole-FTL.db && \
 sudo systemctl start pihole-FTL
 ```
 
@@ -314,7 +314,7 @@ If `System clock synchronized: yes` and the time is correct, the warning is cosm
 **Optional fix**: Disable Pi-hole's NTP client since the OS handles time sync:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config ntp.sync.active false
+sudo pihole-FTL --config ntp.sync.active false && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -494,7 +494,7 @@ By default, Pi-hole only accepts DNS queries from the local subnet.
 Run the following on the Pi:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config dns.listeningMode ALL
+sudo pihole-FTL --config dns.listeningMode ALL && \
 sudo systemctl restart pihole-FTL
 ```
 

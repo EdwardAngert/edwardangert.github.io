@@ -312,16 +312,16 @@ Confirming what the account *can't* do matters more than confirming what it can,
 
 Writing to the log should fail, because the ACL grants read only:
 
-```shell title="From the Pi"
-echo test >> /var/log/pihole/pihole.log
+```shell title="From your workstation"
+ssh pi-hole-admin 'echo test >> /var/log/pihole/pihole.log'
 ```
 
 That should report `Permission denied`.
 
 Then check `pihole.toml`:
 
-```shell title="From the Pi"
-head -n 1 /etc/pihole/pihole.toml
+```shell title="From your workstation"
+ssh pi-hole-admin 'head -n 1 /etc/pihole/pihole.toml'
 ```
 
 The result depends on your Pi-hole version, and both outcomes are expected:
@@ -530,13 +530,13 @@ sudo setfacl -R -x "u:$USER" /var/log/pihole && \
   sudo setfacl -x "u:$USER" /etc/pihole/cli_pw 2>/dev/null || true
 ```
 
+The `cli_pw` entry only exists if you granted it. The `|| true` keeps the chain going when you didn't.
+
 Remove the sudoers rule if you added one:
 
 ```shell title="From the Pi"
 sudo rm -f /etc/sudoers.d/pihole-agent
 ```
-
-The `cli_pw` entry only exists if you granted it. The `|| true` keeps the chain going when you didn't.
 
 Confirm nothing is left. No `user:` line should name the account you revoked:
 

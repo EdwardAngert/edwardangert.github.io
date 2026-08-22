@@ -3,8 +3,6 @@ slug: docs/pi-hole/block-allow-lists
 title: "Add Blocklists and Allowlists to Pi-hole"
 description: "Choose a HaGeZi blocklist tier for Pi-hole v6, fix Disney+, Hulu, and other streaming services it breaks, and control blocking per device with groups."
 category: "Personal Reference Documentation"
-applies-to:
-  pihole: "v6"
 prev:
   link: /docs/pi-hole/pihole-install/
   label: Install Pi-hole v6
@@ -33,6 +31,7 @@ If you're just here to add lists, you can skip to the section:
 
 - [Add Blocklists to Pi-hole](#add-blocklists-to-pi-hole)
 - [Add Allowlists and Domains to Pi-hole](#add-allowlists-and-domains-to-pi-hole)
+- [Fix Streaming Services and Other Broken Sites](#fix-streaming-services-and-other-broken-sites)
 
 ## How to Choose the Best Pi-hole Blocklist
 
@@ -210,7 +209,7 @@ Adding it as a subscription prevents a large category of false positives before 
 1. Paste the allowlist:
 
    ```url
-   https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/whitelist-referral.txt
+   https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/whitelist-referral.txt
    ```
 
 1. Select **Add allowlist**
@@ -328,6 +327,8 @@ None of these are DNS-level fixes.
 They replace or modify the client instead, which is the only layer where YouTube's ads and content can still be told apart.
 
 #### Netflix, Max, Apple TV+
+
+<Verified date="2026-08" method="tested" />
 
 These services generally work without individual domain allowlisting.
 If thumbnails fail to load or playback fails, check the query log for blocked CDN domains and allowlist as needed.

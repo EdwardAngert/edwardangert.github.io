@@ -379,24 +379,24 @@ Confirming what the account *can't* do matters more than confirming what it can,
 Each of these should report `Permission denied`.
 Run them one at a time, since each is expected to fail and chaining them would stop at the first:
 
-```shell title="From the Pi"
-sudo -u claude-agent bash -c 'echo test >> /var/log/pihole/pihole.log'
+```shell title="From your workstation"
+ssh -t pi-hole-admin "sudo -u claude-agent bash -c 'echo test >> /var/log/pihole/pihole.log'"
 ```
 
-```shell title="From the Pi"
-sudo -u claude-agent head -n 1 /home/pi-admin/.ssh/id_ed25519
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /home/pi-admin/.ssh/id_ed25519'
 ```
 
-```shell title="From the Pi"
-sudo -u claude-agent head -n 1 /etc/shadow
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /etc/shadow'
 ```
 
-Replace `/home/pi-admin` with your own home directory.
+Replace `/home/pi-admin` with your own home directory on the Pi.
 
 Then check `pihole.toml`:
 
-```shell title="From the Pi"
-sudo -u claude-agent head -n 1 /etc/pihole/pihole.toml
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /etc/pihole/pihole.toml'
 ```
 
 The result depends on your Pi-hole version, and both outcomes are expected:
@@ -614,7 +614,7 @@ sudo setfacl -R -b /var/log/pihole && \
   sudo setfacl -b /etc/pihole/cli_pw
 ```
 
-The `cli_pw` entry only exists if you granted it. The `|| true` keeps the chain going when you didn't.
+`setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
 
 Confirm nothing is left. No `user:` line should name the account you revoked:
 
