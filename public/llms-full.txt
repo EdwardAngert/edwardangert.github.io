@@ -47,7 +47,7 @@ This guide is a collection of my notes, organized into documentation to help oth
 
 The steps in this guide document how I set up Pi-hole v6 with:
 
-- Raspberry Pi running Raspberry Pi OS (Bookworm)
+- Raspberry Pi running Raspberry Pi OS (64-bit)
 - UFW firewall
 - [HaGeZi tiered blocklists](https://github.com/hagezi/dns-blocklists) with supplementary category lists
 - Allowlists for streaming and smart TV platforms
@@ -90,7 +90,7 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
   - Run the installer, set a password, and optionally add unbound and Netdata.
 - [Add Blocklists and Allowlists](./block-allow-lists/)
   - Choose a blocklist tier, add supplementary lists, allowlist streaming services and smart TVs, and use groups to control blocking per device (including how to bypass Pi-hole for a specific device or apply stricter rules for a child's device).
-- [Enable Network-wide DNS Blocking with Pi-hole](./network-level-blocking/)
+- [Enable Network-Wide DNS Blocking with Pi-hole](./network-level-blocking/)
   - Configure router DHCP so every device uses Pi-hole for DNS.
 - [Use Pi-hole as a VPN to Block Ads On the Go with Tailscale](./tailscale/)
   - Block ads on your phone and laptop anywhere, remote admin access, no port forwarding required.
@@ -308,7 +308,7 @@ Remove the file so that sudo commands require authentication.
    ```
 
 
-### Set Up a Firewall on Your Pi With UFW
+### Set Up a Firewall on Your Pi with UFW
 
 UFW (Uncomplicated Firewall) restricts which ports are accessible on the Pi.
 Pi-hole requires ports for DNS and the web interface.
@@ -554,7 +554,7 @@ That's a separate setting you'll choose on the [next page](./pihole-install/) wh
 1. Reboot the Pi:
 
    ```shell title="From the Pi"
-   sudo reboot now
+   sudo reboot
    ```
 
    Wait a few minutes before you SSH back in.
@@ -623,7 +623,7 @@ That's a separate setting you'll choose on the [next page](./pihole-install/) wh
 1. Reboot the Pi:
 
    ```shell title="From the Pi"
-   sudo reboot now
+   sudo reboot
    ```
 
    Wait a few minutes before you SSH back in.
@@ -1123,6 +1123,8 @@ See [Troubleshoot a Broken Service](./troubleshooting/#troubleshoot-a-broken-ser
 
 If a service stops working after you set up Pi-hole, the likely cause is a blocked domain.
 The sections below list known fixes for common services.
+
+If your service isn't listed below, see [Troubleshoot a Broken Service](./troubleshooting/#troubleshoot-a-broken-service) for how to find the blocked domain yourself.
 
 You can use the Pi-hole dashboard to add multiple domains one at a time through the **Domains** section at `https://pi-hole.local/admin/groups/domains`.
 
@@ -1679,7 +1681,18 @@ To stop using the exit node, select **None** in the app, or run the following fr
 sudo tailscale set --exit-node=
 ```
 
-If you run into issues, see [Tailscale troubleshooting](./troubleshooting/#tailscale).
+## Checkpoint
+
+At this point you can reach your Pi-hole from anywhere, and optionally route all your traffic through it.
+
+Before you continue, confirm the following:
+
+- SSH and the Pi-hole web interface both work from a device on your tailnet, away from your home network.
+- If you configured Pi-hole as your tailnet's DNS server, a tailnet device's queries show up in the Pi-hole query log under its `100.x.x.x` address.
+- If you set up an exit node, a client using it shows your home IP address when it checks.
+- If you run into issues, see [Tailscale troubleshooting](./troubleshooting/#tailscale).
+
+The next page covers updating Pi-hole, backing up your configuration, and other maintenance tasks.
 
 ---
 
@@ -2148,7 +2161,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Reboot the Pi:
 
    ```shell title="From the Pi"
-   sudo reboot now
+   sudo reboot
    ```
 
 1. Verify that the USB drive mounts and Pi-hole starts correctly:

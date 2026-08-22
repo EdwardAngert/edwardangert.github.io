@@ -173,4 +173,15 @@ To stop using the exit node, select **None** in the app, or run the following fr
 sudo tailscale set --exit-node=
 ```
 
-If you run into issues, see [Tailscale troubleshooting](/docs/pi-hole/troubleshooting/#tailscale).
+## Checkpoint
+
+At this point you can reach your Pi-hole from anywhere, and optionally route all your traffic through it.
+
+Before you continue, confirm the following:
+
+- SSH and the Pi-hole web interface both work from a device on your tailnet, away from your home network.
+- If you configured Pi-hole as your tailnet's DNS server, a tailnet device's queries show up in the Pi-hole query log under its `100.x.x.x` address.
+- If you set up an exit node, a client using it shows your home IP address when it checks.
+- If you run into issues, see [Tailscale troubleshooting](/docs/pi-hole/troubleshooting/#tailscale).
+
+The next page covers updating Pi-hole, backing up your configuration, and other maintenance tasks.
