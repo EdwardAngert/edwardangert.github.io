@@ -1,7 +1,7 @@
 ---
 slug: docs/pi-hole/install-configure
-title: "Set Up Raspberry Pi OS"
-description: "How to set up Raspberry Pi OS for Pi-hole v6: flash the SD card, harden with UFW and Fail2Ban, and set a static IP."
+title: "Set Up Raspberry Pi OS for Pi-hole v6"
+description: "How to prepare Raspberry Pi OS for Pi-hole v6: flash the SD card, set a static IP, and harden the system with UFW, Fail2Ban, and automatic security updates."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/
@@ -108,7 +108,7 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 <details>
 <summary>Rebuilds and Upgrades: Confirm Your Linux Version</summary>
 
-Pi-hole v6 needs Debian 11 (Bullseye) or later in practice, because FTL requires glibc 2.28 or newer, which older releases don't have.
+Pi-hole v6 needs Debian 11 (Bullseye) or later, since FTL requires glibc 2.28.
 
 If you're on an existing Pi, use `cat /etc/os-release | grep PRETTY_NAME` to confirm the release version before you continue:
 

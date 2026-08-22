@@ -1,7 +1,7 @@
 ---
 slug: docs/pi-hole/claude-code-access
 title: "Give Claude Code Access to Pi-hole Logs and Diagnostics"
-description: "Give Claude Code read-only access to the Pi-hole query database and logs with POSIX ACLs, including why sudo fails with no prompt inside Claude Code and how to grant access without it. Start here to pick your setup."
+description: "Grant Claude Code read-only access to Pi-hole logs and the query database with POSIX ACLs, and learn why sudo fails silently. Start here to pick your setup."
 category: "Personal Reference Documentation"
 applies-to:
   pihole: "v6"
@@ -192,8 +192,11 @@ Granting it would hand back exactly the write access this page's ACLs are built 
 On unpatched installs, `/api/config` correctly rejected configuration changes from a `cli_pw` session, but `/api/teleporter` didn't get the same check until FTL 6.6.
 That means a `cli_pw` session could import a Teleporter archive and overwrite `pihole.toml` outright, including DNS settings, blocking status, DHCP config, upstream servers.
 
+The 6.6.x line has its own separate advisories, including a session-hijacking bug and two RCEs, plus a session-expiration bypass that reaches back to 6.0.
+All are fixed in **6.7**, so update there, not just to 6.6.
+
 <details>
-<summary>Update to Pi-hole FTL 6.6 or later if you haven't already.</summary>
+<summary>Update to Pi-hole FTL 6.7 or later if you haven't already.</summary>
 
 ```shell title="From the Pi"
 sudo pihole -up
@@ -225,8 +228,9 @@ Check before you commit to this:
 uname -m && free -h | awk '/Mem:/ {print $2}'
 ```
 
-`aarch64` and 4 GB or more means you're fine.
-`armv7l`, or less memory, means use the workstation option instead.
+`aarch64` and about 3.7 GB or more means you're fine.
+Raspberry Pi OS reserves some memory for firmware, so a 4 GB board won't show a full 4.0.
+`armv7l`, or noticeably less memory, means use the workstation option instead.
 
 </TabItem>
 <TabItem label="From a workstation">

@@ -5,7 +5,7 @@
 
 ---
 
-# Pi-hole v6 Setup Guide
+# Pi-hole v6 Setup Guide for Raspberry Pi
 
 Source: https://edwardangert.com/docs/pi-hole/
 
@@ -102,7 +102,7 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
 
 ---
 
-# Set Up Raspberry Pi OS
+# Set Up Raspberry Pi OS for Pi-hole v6
 
 Source: https://edwardangert.com/docs/pi-hole/install-configure/
 
@@ -159,6 +159,33 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
    - Select **Next** if you will connect using Ethernet.
 1. **Customisation: SSH authentication**: Enable SSH and select **Use password authentication**.
    - Optionally, [use public key authentication](https://www.raspberrypi.com/documentation/computers/remote-access.html#configure-ssh-without-a-password) for more secure access.
+
+     <details>
+     <summary>Set up a key instead of a password</summary>
+
+     Imager lets you paste a public key directly into this screen, so you don't need a separate setup step on the Pi.
+
+     1. Check whether you already have a key on this device:
+
+        ```shell title="From your device"
+        ls ~/.ssh/id_ed25519.pub
+        ```
+
+     1. If that file doesn't exist, generate one:
+
+        ```shell title="From your device"
+        ssh-keygen -t ed25519 -C "pi-hole"
+        ```
+
+        Accept the default file location, then set a passphrase or leave it blank.
+
+     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste in the contents of the `.pub` file (find it with `cat ~/.ssh/id_ed25519.pub`).
+
+     This closes the gap between first boot and Fail2Ban's installation later in this guide, when password auth would otherwise be your only protection for SSH.
+
+     </details>
+
+1. **Raspberry Pi Connect**: select **Next** to skip it. This guide doesn't use it.
 1. **Write image**: select **Write**.
 1. In the popup, review the warning, then select **I understand, erase and write** to continue.
 1. When the write completes, remove the SD card from your computer and insert it into the Raspberry Pi.
@@ -168,7 +195,7 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 <details>
 <summary>Rebuilds and Upgrades: Confirm Your Linux Version</summary>
 
-Pi-hole v6 requires Debian 11 (Bullseye) or later.
+Pi-hole v6 needs Debian 11 (Bullseye) or later, since FTL requires glibc 2.28.
 
 If you're on an existing Pi, use `cat /etc/os-release | grep PRETTY_NAME` to confirm the release version before you continue:
 
@@ -236,8 +263,10 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
    ip addr show eth0
    ```
 
+   If you're running Wi-Fi only, use `ip addr show wlan0` instead, and use that address later on.
 
-#### TP-Link Omada-Specific Steps to Find and Fix the Pi's IP
+
+### TP-Link Omada-Specific Steps to Find and Fix the Pi's IP
 
 <details>
 <summary>Find the Pi and set a fixed IP on a TP-Link Omada controller</summary>
@@ -338,6 +367,9 @@ SSH is allowed for remote administration.
    ```
 
 
+The `Pi-hole` rule above isn't scoped to an interface, so it applies to whatever can route to the Pi, not just your LAN.
+That's intentional: later, [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](./tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) depends on the same ports being reachable from the Tailscale interface too.
+
 <details>
 <summary>If you plan to use Pi-hole as a DHCP server</summary>
 
@@ -375,6 +407,10 @@ This helps minimize the risk of brute-force attacks.
    ```
 
    `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables (an alternative way to manage network access to the Pi) rules directly, keeping all firewall rules in one place.
+
+   This ban is flat: an attacker who fails 4 attempts waits out the same 1-hour ban and can try again.
+   That's deliberate here, because an escalating ban risks locking you out if you mistype your own password a few times.
+   If you want repeat offenders banned for longer each time, add `bantime.increment = true` to the `[sshd]` block instead.
 
    Remember to use `sudo` to edit the file (`sudo nano /etc/fail2ban/jail.local` if you're new to this).
 
@@ -428,7 +464,7 @@ Pi-hole is DNS infrastructure for your whole network, so it's worth patching pro
    Confirm both:
 
    ```shell title="From the Pi"
-   grep -A2 "Allowed-Origins" /etc/apt/apt.conf.d/50unattended-upgrades && grep "Automatic-Reboot \"" /etc/apt/apt.conf.d/50unattended-upgrades
+   grep -A5 "Origins-Pattern" /etc/apt/apt.conf.d/50unattended-upgrades && grep "Automatic-Reboot \"" /etc/apt/apt.conf.d/50unattended-upgrades
    ```
 
    Leave automatic reboot commented out (disabled) unless you specifically want the Pi to reboot itself after a kernel update.
@@ -449,6 +485,10 @@ If the router reassigns the Pi's IP after a reboot, all your DHCP clients will p
 These steps use `nmcli` to lock the IP.
 They set the connection name as a temporary shell variable.
 The variable is cleared when you exit the session.
+
+The `ipv4.dns` value below sets the Pi's own OS-level resolver, which it uses to look things up before Pi-hole is installed.
+It's not what Pi-hole will serve to the rest of your network.
+That's a separate setting you'll choose on the [next page](./pihole-install/) when you pick Pi-hole's upstream DNS provider.
 
 <Tabs>
 <TabItem label="Wi-Fi">
@@ -605,7 +645,6 @@ Before you continue, confirm the following:
 - If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#troubleshoot-pi-hole-installation-issues).
 
 The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.
-
 
 ---
 
@@ -780,6 +819,7 @@ To fix: configure unbound on port 5335 as above, then restart both:
 sudo systemctl restart unbound
 sudo systemctl restart pihole-FTL
 ```
+
 :::
 
 ## Optional: Monitor Pi-hole with Netdata
@@ -791,32 +831,39 @@ The Pi-hole web interface already shows DNS stats.
 Add Netdata if you want system-level metrics alongside your Pi-hole data.
 
 
-1. Install Netdata:
+1. Install Netdata on the stable release channel:
 
    ```shell title="From the Pi"
-   curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && sh /tmp/netdata-kickstart.sh --disable-telemetry
+   curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && sh /tmp/netdata-kickstart.sh --stable-channel --disable-telemetry
    ```
 
    The installer takes a few minutes.
 
    When it finishes, Netdata starts automatically and auto-discovers Pi-hole.
 
-1. Allow the dashboard port through UFW if you want access from other devices on your network:
+1. Access the dashboard over an SSH tunnel:
+
+   ```shell title="From your device"
+   ssh -L 19999:localhost:19999 pi-admin@pi-hole.local
+   ```
+
+   Netdata's local dashboard has no login of its own.
+   Anyone who can reach the port can see it: CPU, memory, and (once you enable the collector below) the Fail2Ban jail status.
+   A tunnel keeps the dashboard reachable only from the device you connect from, with no extra port open on the Pi.
+
+   <details>
+   <summary>If you want it reachable from other devices on your network instead</summary>
 
    ```shell title="From the Pi"
    sudo ufw allow 19999/tcp comment 'Netdata dashboard'
    ```
 
-   <details>
-   <summary>If you'll only access Netdata over an SSH tunnel</summary>
-
-   ```shell title="From the Pi"
-   ssh -L 19999:localhost:19999 pi-admin@pi-hole.local
-   ```
+   This opens the dashboard, unauthenticated, to every device that can reach the Pi.
+   Only open it if you accept that tradeoff.
 
    </details>
 
-1. Open the dashboard at `http://pi-hole.local:19999`
+1. Open the dashboard at `http://localhost:19999` (over the tunnel) or `http://pi-hole.local:19999` (if you opened the port instead).
    Scroll down to the **Pi-hole** section to see query rate, cache, and blocking stats alongside system metrics.
 
 1. Enable the Fail2Ban collector to see banned IPs per jail.
@@ -848,7 +895,6 @@ Before you continue to blocklists and allowlists to control what gets blocked, c
 - The default blocklist is active.
   You can check **Gravity** in the Pi-hole dashboard to confirm.
 - If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#troubleshoot-pi-hole-installation-issues).
-
 
 ---
 
@@ -1613,11 +1659,9 @@ If you run into issues, see [Tailscale troubleshooting](./troubleshooting/#tails
 
 ---
 
-# Maintenance and Advanced Configuration
+# Pi-hole Maintenance and Advanced Configuration
 
 Source: https://edwardangert.com/docs/pi-hole/maintenance/
-
-
 
 After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, or to [use a USB drive to store logs](#offload-logs-to-a-usb-drive).
 
@@ -1650,6 +1694,9 @@ To restore after a rebuild or SD card failure, use the **Import** option on the 
 Re-export after making significant changes to lists or settings.
 Store the backup file somewhere other than the Pi, such as on your local computer, a NAS, or cloud storage.
 
+Treat the file as sensitive.
+It includes your full configuration, so store it like any config backup that might hold credentials: never in a shared or public folder.
+
 ## Advanced Pi-hole Configuration with pihole.toml
 
 If you need to configure Pi-hole's DNS behavior outside the web interface, edit `/etc/pihole/pihole.toml` directly.
@@ -1664,11 +1711,13 @@ sudo systemctl restart pihole-FTL
 It needs to be restarted when you make core configuration changes.
 
 :::note[Back up the file before you make changes]
+
 Editing `pihole.toml` directly can break Pi-hole if you introduce syntax errors.
 
 ```shell title="From the Pi"
 sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
 ```
+
 :::
 
 ### Example: Change Upstream DNS
@@ -1958,10 +2007,12 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
    Look for a `/dev/` that wasn't there before, such as `/dev/sda` with a partition at `/dev/sda1`.
 
-1. Get the partition's UUID:
+1. Get the partition's UUID.
 
-   ```shell title="From the Pi"
-   sudo blkid /dev/sda1
+   This example is intentionally set to fail if you don't adjust `YOUR-USB-PARTITION` to the device you found in the previous step:
+
+   ```shell "YOUR-USB-PARTITION" title="From the Pi"
+   sudo blkid /dev/YOUR-USB-PARTITION
    ```
 
    Copy the UUID value from the output.
@@ -2047,10 +2098,14 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
    ```toml title="pihole.toml"
    [files]
-   database = "/mnt/pihole-logs/pihole-FTL.db"
-   log = "/mnt/pihole-logs/pihole.log"
+     database = "/mnt/pihole-logs/pihole-FTL.db"
+
+     [files.log]
+       dnsmasq = "/mnt/pihole-logs/pihole.log"
    ```
 
+   `log` is a subsection (`[files.log]`), not a single value.
+   Only `dnsmasq` needs to change here; `ftl` and `webserver` can stay on the SD card.
    If there is no `[files]` section, add it at the end of the file.
 
 1. Start FTL and verify it comes up cleanly:
@@ -2103,8 +2158,6 @@ If you want to change the database size:
    ```shell title="From the Pi"
    sudo systemctl restart pihole-FTL
    ```
-
-
 
 ---
 
@@ -3706,7 +3759,7 @@ A `+` in a comment fails the whole command.
 
 ---
 
-# Extend, Revoke, and Alternatives
+# Extend, Revoke, and Alternatives for Pi-hole Access
 
 Source: https://edwardangert.com/docs/pi-hole/claude-code-access/extend/
 

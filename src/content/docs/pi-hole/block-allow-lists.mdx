@@ -1,7 +1,7 @@
 ---
 slug: docs/pi-hole/block-allow-lists
 title: "Add Blocklists and Allowlists to Pi-hole"
-description: "How to set up Pi-hole v6 blocklists and allowlists: choose a HaGeZi tier, fix streaming services broken by Pi-hole, and control blocking per device with groups."
+description: "Choose a HaGeZi blocklist tier for Pi-hole v6, fix Disney+, Hulu, and other streaming services it breaks, and control blocking per device with groups."
 category: "Personal Reference Documentation"
 applies-to:
   pihole: "v6"
@@ -44,7 +44,7 @@ The difference is how much control you want:
 **OISD Big** is a single URL, maintained by one person, optimized for zero breakage.
 If you want to set it and never think about it again, use `https://big.oisd.nl/`.
 
-**HaGeZi** aggregates dozens of upstream sources including OISD, StevenBlack, EasyList, EasyPrivacy, URLHaus, and PhishTank into tiered lists you can dial up or down.
+**HaGeZi** aggregates over 200 upstream sources including OISD, EasyList, EasyPrivacy, URLhaus, and Phishing Army into tiered lists you can dial up or down.
 At the Normal tier it's comparable to OISD Big.
 At Pro and above it blocks significantly more, and OISD is still included as an upstream source.
 HaGeZi also offers supplementary category lists (threat intelligence, spam TLDs, smart TV telemetry) that don't have OISD equivalents.
@@ -124,7 +124,10 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
 
    - HaGeZi Bad Hoster
 
-     Known bad hosting providers
+     Blocks entire hosting providers that repeatedly host malware in user-uploaded content, not individual bad domains.
+     Legitimate sites sharing that hosting get blocked too, with no built-in path to unblock just the one you need.
+     HaGeZi scopes this list for high-security environments, not casual use.
+     Skip it unless you're prepared to hand-unblock the occasional legitimate site yourself.
 
      ```url
      https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/hoster.txt
@@ -163,6 +166,10 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
      ```
 
 </Steps>
+
+Not listed above on purpose: HaGeZi's [NRD/DGA list](https://github.com/hagezi/nrd), which blocks newly registered and algorithmically generated domains, a category malware command-and-control infrastructure relies on.
+HaGeZi's own docs call it unsuitable for casual use: legitimate new domains get caught too, and unblocking one takes manual work.
+Worth knowing about if you want it, not worth defaulting to for this guide's setup.
 
 ## Add Blocklists to Pi-hole
 

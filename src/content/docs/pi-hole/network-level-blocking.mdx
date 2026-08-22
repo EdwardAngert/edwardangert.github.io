@@ -1,7 +1,7 @@
 ---
 slug: docs/pi-hole/network-level-blocking
 title: "Enable Network-Wide DNS Blocking with Pi-hole"
-description: "How to set Pi-hole as the DNS server for your whole network by configuring router DHCP, and how to force devices with hardcoded DNS (Chromecast, smart TVs) to use Pi-hole with iptables NAT rules."
+description: "How to set Pi-hole as your network's DNS server via router DHCP, and force devices with hardcoded DNS (Chromecast, smart TVs) to use it with iptables NAT rules."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/block-allow-lists/
@@ -44,11 +44,11 @@ Look for **DHCP**, **LAN**, or **DNS** settings.
 1. Log in to the Omada controller and select the site's name.
 1. In the sidebar, under **Configuration**, select **Network Config** > **LAN**.
 1. Select the edit icon for the network that should use Pi-hole.
-1. Expand **Advanced Settings**
 1. Next to **DHCP Server**, select **☑ Enable** to expand the DHCP options.
+1. Expand **Advanced Settings**
 1. Next to **DNS Server**, select **Manual** and enter the Pi-hole's IP address in the first box.
 1. In the second box, enter `1.1.1.1` to use Cloudflare as a backup DNS server.
-1. Select **Next** to save and apply the settings.
+1. Select **Save** then **Apply** to save and apply the settings.
 
 </Steps>
 
