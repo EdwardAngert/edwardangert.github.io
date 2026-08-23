@@ -91,7 +91,7 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
 - [Add Blocklists and Allowlists](./block-allow-lists/)
   - Choose a blocklist tier, add supplementary lists, allowlist streaming services and smart TVs, and use groups to control blocking per device (including how to bypass Pi-hole for a specific device or apply stricter rules for a child's device).
 - [Enable Network-Wide DNS Blocking with Pi-hole](./network-level-blocking/)
-  - Configure router DHCP so every device uses Pi-hole for DNS.
+  - Configure router DHCP so every device uses Pi-hole for DNS, including devices with hardcoded DNS like Chromecast or some smart TVs.
 - [Use Pi-hole as a VPN to Block Ads On the Go with Tailscale](./tailscale/)
   - Block ads on your phone and laptop anywhere, remote admin access, no port forwarding required.
 - [Pi-hole Maintenance and Advanced Configuration](./maintenance/)
@@ -3818,16 +3818,42 @@ Confirm it works by allowing a domain as that account, with no `sudo`:
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
 
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
 ```shell title="From the Pi"
 pihole allow ads.example.com
 ```
 
 </TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From the Pi"
+sudo -u claude-agent pihole allow ads.example.com
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
 <TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
 
 ```shell title="From your workstation"
 ssh pi-hole-admin 'pihole allow ads.example.com'
 ```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From your workstation"
+ssh pi-hole-agent 'pihole allow ads.example.com'
+```
+
+</TabItem>
+</Tabs>
 
 </TabItem>
 </Tabs>
@@ -3863,18 +3889,44 @@ To take this back, remove that one entry. Everything else on this page keeps wor
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
 
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
 ```shell title="From the Pi"
 sudo setfacl -x "u:$USER" /etc/pihole/cli_pw
 ```
 
 </TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From the Pi"
+sudo setfacl -x u:claude-agent /etc/pihole/cli_pw
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
 <TabItem label="From a workstation">
 
-Replace `pi-admin` with your own account name on the Pi, or `claude-agent` if that's the identity you granted:
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Replace `pi-admin` with your own account name on the Pi:
 
 ```shell title="From your workstation"
 ssh -t pi-hole-admin 'sudo setfacl -x "u:pi-admin" /etc/pihole/cli_pw'
 ```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -x u:claude-agent /etc/pihole/cli_pw'
+```
+
+</TabItem>
+</Tabs>
 
 </TabItem>
 </Tabs>
@@ -4036,16 +4088,44 @@ Pinning the arguments isn't enough either.
    <Tabs syncKey="cc-location">
    <TabItem label="On the Pi">
 
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
    ```shell title="From the Pi"
    sudo -n /usr/local/sbin/pihole-agent-diag
    ```
 
    </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   The sudoers rule was granted to `claude-agent`, so the check has to run as that account:
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent sudo -n /usr/local/sbin/pihole-agent-diag
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
    <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
 
    ```shell title="From your workstation"
    ssh -t pi-hole-admin 'sudo -n /usr/local/sbin/pihole-agent-diag'
    ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-agent 'sudo -n /usr/local/sbin/pihole-agent-diag'
+   ```
+
+   </TabItem>
+   </Tabs>
 
    </TabItem>
    </Tabs>
@@ -4055,16 +4135,42 @@ Pinning the arguments isn't enough either.
    <Tabs syncKey="cc-location">
    <TabItem label="On the Pi">
 
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
    ```shell title="From the Pi"
    sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow
    ```
 
    </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
    <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
 
    ```shell title="From your workstation"
    ssh -t pi-hole-admin 'sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow'
    ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-agent 'sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow'
+   ```
+
+   </TabItem>
+   </Tabs>
 
    </TabItem>
    </Tabs>

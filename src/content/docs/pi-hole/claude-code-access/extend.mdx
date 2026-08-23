@@ -86,16 +86,42 @@ Confirm it works by allowing a domain as that account, with no `sudo`:
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
 
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
 ```shell title="From the Pi"
 pihole allow ads.example.com
 ```
 
 </TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From the Pi"
+sudo -u claude-agent pihole allow ads.example.com
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
 <TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
 
 ```shell title="From your workstation"
 ssh pi-hole-admin 'pihole allow ads.example.com'
 ```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From your workstation"
+ssh pi-hole-agent 'pihole allow ads.example.com'
+```
+
+</TabItem>
+</Tabs>
 
 </TabItem>
 </Tabs>
@@ -131,18 +157,44 @@ To take this back, remove that one entry. Everything else on this page keeps wor
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
 
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
 ```shell title="From the Pi"
 sudo setfacl -x "u:$USER" /etc/pihole/cli_pw
 ```
 
 </TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From the Pi"
+sudo setfacl -x u:claude-agent /etc/pihole/cli_pw
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
 <TabItem label="From a workstation">
 
-Replace `pi-admin` with your own account name on the Pi, or `claude-agent` if that's the identity you granted:
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Replace `pi-admin` with your own account name on the Pi:
 
 ```shell title="From your workstation"
 ssh -t pi-hole-admin 'sudo setfacl -x "u:pi-admin" /etc/pihole/cli_pw'
 ```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -x u:claude-agent /etc/pihole/cli_pw'
+```
+
+</TabItem>
+</Tabs>
 
 </TabItem>
 </Tabs>
@@ -305,16 +357,44 @@ Pinning the arguments isn't enough either.
    <Tabs syncKey="cc-location">
    <TabItem label="On the Pi">
 
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
    ```shell title="From the Pi"
    sudo -n /usr/local/sbin/pihole-agent-diag
    ```
 
    </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   The sudoers rule was granted to `claude-agent`, so the check has to run as that account:
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent sudo -n /usr/local/sbin/pihole-agent-diag
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
    <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
 
    ```shell title="From your workstation"
    ssh -t pi-hole-admin 'sudo -n /usr/local/sbin/pihole-agent-diag'
    ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-agent 'sudo -n /usr/local/sbin/pihole-agent-diag'
+   ```
+
+   </TabItem>
+   </Tabs>
 
    </TabItem>
    </Tabs>
@@ -324,16 +404,42 @@ Pinning the arguments isn't enough either.
    <Tabs syncKey="cc-location">
    <TabItem label="On the Pi">
 
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
    ```shell title="From the Pi"
    sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow
    ```
 
    </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
    <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
 
    ```shell title="From your workstation"
    ssh -t pi-hole-admin 'sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow'
    ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-agent 'sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow'
+   ```
+
+   </TabItem>
+   </Tabs>
 
    </TabItem>
    </Tabs>
