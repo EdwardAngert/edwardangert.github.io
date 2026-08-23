@@ -1480,10 +1480,10 @@ The fix has to be a transparent redirect that still gives the device a real answ
 **If your router is a TP-Link Omada Gateway** (not just an Omada-managed switch or access point), it has a feature built for exactly this:
 
 
-1. In the Omada controller, go to **Device Config** > select your gateway > **DNS Proxy**.
-1. Turn on **DNS Proxy**.
+1. In the Omada controller, go to **Device Config** > **DNS**.
+1. Select the **DNS Proxy** tab and enable **DNS Proxy**.
 1. Under **Proxy Type**, select **DNS Override**.
-1. Set **Primary DNS Server** to your Pi-hole's IP address, and optionally a **Secondary DNS Server** as a fallback.
+1. Set **Primary DNS Server** to your Pi-hole's IP address, and optionally a **Secondary DNS Server** as a fallback, such as `1.1.1.1`.
 1. Under **Apply Network**, select which networks this applies to.
 1. Select **Save**.
 
