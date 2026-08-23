@@ -17,6 +17,11 @@ pnpm lint:vale      # Vale only, via scripts/vale.sh
   They read as machine-written. If one is cut, don't argue it back.
 - Headings are **title case**. `Google.Headings` is disabled in `.vale.ini`
   for exactly this reason.
+  - **Exception: symptom headings in troubleshooting pages stay sentence case**
+    ("Gravity fails to update", not "Gravity Fails to Update"). They are phrased
+    the way a reader describes the problem, which is also how the query arrives.
+    Don't normalize them to title case. Task and concept headings on those same
+    pages stay title case ("Fix List Health Issues").
 - One sentence per line in docs prose. Line length is not enforced
   (`MD013` is off) because one-sentence-per-line makes lines intentionally long.
 
