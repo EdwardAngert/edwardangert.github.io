@@ -1461,7 +1461,7 @@ For a smart TV, that means a full power cycle from the menu or the old favorite:
 
 ## Optional: Force Devices That Ignore Router DNS to Use the Pi-hole
 
-[Verified: Per vendor docs, August 2026]
+[Verified: Tested, August 2026]
 
 Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server your router assigns and use their own hardcoded DNS:
 
@@ -1477,10 +1477,20 @@ Catching it requires a rule on whatever box actually sits between your devices a
 Chromecast in particular refuses to function at all if `8.8.8.8` is unreachable, rather than falling back to the DNS server it was assigned.
 The fix has to be a transparent redirect that still gives the device a real answer, not a block.
 
-**If your router is a TP-Link Omada Gateway** (not just an Omada-managed switch or access point), current firmware has a feature built for exactly this: **DNS Override**, under **Settings** > **Services** > **DNS Proxy**.
-Enabling it and pointing it at your Pi-hole's IP transparently redirects DNS requests bound for any other server to Pi-hole instead, for the networks you select, with no per-device configuration.
-It requires an actual Omada Gateway unit (not all Omada hardware qualifies) running controller version 5.15.20 or later.
-Check **Settings** > **Services** > **DNS Proxy** in your own controller to see if it's available before assuming it isn't.
+**If your router is a TP-Link Omada Gateway** (not just an Omada-managed switch or access point), it has a feature built for exactly this:
+
+
+1. In the Omada controller, go to **Device Config** > select your gateway > **DNS Proxy**.
+1. Turn on **DNS Proxy**.
+1. Under **Proxy Type**, select **DNS Override**.
+1. Set **Primary DNS Server** to your Pi-hole's IP address, and optionally a **Secondary DNS Server** as a fallback.
+1. Under **Apply Network**, select which networks this applies to.
+1. Select **Save**.
+
+
+This transparently redirects DNS requests bound for any other server to Pi-hole instead, for the networks you selected, with no per-device configuration.
+It requires an actual Omada Gateway unit (not all Omada hardware qualifies).
+If you don't see a **DNS Proxy** tab under **Device Config**, your hardware or controller version doesn't support it.
 
 Other prosumer-grade routers (OPNsense, pfSense, OpenWrt, and similar) generally offer the same capability under names like "DNS redirect," "transparent DNS proxy," or NAT/policy-routing rules, but the exact steps are specific enough to your router's software that they're out of scope for this guide.
 
