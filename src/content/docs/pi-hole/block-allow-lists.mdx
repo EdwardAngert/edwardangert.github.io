@@ -392,7 +392,7 @@ Not tested on my own hardware.
 Roku is the most awkward device on this list, because it fights back in two ways.
 
 **It hardcodes Google's DNS.** Roku ignores the DNS server your router hands out and talks to `8.8.8.8` and `8.8.4.4` directly, so Pi-hole never sees its queries.
-You have to intercept port 53 at the router or the Pi to bring it back under filtering.
+Bringing it back under filtering requires a redirect at the router, not the Pi.
 See [Force devices that ignore router DNS to use the Pi-hole](/docs/pi-hole/network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
 
 **Some ads aren't DNS-delivered at all.** The home screen banner and screensaver ads can be reduced but not removed, because parts of them ship with the platform rather than being fetched per-view.

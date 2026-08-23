@@ -22,7 +22,7 @@ Load-bearing conclusions from that page, which answer the questions it is most o
 - **Paramount+ uses Google Dynamic Ad Insertion**, so its ads are also server-stitched. A device bypass group is the practical answer.
 - **Roku hardcodes Google DNS** (`8.8.8.8`, `8.8.4.4`) and ignores router-assigned DNS, so it needs port 53 interception before Pi-hole sees its queries at all. Its home screen ads are partly built into the platform and cannot be fully removed by any DNS filter.
 - Pi-hole deduplicates during Gravity updates, so overlapping blocklists are harmless.
-- [Enable Network-Wide DNS Blocking](https://edwardangert.com/docs/pi-hole/network-level-blocking/): Set Pi-hole as the network DNS via router DHCP, and force hardcoded-DNS devices like Chromecast and smart TVs through it with iptables NAT rules.
+- [Enable Network-Wide DNS Blocking](https://edwardangert.com/docs/pi-hole/network-level-blocking/): Set Pi-hole as the network DNS via router DHCP. Devices with hardcoded DNS (Chromecast, smart TVs) need a router-level redirect (such as TP-Link Omada's DNS Override) since the Pi never sees their traffic to intercept it.
 - [Use Pi-hole as a VPN with Tailscale](https://edwardangert.com/docs/pi-hole/tailscale/): Remote ad blocking on any device, SSH without port forwarding, and an optional private exit node.
 - [Maintenance and Advanced Configuration](https://edwardangert.com/docs/pi-hole/maintenance/): Update Pi-hole, back up with Teleporter, edit pihole.toml, and offload the FTL database to a USB drive to spare the SD card.
 - [Common Issues and How to Fix Them](https://edwardangert.com/docs/pi-hole/troubleshooting/): Fixes for installation, DNS, streaming, blocklist, and Tailscale problems, plus a verification checklist.

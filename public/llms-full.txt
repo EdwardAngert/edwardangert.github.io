@@ -737,7 +737,7 @@ Add unbound if you prefer the additional privacy of recursive resolution.
 1. Install unbound, then immediately stop it so that you can set your own configuration:
 
    ```shell title="From the Pi"
-   sudo apt install unbound
+   sudo apt install unbound && \
    sudo systemctl stop unbound
    ```
 
@@ -1276,7 +1276,7 @@ Not tested on my own hardware.
 Roku is the most awkward device on this list, because it fights back in two ways.
 
 **It hardcodes Google's DNS.** Roku ignores the DNS server your router hands out and talks to `8.8.8.8` and `8.8.4.4` directly, so Pi-hole never sees its queries.
-You have to intercept port 53 at the router or the Pi to bring it back under filtering.
+Bringing it back under filtering requires a redirect at the router, not the Pi.
 See [Force devices that ignore router DNS to use the Pi-hole](./network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
 
 **Some ads aren't DNS-delivered at all.** The home screen banner and screensaver ads can be reduced but not removed, because parts of them ship with the platform rather than being fetched per-view.
@@ -1461,53 +1461,33 @@ For a smart TV, that means a full power cycle from the menu or the old favorite:
 
 ## Optional: Force Devices That Ignore Router DNS to Use the Pi-hole
 
+[Verified: Per vendor docs, August 2026]
+
 Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server your router assigns and use their own hardcoded DNS:
 
 - **Google Chromecast and Google Home** hardcode `8.8.8.8`.
 - **Samsung Smart TVs** may use `8.8.8.8` for some services even when a different DNS is assigned.
 - **Android and iOS** support encrypted DNS (DNS-over-HTTPS or DNS-over-TLS), which can send queries directly to Google or Cloudflare, bypassing Pi-hole completely.
 
+**This can't be fixed from the Pi itself.**
+Network traffic doesn't flow through the Pi-hole (as stated above), so a device's DNS query to `8.8.8.8` never reaches the Pi to intercept in the first place.
+Catching it requires a rule on whatever box actually sits between your devices and the internet: your router.
 
-1. To force traffic from these devices through the Pi-hole, add NAT rules that intercept all outbound DNS on port 53.
+**Blocking the hardcoded address outright doesn't work either.**
+Chromecast in particular refuses to function at all if `8.8.8.8` is unreachable, rather than falling back to the DNS server it was assigned.
+The fix has to be a transparent redirect that still gives the device a real answer, not a block.
 
-   This uses raw iptables because UFW doesn't expose NAT rules.
-   The rules operate at different layers and should not cause conflicts.
+**If your router is a TP-Link Omada Gateway** (not just an Omada-managed switch or access point), current firmware has a feature built for exactly this: **DNS Override**, under **Settings** > **Services** > **DNS Proxy**.
+Enabling it and pointing it at your Pi-hole's IP transparently redirects DNS requests bound for any other server to Pi-hole instead, for the networks you select, with no per-device configuration.
+It requires an actual Omada Gateway unit (not all Omada hardware qualifies) running controller version 5.15.20 or later.
+Check **Settings** > **Services** > **DNS Proxy** in your own controller to see if it's available before assuming it isn't.
 
-   Replace `YOUR-PI-IP` with your Pi-hole's actual IP:
+Other prosumer-grade routers (OPNsense, pfSense, OpenWrt, and similar) generally offer the same capability under names like "DNS redirect," "transparent DNS proxy," or NAT/policy-routing rules, but the exact steps are specific enough to your router's software that they're out of scope for this guide.
 
-   ```shell "YOUR-PI-IP" title="From the Pi"
-   sudo iptables -t nat -A PREROUTING -i eth0 -p udp --dport 53 -j DNAT --to YOUR-PI-IP
-   sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 53 -j DNAT --to YOUR-PI-IP
-   ```
+**If none of that is available to you**, the practical options are the ones already covered elsewhere in this guide: accept the device's own ads (as with Roku and Fire TV's captive-portal domains), or put the device in a bypass group so Pi-hole doesn't try to filter it at all - see [Skip Pi-hole for a Specific Device](./block-allow-lists/#skip-pi-hole-for-a-specific-device).
 
-1. To make the rules persist across reboots:
-
-   ```shell title="From the Pi"
-   sudo apt install iptables-persistent
-   sudo netfilter-persistent save
-   ```
-
-1. Verify the rules were added:
-
-   ```shell title="From the Pi"
-   sudo iptables -t nat -L PREROUTING --line-numbers
-   ```
-
-   You should see two rules with `DNAT` and `to:YOUR-PI-IP`: one for `udp dpt:domain` and one for `tcp dpt:domain`.
-
-   ```shellsession "192.168.1.25" title="Example output, with YOUR-PI-IP replaced"
-   Chain PREROUTING (policy ACCEPT)
-   num  target     prot opt source               destination
-   1    DNAT       udp  --  anywhere             anywhere             udp dpt:domain to:192.168.1.25
-   2    DNAT       tcp  --  anywhere             anywhere             tcp dpt:domain to:192.168.1.25
-   ```
-
-
-To verify a specific device is now routing through Pi-hole, check the query log at `https://pi-hole.local/admin/queries` and filter by that device's IP.
-You should see its DNS requests appearing there.
-
-These rules won't catch encrypted DNS (DNS-over-HTTPS) traffic on port 443.
-Blocking DoH requires blocking the IP addresses of known DoH providers, which is more aggressive and can break legitimate HTTPS traffic.
+Encrypted DNS (DNS-over-HTTPS or DNS-over-TLS) on Android and iOS is a separate problem: it isn't just hardcoded to one server, it's not plaintext DNS at all, so no redirect at any layer can catch it.
+Blocking DoH requires blocking the IP addresses of known DoH providers instead, which is more aggressive and can break legitimate HTTPS traffic.
 
 ## Checkpoint
 
@@ -1516,7 +1496,7 @@ At this point every device on your network uses Pi-hole for DNS, including ones 
 Before you continue, confirm the following:
 
 - A device that renewed its DHCP lease shows up as a client in the Pi-hole query log.
-- If you added the iptables rules, `sudo iptables -t nat -L PREROUTING --line-numbers` still lists both DNAT rules.
+- If you set up DNS Override or an equivalent router-level redirect, a hardcoded-DNS device shows up in the query log too.
 - If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#verify-pi-hole-is-working).
 
 The next page covers using Tailscale for remote access and ad blocking away from home.
@@ -2147,7 +2127,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
 1. Start FTL and verify it comes up cleanly:
 
-   ```shell
+   ```shell title="From the Pi"
    sudo systemctl start pihole-FTL
    sudo systemctl status pihole-FTL
    ```
@@ -2279,7 +2259,7 @@ Look for: `dnsmasq: failed to create listening socket for port 53: Address in us
 **Fix**: Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](./pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
 
 ```shell title="From the Pi"
-sudo systemctl restart unbound
+sudo systemctl restart unbound && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -2299,8 +2279,8 @@ sudo systemctl status lighttpd
 **Fix**:
 
 ```shell title="From the Pi"
-sudo systemctl stop lighttpd
-sudo systemctl disable lighttpd
+sudo systemctl stop lighttpd && \
+sudo systemctl disable lighttpd && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -2504,6 +2484,9 @@ sudo systemctl restart pihole-FTL
 ## Blocklists and Allowlists
 
 ### Troubleshoot a Broken Service
+
+If the broken service is Disney+, Hulu, Paramount+, YouTube, Netflix, Max, Apple TV+, Samsung Smart TVs, Amazon Fire TV, Roku, or Monday.com, check [Fix Streaming Services and Other Broken Sites](./block-allow-lists/#fix-streaming-services-and-other-broken-sites) first - it has tested domain lists for each.
+Use the general method below for anything else.
 
 #### Step 1: Check if Pi-hole is the problem
 
@@ -3444,16 +3427,17 @@ Re-run the third command if you delete or restore that database.
 `pihole-FTL` ships an embedded SQLite shell, so no separate `sqlite3` package is needed.
 Always pass `--readonly`, which makes writes impossible at the connection level.
 
-Run this as the account you just granted access to. It doubles as proof the grant works:
+Run this as the account you just granted access to. It doubles as proof the grant works.
+Replace `YOUR-DEVICE-IP` with the IP of a device on your network you want to check:
 
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
 
-```shell title="From the Pi"
+```shell "YOUR-DEVICE-IP" title="From the Pi"
 pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
   "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
    FROM queries
-   WHERE client = '192.168.0.22'
+   WHERE client = 'YOUR-DEVICE-IP'
    ORDER BY timestamp DESC LIMIT 20;"
 ```
 
@@ -3463,19 +3447,23 @@ pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
 <Tabs syncKey="cc-identity">
 <TabItem label="Your login user">
 
-```shell title="From your workstation"
+```shell "YOUR-DEVICE-IP" title="From your workstation"
 ssh pi-hole-admin "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
   \"SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
-    FROM queries ORDER BY timestamp DESC LIMIT 20;\""
+    FROM queries
+    WHERE client = 'YOUR-DEVICE-IP'
+    ORDER BY timestamp DESC LIMIT 20;\""
 ```
 
 </TabItem>
 <TabItem label="Dedicated agent user">
 
-```shell title="From your workstation"
+```shell "YOUR-DEVICE-IP" title="From your workstation"
 ssh pi-hole-agent "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
   \"SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
-    FROM queries ORDER BY timestamp DESC LIMIT 20;\""
+    FROM queries
+    WHERE client = 'YOUR-DEVICE-IP'
+    ORDER BY timestamp DESC LIMIT 20;\""
 ```
 
 </TabItem>
@@ -4286,12 +4274,14 @@ If you have root on the Pi, the ACL method above grants strictly less.
    <Tabs syncKey="cc-location">
    <TabItem label="On the Pi">
 
-   ```shell title="From the Pi"
+   Replace `YOUR-DEVICE-IP` with the IP of a device on your network you want to check:
+
+   ```shell "YOUR-DEVICE-IP" title="From the Pi"
    SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
      | curl -s -X POST http://127.0.0.1/api/auth --data @- \
      | jq -r .session.sid) && \
    curl -s -H "X-FTL-SID: $SID" \
-     'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
+     'http://127.0.0.1/api/queries?client_ip=YOUR-DEVICE-IP&status=GRAVITY&length=50' | jq
    ```
 
    </TabItem>
@@ -4303,14 +4293,14 @@ If you have root on the Pi, the ACL method above grants strictly less.
    ssh -t pi-hole-admin
    ```
 
-   Then, on the Pi:
+   Then, on the Pi, replacing `YOUR-DEVICE-IP` the same way:
 
-   ```shell title="On the Pi, over that session"
+   ```shell "YOUR-DEVICE-IP" title="On the Pi, over that session"
    SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
      | curl -s -X POST http://127.0.0.1/api/auth --data @- \
      | jq -r .session.sid) && \
    curl -s -H "X-FTL-SID: $SID" \
-     'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
+     'http://127.0.0.1/api/queries?client_ip=YOUR-DEVICE-IP&status=GRAVITY&length=50' | jq
    ```
 
    </TabItem>

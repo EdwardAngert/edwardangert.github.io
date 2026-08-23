@@ -555,12 +555,14 @@ If you have root on the Pi, the ACL method above grants strictly less.
    <Tabs syncKey="cc-location">
    <TabItem label="On the Pi">
 
-   ```shell title="From the Pi"
+   Replace `YOUR-DEVICE-IP` with the IP of a device on your network you want to check:
+
+   ```shell "YOUR-DEVICE-IP" title="From the Pi"
    SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
      | curl -s -X POST http://127.0.0.1/api/auth --data @- \
      | jq -r .session.sid) && \
    curl -s -H "X-FTL-SID: $SID" \
-     'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
+     'http://127.0.0.1/api/queries?client_ip=YOUR-DEVICE-IP&status=GRAVITY&length=50' | jq
    ```
 
    </TabItem>
@@ -572,14 +574,14 @@ If you have root on the Pi, the ACL method above grants strictly less.
    ssh -t pi-hole-admin
    ```
 
-   Then, on the Pi:
+   Then, on the Pi, replacing `YOUR-DEVICE-IP` the same way:
 
-   ```shell title="On the Pi, over that session"
+   ```shell "YOUR-DEVICE-IP" title="On the Pi, over that session"
    SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
      | curl -s -X POST http://127.0.0.1/api/auth --data @- \
      | jq -r .session.sid) && \
    curl -s -H "X-FTL-SID: $SID" \
-     'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
+     'http://127.0.0.1/api/queries?client_ip=YOUR-DEVICE-IP&status=GRAVITY&length=50' | jq
    ```
 
    </TabItem>

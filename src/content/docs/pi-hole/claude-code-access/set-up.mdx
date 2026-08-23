@@ -372,16 +372,17 @@ Re-run the third command if you delete or restore that database.
 `pihole-FTL` ships an embedded SQLite shell, so no separate `sqlite3` package is needed.
 Always pass `--readonly`, which makes writes impossible at the connection level.
 
-Run this as the account you just granted access to. It doubles as proof the grant works:
+Run this as the account you just granted access to. It doubles as proof the grant works.
+Replace `YOUR-DEVICE-IP` with the IP of a device on your network you want to check:
 
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
 
-```shell title="From the Pi"
+```shell "YOUR-DEVICE-IP" title="From the Pi"
 pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
   "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
    FROM queries
-   WHERE client = '192.168.0.22'
+   WHERE client = 'YOUR-DEVICE-IP'
    ORDER BY timestamp DESC LIMIT 20;"
 ```
 
@@ -391,19 +392,23 @@ pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
 <Tabs syncKey="cc-identity">
 <TabItem label="Your login user">
 
-```shell title="From your workstation"
+```shell "YOUR-DEVICE-IP" title="From your workstation"
 ssh pi-hole-admin "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
   \"SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
-    FROM queries ORDER BY timestamp DESC LIMIT 20;\""
+    FROM queries
+    WHERE client = 'YOUR-DEVICE-IP'
+    ORDER BY timestamp DESC LIMIT 20;\""
 ```
 
 </TabItem>
 <TabItem label="Dedicated agent user">
 
-```shell title="From your workstation"
+```shell "YOUR-DEVICE-IP" title="From your workstation"
 ssh pi-hole-agent "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
   \"SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
-    FROM queries ORDER BY timestamp DESC LIMIT 20;\""
+    FROM queries
+    WHERE client = 'YOUR-DEVICE-IP'
+    ORDER BY timestamp DESC LIMIT 20;\""
 ```
 
 </TabItem>

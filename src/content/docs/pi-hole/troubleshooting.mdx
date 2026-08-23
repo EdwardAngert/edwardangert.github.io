@@ -92,7 +92,7 @@ Look for: `dnsmasq: failed to create listening socket for port 53: Address in us
 **Fix**: Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](/docs/pi-hole/pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
 
 ```shell title="From the Pi"
-sudo systemctl restart unbound
+sudo systemctl restart unbound && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -112,8 +112,8 @@ sudo systemctl status lighttpd
 **Fix**:
 
 ```shell title="From the Pi"
-sudo systemctl stop lighttpd
-sudo systemctl disable lighttpd
+sudo systemctl stop lighttpd && \
+sudo systemctl disable lighttpd && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -321,6 +321,9 @@ sudo systemctl restart pihole-FTL
 ## Blocklists and Allowlists
 
 ### Troubleshoot a Broken Service
+
+If the broken service is Disney+, Hulu, Paramount+, YouTube, Netflix, Max, Apple TV+, Samsung Smart TVs, Amazon Fire TV, Roku, or Monday.com, check [Fix Streaming Services and Other Broken Sites](/docs/pi-hole/block-allow-lists/#fix-streaming-services-and-other-broken-sites) first - it has tested domain lists for each.
+Use the general method below for anything else.
 
 #### Step 1: Check if Pi-hole is the problem
 
