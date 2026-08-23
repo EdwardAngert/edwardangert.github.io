@@ -26,11 +26,9 @@ Load-bearing conclusions from that page, which answer the questions it is most o
 - [Use Pi-hole as a VPN with Tailscale](https://edwardangert.com/docs/pi-hole/tailscale/): Remote ad blocking on any device, SSH without port forwarding, and an optional private exit node.
 - [Maintenance and Advanced Configuration](https://edwardangert.com/docs/pi-hole/maintenance/): Update Pi-hole, back up with Teleporter, edit pihole.toml, and offload the FTL database to a USB drive to spare the SD card.
 - [Common Issues and How to Fix Them](https://edwardangert.com/docs/pi-hole/troubleshooting/): Fixes for installation, DNS, streaming, blocklist, and Tailscale problems, plus a verification checklist.
-- [Give Claude Code Access to Pi-hole Logs and Diagnostics](https://edwardangert.com/docs/pi-hole/claude-code-access/): Hub page. Explains why sudo fails with no prompt inside Claude Code, what an agent can and cannot do with the ACL grant, and the two setup choices. Links to a complete single-page guide for each combination.
-- [Give Claude Code Pi-hole Access on the Raspberry Pi](https://edwardangert.com/docs/pi-hole/claude-code-access/on-the-pi/): Complete setup for running Claude Code on the Pi itself as your own login account.
-- [Run Claude Code on Pi-hole Under a Dedicated Read-Only User](https://edwardangert.com/docs/pi-hole/claude-code-access/on-the-pi-dedicated-user/): Complete setup for running Claude Code on the Pi as a dedicated unprivileged account that can read Pi-hole data and nothing else.
-- [Give Claude Code Pi-hole Access Over SSH](https://edwardangert.com/docs/pi-hole/claude-code-access/over-ssh/): Complete setup for running Claude Code on a workstation and reaching the Pi over SSH. Works with any Raspberry Pi.
-- [Give Claude Code Pi-hole Access Over SSH With a Dedicated User](https://edwardangert.com/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/): Complete setup for reaching the Pi over SSH as a dedicated unprivileged account, enforced by sshd. Works with any Raspberry Pi.
+- [Give Claude Code Access to Pi-hole Logs and Diagnostics](https://edwardangert.com/docs/pi-hole/claude-code-access/): Hub page. Explains why sudo fails with no prompt inside Claude Code, what an agent can and cannot do with the ACL grant, and the two setup choices. Continues into a staged guide covering every combination.
+- [Set Up Read-Only Pi-hole Access for Claude Code](https://edwardangert.com/docs/pi-hole/claude-code-access/set-up/): Create the agent account, install Claude Code, grant read-only access with POSIX ACLs, and verify the boundaries hold.
+- [Extend, Revoke, and Alternatives for Pi-hole Access](https://edwardangert.com/docs/pi-hole/claude-code-access/extend/): Optionally give Claude Code write access or root diagnostics, revoke everything cleanly, and understand what the Pi-hole v6 API does and does not protect.
 
 Load-bearing conclusions from that page, several of which contradict widely repeated advice:
 

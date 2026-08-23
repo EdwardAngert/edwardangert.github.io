@@ -5,11 +5,6 @@ description: "Create the agent account, install Claude Code, grant read-only acc
 category: "Personal Reference Documentation"
 applies-to:
   pihole: "v6"
-head:
-  - tag: meta
-    attrs:
-      name: robots
-      content: noindex, follow
 prev:
   link: /docs/pi-hole/claude-code-access/
   label: Give Claude Code Access to Pi-hole
@@ -18,7 +13,7 @@ next:
   label: Extend, Revoke, and Alternatives for Pi-hole Access
 ---
 
-import { Steps, Tabs, TabItem, Code, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Steps, Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import Verified from '../../../../components/Verified.astro';
 import claudeMd from '../CLAUDE.md.example?raw';
 
@@ -43,21 +38,60 @@ Skip to [Install Claude Code](#install-claude-code).
 
 1. Create the user with a home directory and no `sudo` group membership:
 
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
    ```shell title="From the Pi"
    sudo useradd -m -s /bin/bash claude-agent
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo useradd -m -s /bin/bash claude-agent'
+   ```
+
+   </TabItem>
+   </Tabs>
+
 1. Tighten its home directory so other accounts can't read its session data:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    sudo chmod 750 /home/claude-agent
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo chmod 750 /home/claude-agent'
+   ```
+
+   </TabItem>
+   </Tabs>
+
 1. Give it a working directory, since Claude Code needs somewhere it can write:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    sudo -u claude-agent mkdir -p /home/claude-agent/pihole
    ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo -u claude-agent mkdir -p /home/claude-agent/pihole'
+   ```
+
+   </TabItem>
+   </Tabs>
 
 1. Set up access to the account:
 

@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import sitemap from '@astrojs/sitemap';
 import catppuccin from '@catppuccin/starlight';
 import starlightBlog from 'starlight-blog';
 import starlightFullViewMode from 'starlight-fullview-mode'
@@ -24,16 +23,8 @@ export default defineConfig({
 		'/docs/contrib-pr': '/portfolio/contrib-pr',
 	},
 	integrations: [
-		// Explicit so the noindexed staged pages can be filtered out. Starlight
-		// defers to a sitemap integration that is already configured.
-		sitemap({
-			filter: (page) =>
-				!page.includes('/claude-code-access/set-up/') &&
-				!page.includes('/claude-code-access/extend/'),
-		}),
 		starlight({
 			title: 'Edward Angert',
-			routeMiddleware: './src/starlightRouteData.ts',
 			favicon: '/favicon.ico',
 			// Page-level "last touched", derived from git. Distinct from the
 			// <Verified> badges, which are per-section claims about when the

@@ -99,7 +99,7 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
 - [Troubleshooting](./troubleshooting/)
   - Fix common installation issues, DNS failures, broken streaming services, Gravity errors, and Tailscale DNS problems.
 - [Give Claude Code Access to Pi-hole Logs and Diagnostics](./claude-code-access/)
-  - Grant read-only access to the query database and logs with POSIX ACLs, optionally under a dedicated unprivileged user. Available as a staged walkthrough or as a single self-contained page per setup.
+  - Grant read-only access to the query database and logs with POSIX ACLs, optionally under a dedicated unprivileged user.
 
 ---
 
@@ -2825,7 +2825,7 @@ No separate service account exists to add to a group, and no setting changes whi
 If that account already has `sudo`, why not let it use that?
 The answer depends on something you should check first:
 
-```shell title="From the Pi"
+```shell title="From the Pi (however you already connect)"
 sudo -n true && echo "passwordless sudo: ENABLED" || echo "sudo asks for a password"
 ```
 
@@ -2875,7 +2875,7 @@ After you remove the file, `sudo` asks for that account's password.
 
 1. Raspberry Pi OS names the file after the account, such as `/etc/sudoers.d/010_pi-admin-nopasswd`.
 
-   ```shell title="From the Pi"
+   ```shell title="From the Pi (however you already connect)"
    sudo grep -rl NOPASSWD /etc/sudoers.d/
    ```
 
@@ -2889,7 +2889,7 @@ After you remove the file, `sudo` asks for that account's password.
 
 1. Remove the file if it exists:
 
-   ```shell title="From the Pi"
+   ```shell title="From the Pi (however you already connect)"
    sudo rm /etc/sudoers.d/010_pi-admin-nopasswd
    ```
 
@@ -2958,7 +2958,7 @@ It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` as plain strings
 
 If you need a single value from it, read that value on its own:
 
-```shell title="From the Pi"
+```shell title="From the Pi (however you already connect)"
 pihole-FTL --config webserver.api.app_sudo
 ```
 
@@ -2981,7 +2981,7 @@ All are fixed in **6.7**, so update there, not just to 6.6.
 <details>
 <summary>Update to Pi-hole FTL 6.7 or later if you haven't already.</summary>
 
-```shell title="From the Pi"
+```shell title="From the Pi (however you already connect)"
 sudo pihole -up
 ```
 
@@ -2989,8 +2989,6 @@ sudo pihole -up
 :::
 
 Left unreadable, the wait is for a password prompt on a terminal Claude Code doesn't have, the same wall as `sudo` above.
-
-{/*onepager:skip: a one-pager reader has already made this choice*/}
 
 ## Choose Your Setup
 
@@ -3091,36 +3089,7 @@ The account has to be real at the process level, which works differently in each
 </TabItem>
 </Tabs>
 
-{/*onepager:skip: a one-pager already is one of these choices*/}
-
-## In This Guide
-
-Each of these is a complete, self-contained guide covering one combination of the two choices above.
-
-<CardGrid>
-  <LinkCard
-    title="On the Raspberry Pi"
-    href="/docs/pi-hole/claude-code-access/on-the-pi/"
-    description="Simplest option. Needs a Pi 4 with 4 GB or more, or a Pi 5, running 64-bit Raspberry Pi OS."
-  />
-  <LinkCard
-    title="On the Pi, dedicated read-only user"
-    href="/docs/pi-hole/claude-code-access/on-the-pi-dedicated-user/"
-    description="Tightest isolation. Claude Code runs as an account that can read Pi-hole data and nothing else."
-  />
-  <LinkCard
-    title="Over SSH from your laptop"
-    href="/docs/pi-hole/claude-code-access/over-ssh/"
-    description="Works with any Pi, including a Pi 3, a Zero 2 W, or a 2 GB Pi 4."
-  />
-  <LinkCard
-    title="Over SSH, dedicated read-only user"
-    href="/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/"
-    description="Tightest isolation on any Pi. sshd enforces the account for every command."
-  />
-</CardGrid>
-
-Would rather work through it in stages? Continue to [Set up read-only access](./claude-code-access/set-up/).
+With both choices made, continue to [Set up read-only access](./claude-code-access/set-up/).
 
 ---
 
@@ -3148,21 +3117,60 @@ Skip to [Install Claude Code](#install-claude-code).
 
 1. Create the user with a home directory and no `sudo` group membership:
 
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
    ```shell title="From the Pi"
    sudo useradd -m -s /bin/bash claude-agent
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo useradd -m -s /bin/bash claude-agent'
+   ```
+
+   </TabItem>
+   </Tabs>
+
 1. Tighten its home directory so other accounts can't read its session data:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    sudo chmod 750 /home/claude-agent
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo chmod 750 /home/claude-agent'
+   ```
+
+   </TabItem>
+   </Tabs>
+
 1. Give it a working directory, since Claude Code needs somewhere it can write:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    sudo -u claude-agent mkdir -p /home/claude-agent/pihole
    ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo -u claude-agent mkdir -p /home/claude-agent/pihole'
+   ```
+
+   </TabItem>
+   </Tabs>
 
 1. Set up access to the account:
 
@@ -3762,6 +3770,9 @@ It can remove lists as well as add them, and `pihole disable` turns off blocking
 Grant this if you want an agent that fixes things. Don't grant it if you want an agent that only reports.
 :::
 
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
 <Tabs syncKey="cc-identity">
 <TabItem label="Your login user">
 
@@ -3779,11 +3790,49 @@ sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw
 </TabItem>
 </Tabs>
 
+</TabItem>
+<TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Replace `pi-admin` with your own account name on the Pi:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -m u:pi-admin:r /etc/pihole/cli_pw'
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw'
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+</Tabs>
+
 Confirm it works by allowing a domain as that account, with no `sudo`:
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
 
 ```shell title="From the Pi"
 pihole allow ads.example.com
 ```
+
+</TabItem>
+<TabItem label="From a workstation">
+
+```shell title="From your workstation"
+ssh pi-hole-admin 'pihole allow ads.example.com'
+```
+
+</TabItem>
+</Tabs>
 
 If you grant this, uncomment the matching block in the **Privileges** section of your `CLAUDE.md`, so the agent knows it can run these commands directly.
 
@@ -3813,9 +3862,24 @@ If you delete the file outright, re-run the grant above.
 
 To take this back, remove that one entry. Everything else on this page keeps working:
 
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
 ```shell title="From the Pi"
 sudo setfacl -x "u:$USER" /etc/pihole/cli_pw
 ```
+
+</TabItem>
+<TabItem label="From a workstation">
+
+Replace `pi-admin` with your own account name on the Pi, or `claude-agent` if that's the identity you granted:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -x "u:pi-admin" /etc/pihole/cli_pw'
+```
+
+</TabItem>
+</Tabs>
 
 ## Optional: Run Diagnostics That Need Root
 
@@ -3844,10 +3908,13 @@ Pinning the arguments isn't enough either.
 :::
 
 
-1. Write a script that takes no input at all:
+1. Write a script that takes no input at all.
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
-   sudo tee /usr/local/sbin/pihole-agent-diag >/dev/null <<'EOF'
+   sudo tee /usr/local/sbin/pihole-agent-diag >/dev/null <<"EOF"
    #!/bin/bash
    set -euo pipefail
    echo "=== FTL service ==="
@@ -3857,16 +3924,58 @@ Pinning the arguments isn't enough either.
    EOF
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   A heredoc doesn't fit cleanly into a single quoted `ssh` remote command, so log in first:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin
+   ```
+
+   Then, on the Pi:
+
+   ```shell title="On the Pi, over that session"
+   sudo tee /usr/local/sbin/pihole-agent-diag >/dev/null <<"EOF"
+   #!/bin/bash
+   set -euo pipefail
+   echo "=== FTL service ==="
+   systemctl status pihole-FTL --no-pager
+   echo "=== last 100 FTL log lines ==="
+   tail -n 100 /var/log/pihole/FTL.log
+   EOF
+   ```
+
+   </TabItem>
+   </Tabs>
+
 1. Make it root-owned and unwritable by anyone else.
 
    If the agent can edit this script, a password-free rule on it is a root shell:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    sudo chown root:root /usr/local/sbin/pihole-agent-diag && \
      sudo chmod 755 /usr/local/sbin/pihole-agent-diag
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo chown root:root /usr/local/sbin/pihole-agent-diag && \
+     sudo chmod 755 /usr/local/sbin/pihole-agent-diag'
+   ```
+
+   </TabItem>
+   </Tabs>
+
 1. Allow exactly that script, with no arguments. The `""` pins it to zero arguments:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    <Tabs syncKey="cc-identity">
    <TabItem label="Your login user">
@@ -3891,25 +4000,85 @@ Pinning the arguments isn't enough either.
    </TabItem>
    </Tabs>
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   Replace `pi-admin` with your own account name on the Pi:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'echo "pi-admin ALL=(root) NOPASSWD: /usr/local/sbin/pihole-agent-diag \"\"" \
+     | sudo tee /etc/sudoers.d/pihole-agent && \
+     sudo chmod 440 /etc/sudoers.d/pihole-agent && \
+     sudo visudo -c -f /etc/sudoers.d/pihole-agent'
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'echo "claude-agent ALL=(root) NOPASSWD: /usr/local/sbin/pihole-agent-diag \"\"" \
+     | sudo tee /etc/sudoers.d/pihole-agent && \
+     sudo chmod 440 /etc/sudoers.d/pihole-agent && \
+     sudo visudo -c -f /etc/sudoers.d/pihole-agent'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   </Tabs>
+
 1. Confirm the pin holds. Run these separately, since the second is meant to be refused.
 
    This should print the diagnostics:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    sudo -n /usr/local/sbin/pihole-agent-diag
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo -n /usr/local/sbin/pihole-agent-diag'
+   ```
+
+   </TabItem>
+   </Tabs>
+
    This should be rejected, because the rule allows no arguments:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow
    ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow'
+   ```
+
+   </TabItem>
+   </Tabs>
 
 
 If you add this, uncomment the matching block in the **Privileges** section of your `CLAUDE.md` so the agent knows the wrapper exists.
 Otherwise it will keep asking you to run diagnostics by hand.
 
 ## Revoke Access
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
 
 <Tabs syncKey="cc-identity">
 <TabItem label="Your login user">
@@ -3950,6 +4119,56 @@ sudo setfacl -R -b /var/log/pihole && \
 ```
 
 `setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Remove the ACL entries. The `-R` matters, because rotated archives inherited the grant from the directory's default ACL.
+Replace `pi-admin` with your own account name on the Pi:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -R -x u:pi-admin /var/log/pihole && \
+  sudo setfacl -x d:u:pi-admin /var/log/pihole && \
+  sudo setfacl -x u:pi-admin /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -x u:pi-admin /etc/pihole/cli_pw 2>/dev/null || true'
+```
+
+The `cli_pw` entry only exists if you granted it. The `|| true` keeps the chain going when you didn't.
+
+Remove the sudoers rule if you added one:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo rm -f /etc/sudoers.d/pihole-agent'
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+Deleting the account removes its access everywhere at once:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo rm -f /etc/sudoers.d/pihole-agent /etc/sudoers.d/claude-agent-switch && \
+  sudo userdel -r claude-agent'
+```
+
+Then clear the now-orphaned ACL entries, which otherwise linger as a bare numeric UID:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -R -b /var/log/pihole && \
+  sudo setfacl -b /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -b /etc/pihole/cli_pw'
+```
+
+`setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
+
+</TabItem>
+</Tabs>
 
 </TabItem>
 </Tabs>
@@ -3997,32 +4216,75 @@ If you have root on the Pi, the ACL method above grants strictly less.
 
    Port `80` is the default, but it's marked optional, so FTL falls back silently, often to `8080`, when something else holds it:
 
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
    ```shell title="From the Pi"
    pihole-FTL --config webserver.port
    ```
 
-   Use that port in the commands below.
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-admin 'pihole-FTL --config webserver.port'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   Use that port in the commands below. Every one of them targets `127.0.0.1`, meaning Pi-hole's own webserver, which only makes sense run on the Pi itself - if you're on a workstation, that's exactly why each command below runs over `ssh` rather than directly against the Pi's address.
 
 1. In the web interface, go to **Settings** > **Web interface / API**, switch to **Expert** mode, and generate an application password.
 
 1. Store it in a file only your user can read:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    mkdir -p ~/.config/pihole && \
      install -m 600 /dev/null ~/.config/pihole/agent-app-password
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-admin 'mkdir -p ~/.config/pihole && \
+     install -m 600 /dev/null ~/.config/pihole/agent-app-password'
+   ```
+
+   </TabItem>
+   </Tabs>
+
    Paste the password in as a single line.
    Never put it in `CLAUDE.md`, a dotfiles repo, or anything else you commit.
 
 1. Install `jq`, which isn't present by default:
 
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
    ```shell title="From the Pi"
    sudo apt install jq
    ```
 
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo apt install jq'
+   ```
+
+   </TabItem>
+   </Tabs>
+
 1. Authenticate and query.
-   Piping the password through stdin keeps it out of the process list:
+   Piping the password through stdin keeps it out of the process list.
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
    ```shell title="From the Pi"
    SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
@@ -4031,6 +4293,28 @@ If you have root on the Pi, the ACL method above grants strictly less.
    curl -s -H "X-FTL-SID: $SID" \
      'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
    ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   This pipeline has too many quotes of its own to also wrap in a quoted `ssh` argument without a mistake, so log in first:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin
+   ```
+
+   Then, on the Pi:
+
+   ```shell title="On the Pi, over that session"
+   SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
+     | curl -s -X POST http://127.0.0.1/api/auth --data @- \
+     | jq -r .session.sid) && \
+   curl -s -H "X-FTL-SID: $SID" \
+     'http://127.0.0.1/api/queries?client_ip=192.168.0.22&status=GRAVITY&length=50' | jq
+   ```
+
+   </TabItem>
+   </Tabs>
 
 
 `/api/queries` filters server-side on `client_ip`, `client_name`, `domain`, `status`, `upstream`, `type`, `reply`, `dnssec`, `from`, and `until`.
@@ -4058,10 +4342,32 @@ Least privilege limits what an agent can change, not what it can see.
 If some of that shouldn't leave the Pi, Pi-hole can filter it out of API results before anything reads them.
 Both settings take arrays of **regular expressions**, not plain strings, so anchor them and escape the dots:
 
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
 ```shell title="From the Pi"
 sudo pihole-FTL --config webserver.api.excludeClients '["^192\\.168\\.0\\.50$"]' && \
   sudo pihole-FTL --config webserver.api.excludeDomains '["^example\\.com$"]'
 ```
+
+</TabItem>
+<TabItem label="From a workstation">
+
+The nested quotes here don't survive being wrapped in another quoted `ssh` argument reliably, so log in first:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin
+```
+
+Then, on the Pi:
+
+```shell title="On the Pi, over that session"
+sudo pihole-FTL --config webserver.api.excludeClients '["^192\\.168\\.0\\.50$"]' && \
+  sudo pihole-FTL --config webserver.api.excludeDomains '["^example\\.com$"]'
+```
+
+</TabItem>
+</Tabs>
 
 Those filters reach only two API responses, `/api/queries` and `/api/stats/top_clients`.
 They do nothing for an agent reading `pihole-FTL.db` through the ACL grant, which sees the unfiltered database.

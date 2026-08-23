@@ -13,7 +13,7 @@ next:
   label: Set Up Read-Only Access
 ---
 
-import { Steps, Tabs, TabItem, Code, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 import Verified from '../../../../components/Verified.astro';
 
 Give Claude Code limited access to Pi-hole logs and the query database so that it can help you diagnose issues with your Pi-hole setup.
@@ -40,7 +40,7 @@ No separate service account exists to add to a group, and no setting changes whi
 If that account already has `sudo`, why not let it use that?
 The answer depends on something you should check first:
 
-```shell title="From the Pi"
+```shell title="From the Pi (however you already connect)"
 sudo -n true && echo "passwordless sudo: ENABLED" || echo "sudo asks for a password"
 ```
 
@@ -91,7 +91,7 @@ After you remove the file, `sudo` asks for that account's password.
 
 1. Raspberry Pi OS names the file after the account, such as `/etc/sudoers.d/010_pi-admin-nopasswd`.
 
-   ```shell title="From the Pi"
+   ```shell title="From the Pi (however you already connect)"
    sudo grep -rl NOPASSWD /etc/sudoers.d/
    ```
 
@@ -105,7 +105,7 @@ After you remove the file, `sudo` asks for that account's password.
 
 1. Remove the file if it exists:
 
-   ```shell title="From the Pi"
+   ```shell title="From the Pi (however you already connect)"
    sudo rm /etc/sudoers.d/010_pi-admin-nopasswd
    ```
 
@@ -175,7 +175,7 @@ It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` as plain strings
 
 If you need a single value from it, read that value on its own:
 
-```shell title="From the Pi"
+```shell title="From the Pi (however you already connect)"
 pihole-FTL --config webserver.api.app_sudo
 ```
 
@@ -198,7 +198,7 @@ All are fixed in **6.7**, so update there, not just to 6.6.
 <details>
 <summary>Update to Pi-hole FTL 6.7 or later if you haven't already.</summary>
 
-```shell title="From the Pi"
+```shell title="From the Pi (however you already connect)"
 sudo pihole -up
 ```
 
@@ -206,8 +206,6 @@ sudo pihole -up
 :::
 
 Left unreadable, the wait is for a password prompt on a terminal Claude Code doesn't have, the same wall as `sudo` above.
-
-{/*onepager:skip: a one-pager reader has already made this choice*/}
 
 ## Choose Your Setup
 
@@ -308,33 +306,4 @@ The account has to be real at the process level, which works differently in each
 </TabItem>
 </Tabs>
 
-{/*onepager:skip: a one-pager already is one of these choices*/}
-
-## In This Guide
-
-Each of these is a complete, self-contained guide covering one combination of the two choices above.
-
-<CardGrid>
-  <LinkCard
-    title="On the Raspberry Pi"
-    href="/docs/pi-hole/claude-code-access/on-the-pi/"
-    description="Simplest option. Needs a Pi 4 with 4 GB or more, or a Pi 5, running 64-bit Raspberry Pi OS."
-  />
-  <LinkCard
-    title="On the Pi, dedicated read-only user"
-    href="/docs/pi-hole/claude-code-access/on-the-pi-dedicated-user/"
-    description="Tightest isolation. Claude Code runs as an account that can read Pi-hole data and nothing else."
-  />
-  <LinkCard
-    title="Over SSH from your laptop"
-    href="/docs/pi-hole/claude-code-access/over-ssh/"
-    description="Works with any Pi, including a Pi 3, a Zero 2 W, or a 2 GB Pi 4."
-  />
-  <LinkCard
-    title="Over SSH, dedicated read-only user"
-    href="/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/"
-    description="Tightest isolation on any Pi. sshd enforces the account for every command."
-  />
-</CardGrid>
-
-Would rather work through it in stages? Continue to [Set up read-only access](/docs/pi-hole/claude-code-access/set-up/).
+With both choices made, continue to [Set up read-only access](/docs/pi-hole/claude-code-access/set-up/).
