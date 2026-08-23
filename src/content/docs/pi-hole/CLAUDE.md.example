@@ -67,7 +67,7 @@ The standalone `sqlite3` binary isn't installed. Use the one built into FTL, alw
 pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
   "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
    FROM queries
-   WHERE client = '192.168.0.22'
+   WHERE client = '203.0.113.42'
    ORDER BY timestamp DESC LIMIT 20;"
 ```
 
@@ -92,7 +92,7 @@ While a device is connected to the tailnet, its DNS queries arrive over `tailsca
 Filtering by the LAN IP returns nothing at all, which looks identical to "this device isn't using Pi-hole."
 
 Run `tailscale status` first and map the device both ways.
-Active peers show the LAN address they connected from, such as `direct 192.168.0.22:41641`.
+Active peers show the LAN address they connected from, such as `direct 203.0.113.42:41641`.
 
 ### Tailnet devices fall back to the Default group
 
