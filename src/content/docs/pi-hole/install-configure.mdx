@@ -204,18 +204,36 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 ### Require a Password for sudo Commands
 
-The non-root user that Raspberry Pi Imager created can run `sudo` commands without a password.
+The non-root user that Raspberry Pi Imager created may be able to run `sudo` commands without a password.
 
-Raspberry Pi Imager creates a configuration file to enforce passwordless `sudo`.
+Raspberry Pi OS grants that through a file in `/etc/sudoers.d/` named after the account, such as `010_pi-admin-nopasswd`.
 Remove the file so that sudo commands require authentication.
+
+Raspberry Pi OS 6.2 (April 2026) stopped creating that file on new installs, so a current image may not have one.
+The command below handles both cases.
 
 <Steps>
 
-1. Remove the configuration file:
+1. Remove the configuration file if it exists:
 
    ```shell title="From the Pi"
-   sudo rm /etc/sudoers.d/010_pi-nopasswd
+   sudo sh -c 'rm -fv /etc/sudoers.d/*-nopasswd'
    ```
+
+   The glob runs inside `sh -c` so that root expands it.
+   `/etc/sudoers.d/` is readable only by root, so your own shell can't match the filename before `sudo` starts.
+
+   A removed file is named in the output.
+   No output means there was nothing to remove.
+
+1. Confirm no passwordless rule survives anywhere else in the directory:
+
+   ```shell title="From the Pi"
+   sudo grep -rl NOPASSWD /etc/sudoers.d/
+   ```
+
+   This prints nothing when passwordless `sudo` is off.
+   Any file it names still grants it, and you should read that file before removing it.
 
 1. Log out of the SSH session, then log back in:
 

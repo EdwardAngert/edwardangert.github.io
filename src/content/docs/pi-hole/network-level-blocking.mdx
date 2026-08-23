@@ -38,6 +38,25 @@ In your router's DHCP settings, set:
 This will look different for each router brand.
 Look for **DHCP**, **LAN**, or **DNS** settings.
 
+:::caution[A secondary DNS server is a fallback and a leak at the same time]
+Nothing in DNS requires a client to prefer the first server it was handed.
+
+Most Linux clients do try them in order and fall through only on timeout, which behaves like real failover.
+Windows, macOS, Android, and a lot of smart-device firmware instead query both or learn to prefer whichever answered fastest, and Cloudflare will usually beat a Raspberry Pi that's busy rebuilding gravity.
+
+The result is that some devices resolve past Pi-hole while it's perfectly healthy.
+The symptom is ads reappearing on one device and not another, with nothing in the query log to explain it, because the queries never reached the Pi.
+
+This guide keeps `1.1.1.1` anyway, on the trade that a dead Pi taking the whole house offline is worse than some devices leaking past it.
+If you'd rather close the leak, leave **Secondary DNS** empty and set only the Pi-hole.
+Then keep [Teleporter backups](/docs/pi-hole/maintenance/#back-up-your-configuration) current, because the Pi becomes a single point of failure for your network's DNS.
+
+If you're chasing intermittent blocking, check this before anything else, and see [Force Devices That Ignore Router DNS to Use the Pi-hole](#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole) for devices that bypass DHCP entirely.
+
+The resolver behavior described here is drawn from how the implementations document their own selection order, not from measurements on my network.
+The rest of this section is tested.
+:::
+
 ### Set Up Network-Wide Pi-hole on a TP-Link Omada Controller
 
 ![Omada controller DNS server settings](./screenshots/omada-dns-server-settings.png)

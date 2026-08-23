@@ -13,9 +13,12 @@ next:
 
 import { Steps, Code } from '@astrojs/starlight/components';
 import piholeToml from './pihole.toml.example?raw';
+import Verified from '../../../components/Verified.astro';
 export const highlights = ["<redacted>", "### CHANGED"];
 
-After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, or to [use a USB drive to store logs](#offload-logs-to-a-usb-drive).
+<Verified date="2026-08" method="tested" />
+
+After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, [use a USB drive to store logs](#offload-logs-to-a-usb-drive), or setting [how long query history is kept](#optional-set-pi-hole-database-retention).
 
 All of these sections are optional.
 
@@ -103,6 +106,8 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
 </details>
 
 ## Offload Logs to a USB Drive
+
+<Verified date="2026-08" method="community" />
 
 The Pi-hole FTL database (`pihole-FTL.db`) grows continuously and can wear out an SD card over months.
 Move the database and log file to a USB drive to protect the SD card and extend its life.
@@ -261,7 +266,9 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
 </Steps>
 
-### Optional: Set Pi-hole Database Retention
+## Optional: Set Pi-hole Database Retention
+
+<Verified date="2026-08" method="tested" />
 
 By default, Pi-hole keeps 91 days of query history.
 

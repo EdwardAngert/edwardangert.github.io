@@ -12,6 +12,9 @@ next:
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import Verified from '../../../components/Verified.astro';
+
+<Verified date="2026-08" method="tested" />
 
 [Tailscale](https://tailscale.com/) lets you securely reach your Pi-hole from anywhere without opening ports on your router.
 
@@ -103,6 +106,10 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 1. Enter the Pi's Tailscale IP (the `100.x.x.x` address from the previous section).
 1. Add a second nameserver: select **Add nameserver** > **Custom** again and enter `1.1.1.1`.
    This keeps DNS working on your tailnet if the Pi goes offline.
+
+   The same trade applies here as in your router's DHCP settings: a second nameserver is a fallback and a leak at the same time, because clients aren't required to prefer the first one.
+   See [A secondary DNS server is a fallback and a leak at the same time](/docs/pi-hole/network-level-blocking/#configure-network-wide-blocking).
+   Leave this step out if you'd rather every tailnet query go to Pi-hole or fail.
 1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
 1. Select **Save**.
 

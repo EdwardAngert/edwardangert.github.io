@@ -364,7 +364,7 @@ Not tested on my own hardware.
 
 #### Amazon Fire TV / Fire Stick
 
-<Verified date="2025-01" method="community" />
+<Verified date="2026-08" method="community" />
 
 Fire TV uses a captive-portal check to decide whether it has internet.
 If that check is blocked, the device shows a network error or hangs on the home screen.
@@ -379,10 +379,17 @@ sudo pihole allowlist fireoscaptiveportal.com firetvcaptiveportal.com dp-discove
 | `firetvcaptiveportal.com`        | Second connectivity-check domain, polled roughly every two minutes |
 | `dp-discovery-na-ext.amazon.com` | App discovery and store |
 
-Both captive-portal domains are real and separately registered to Amazon, and guidance differs on which one a given device generation uses.
-Allowing both costs nothing.
+Both captive-portal domains are real, separately registered through Amazon's corporate registrar, and still actively maintained: `fireoscaptiveportal.com` was created in 2017 and `firetvcaptiveportal.com` in 2020, and both had registration records updated in 2026.
+Guidance differs on which one a given device generation uses, and allowing both costs nothing.
 
-Compiled from the [hkamran80 smart TV blocklist](https://gist.github.com/hkamran80/779019103fcd306979411d44c8d38459) comment history, where both domains were removed from the blocklist after users reported Fire Sticks failing. *(Accessed July 28, 2026.)*
+`fireoscaptiveportal.com` comes from [hkamran80's smart TV blocklist](https://github.com/hkamran80/blocklists), which removed it after a user reported it breaking their Fire Stick with a network error.
+Neither captive-portal domain appears in [the current `smart-tv.txt`](https://raw.githubusercontent.com/hkamran80/blocklists/main/smart-tv.txt), which is the evidence for allowing them.
+That list was last updated in September 2025, so treat it as stable rather than actively curated.
+
+`firetvcaptiveportal.com` was never on that list to begin with.
+It's included here on the registration evidence above and on wider community reports.
+
+*(Sources and domain registrations re-checked August 23, 2026.)*
 Not tested on my own hardware.
 
 #### Roku

@@ -106,7 +106,21 @@ After you remove the file, `sudo` asks for that account's password.
 1. Remove the file if it exists:
 
    ```shell title="From the Pi (however you already connect)"
-   sudo rm /etc/sudoers.d/010_pi-admin-nopasswd
+   sudo sh -c 'rm -fv /etc/sudoers.d/*-nopasswd'
+   ```
+
+   The glob runs inside `sh -c` so that root expands it.
+   `/etc/sudoers.d/` is readable only by root, so your own shell can't match the filename before `sudo` starts.
+
+   A removed file is named in the output.
+   No output means there was nothing to remove.
+
+1. Re-run the check from step 1.
+
+   It prints nothing when passwordless `sudo` is off:
+
+   ```shell title="From the Pi (however you already connect)"
+   sudo grep -rl NOPASSWD /etc/sudoers.d/
    ```
 
 </Steps>
