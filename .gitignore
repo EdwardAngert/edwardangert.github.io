@@ -31,3 +31,8 @@ pnpm-debug.log*
 
 # Vale binary fetched locally by scripts/vale.sh when not on PATH.
 /.bin/
+
+# Docs Assist scratch output: regeneratable claim-check cache and audit
+# reports. Audit-trail value already lives in commit messages/PR
+# descriptions; these are working files, not shipped content.
+/.docs-assist/
