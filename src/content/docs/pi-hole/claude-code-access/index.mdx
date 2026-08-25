@@ -145,17 +145,25 @@ It cannot allow or deny a domain, update gravity, restart DNS, edit any configur
 Keep in mind that this is only effective if passwordless `sudo` is off.
 If the account still has passwordless `sudo`, all `sudo` commands will be allowed.
 
-### Run a sudo Command with Claude Code's Shell Mode
+### Run a Command Yourself with Claude Code's Shell Mode
+
+<Verified date="2026-08" method="tested" />
 
 After Claude Code tells you the command, you can run it from inside Claude Code using **shell mode** or manually in a separate terminal session.
 
-Enter <kbd>!</kbd> at the start of the Claude Code prompt to run the rest of the line as a shell command in your own terminal from inside Claude Code:
+Enter <kbd>!</kbd> at the start of the Claude Code prompt to run the rest of the line as a shell command, with the result added to the conversation:
 
 ```shell title="At the Claude Code prompt"
-! sudo pihole allow ads.example.com
+! pihole allow ads.example.com
 ```
 
-Shell mode runs the command directly, without Claude interpreting or approving it, and adds both the command and its output to the conversation.
+Shell mode is not an interactive terminal.
+It runs the command directly, without Claude interpreting or approving it, and adds both the command and its output to the conversation, but it does not give `sudo` anywhere to prompt for a password.
+A command that needs to *prompt* for a password fails through `!` the same way it fails when Claude runs it directly, with the same `a terminal is required to read the password` error.
+
+Shell mode helps here because `pihole allow` and `pihole deny` don't need `sudo` at all, not because it grants one.
+If a command genuinely needs an interactive `sudo` prompt, run it in your own separate terminal instead.
+
 Claude then reads the result and carries on.
 
 The loop is: Claude diagnoses, gives you a command, you run it with `!`, and Claude picks up from the output.
