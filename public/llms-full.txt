@@ -17,8 +17,8 @@ Pi-hole is a DNS-based ad blocker for your whole network.
 
 ## What Pi-hole Does
 
-When a device on your network tries to access something from the Internet, it checks in with the Pi-hole first.
-The Pi-hole checks the address against a list you've configured, and if that resource isn't on the list, it allows the device to connect.
+When a device on your network tries to access something from the internet, it checks in with Pi-hole first.
+Pi-hole checks the address against a list you've configured, and if that resource isn't on the list, it allows the device to connect.
 
 Usually, the website itself still loads while the ads and trackers get blocked.
 
@@ -37,12 +37,12 @@ Pi-hole cannot block Hulu or Disney+ ads on their ad-supported plans without bre
 
 For most other services, you can [add service-specific rules to the allowlists](./block-allow-lists/#fix-streaming-services-and-other-broken-sites) when you get to that page, or skip ahead if that's your main use case.
 
-You can set up a Pi-hole to reduce the advertising noise of the Internet.
+You can set up a Pi-hole to reduce the advertising noise of the internet.
 But if you're looking for a way to remove the essay before a recipe, this isn't it.
 
 ## Why This Guide Exists
 
-Due to some hardware issues in the past, I've had to rebuild this setup several times, collecting steps from around the Internet each time.
+Due to some hardware issues in the past, I've had to rebuild this setup several times, collecting steps from around the internet each time.
 This guide is a collection of my notes, organized into documentation to help other people set up or rebuild their Pi-hole.
 
 The steps in this guide document how I set up Pi-hole v6 with:
@@ -66,7 +66,7 @@ This guide is written for Pi-hole v6 as an opinionated copy-and-paste solution t
 If you have Pi-hole v5 installed, many of the concepts remain the same in v6.
 You can still access the [older version of this guide on GitHub](https://github.com/EdwardAngert/edwardangert.github.io/blob/551b9d08bb444c42ed2b56dcbc928105984da7bd/src/content/docs/pi-hole/index.mdx).
 
-If you identify any errors or areas for improvement, please [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new) or select **Edit page** at the bottom of any page to suggest a change.
+If you identify any errors or areas for improvement, [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new) or select **Edit page** at the bottom of any page to suggest a change.
 
 ## Prerequisites
 
@@ -77,7 +77,8 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
 
     This is usually your gateway IP.
 - [Raspberry Pi](https://www.raspberrypi.com)
-  - You can use another always-on device on your local network or even a VPS and most of the steps in this guide will still work, but it's outside the scope of this guide and some steps might differ.
+  - You can use another always-on device on your local network, or even a VPS.
+    Most of the steps in this guide will still work, but that's outside this guide's scope and some steps might differ.
 - microSD card, 8 GB or larger, with a way to plug it into your computer.
 - Familiarity with a terminal and the command line, or at least comfort following terminal commands.
   Most commands in this guide can be copied and pasted, and I try to explain the ones that can't be.
@@ -92,7 +93,7 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
   - Choose a blocklist tier, add supplementary lists, allowlist streaming services and smart TVs, and use groups to control blocking per device (including how to bypass Pi-hole for a specific device or apply stricter rules for a child's device).
 - [Enable Network-Wide DNS Blocking with Pi-hole](./network-level-blocking/)
   - Configure router DHCP so every device uses Pi-hole for DNS, including devices with hardcoded DNS like Chromecast or some smart TVs.
-- [Use Pi-hole as a VPN to Block Ads On the Go with Tailscale](./tailscale/)
+- [Use Pi-hole as a VPN to Block Ads on the Go with Tailscale](./tailscale/)
   - Block ads on your phone and laptop anywhere, remote admin access, no port forwarding required.
 - [Pi-hole Maintenance and Advanced Configuration](./maintenance/)
   - Update Pi-hole, export/import backups with Teleporter, tune `pihole.toml`, offload logs to a USB drive.
@@ -113,7 +114,7 @@ Source: https://edwardangert.com/docs/pi-hole/install-configure/
 
 The tools below are linked to their official download pages.
 
-macOS users can install tools both using [Homebrew](https://brew.sh/).
+macOS users can install both tools using [Homebrew](https://brew.sh/).
 Windows and Linux users can download installers directly from each link.
 
 - [SD Card Formatter](https://www.sdcard.org/downloads/formatter/)
@@ -180,7 +181,7 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 
         Accept the default file location, then set a passphrase or leave it blank.
 
-     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste in the contents of the `.pub` file (find it with `cat ~/.ssh/id_ed25519.pub`).
+     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste the contents of the `.pub` file (find it with `cat ~/.ssh/id_ed25519.pub`).
 
      This closes the gap between first boot and Fail2Ban's installation later in this guide, when password auth would otherwise be your only protection for SSH.
 
@@ -288,7 +289,7 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 ### Require a Password for sudo Commands
 
-The non-root user that Raspberry Pi Imager created may be able to run `sudo` commands without a password.
+The non-root user that Raspberry Pi Imager created might be able to run `sudo` commands without a password.
 
 Raspberry Pi OS grants that through a file in `/etc/sudoers.d/` named after the account, such as `010_pi-admin-nopasswd`.
 Remove the file so that sudo commands require authentication.
@@ -425,7 +426,7 @@ This helps minimize the risk of brute-force attacks.
    findtime = 10m
    ```
 
-   `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables (an alternative way to manage network access to the Pi) rules directly, keeping all firewall rules in one place.
+   `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables rules directly (iptables is an alternative way to manage network access to the Pi), keeping all firewall rules in one place.
 
    This ban is flat: an attacker who fails 4 attempts waits out the same 1-hour ban and can try again.
    That's deliberate here, because an escalating ban risks locking you out if you mistype your own password a few times.
@@ -499,7 +500,7 @@ Pi-hole is DNS infrastructure for your whole network, so it's worth patching pro
 ### Set a Static IP Address
 
 Pi-hole needs a stable IP address.
-If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the Internet.
+If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the internet.
 
 These steps use `nmcli` to lock the IP.
 They set the connection name as a temporary shell variable.
@@ -541,7 +542,7 @@ That's a separate setting you'll choose on the [next page](./pihole-install/) wh
    [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
    </details>
 
-   - If you do get locked out, you'll need to access the Pi directly.
+   - If you do get locked out, you'll need to access the Pi directly, with a monitor and keyboard.
      Then run this same command in the terminal with the correct IPs.
 
 1. Apply the changes:
@@ -610,7 +611,7 @@ That's a separate setting you'll choose on the [next page](./pihole-install/) wh
    [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
    </details>
 
-   - If you do get locked out, you'll need to access the Pi directly.
+   - If you do get locked out, you'll need to access the Pi directly, with a monitor and keyboard.
      Then run this same command in the terminal with the correct IPs.
 
 1. Apply the changes:
@@ -704,7 +705,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
    sudo apt update && sudo apt upgrade -y
    ```
 
-   This can take 10-20 minutes even on a freshly installed OS.
+   This can take 10 to 20 minutes even on a freshly installed OS.
 
 1. Run the Pi-hole installer:
 
@@ -780,7 +781,7 @@ Add unbound if you prefer the additional privacy of recursive resolution.
        # harden-dnssec-stripped enables DNSSEC validation - unbound rejects responses
        # that fail cryptographic signature checks, protecting against DNS spoofing.
        harden-dnssec-stripped: yes
-       # Don't use Capitalization randomization
+       # Disable capitalization randomization
        use-caps-for-id: no
        # Reduce EDNS reassembly buffer size
        edns-buffer-size: 1232
@@ -868,7 +869,7 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
    ```
 
    Netdata's local dashboard has no login of its own.
-   Anyone who can reach the port can see it: CPU, memory, and (once you enable the collector below) the Fail2Ban jail status.
+   Anyone who can reach the port can see CPU and memory usage right away, and the Fail2Ban jail status too once you enable the collector below.
    A tunnel keeps the dashboard reachable only from the device you connect from, with no extra port open on the Pi.
 
    <details>
@@ -935,7 +936,7 @@ Many services depend on domains that look like tracking but are required to work
 Most streaming apps run a verification chain on launch: they contact telemetry or analytics domains, and if those fail, the streaming app refuses to play content.
 This can be frustrating and has led to a number of "why isn't the TV working" complaints in my house.
 
-If you're just here to add lists, you can skip to the section:
+If you're just here to add lists, you can skip to these sections:
 
 - [Add Blocklists to Pi-hole](#add-blocklists-to-pi-hole)
 - [Add Allowlists and Domains to Pi-hole](#add-allowlists-and-domains-to-pi-hole)
@@ -967,7 +968,7 @@ If the project goes inactive, the supplementary lists (Perflyst Smart-TV, BLP Ph
 :::note[Blocklists/Allowlists and Blacklists/Whitelists]
 As of Pi-hole v6, Pi-hole uses the words `blocklist` and `allowlist` instead of the legacy `whitelist` and `blacklist`.
 
-Some list maintainers still use some of the outdated languages in their descriptions and in the list URLs.
+Some list maintainers still use some of the outdated language in their descriptions and in the list URLs.
 :::
 
 ### Choose a HaGeZi Tier
@@ -1072,7 +1073,7 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
      ```
 
 
-Not listed above on purpose: HaGeZi's [NRD/DGA list](https://github.com/hagezi/nrd), which blocks newly registered and algorithmically generated domains, a category malware command-and-control infrastructure relies on.
+Not listed above on purpose: HaGeZi's [NRD/DGA list](https://github.com/hagezi/nrd), which blocks newly registered and algorithmically generated domains, a category that malware command-and-control infrastructure relies on.
 HaGeZi's own docs call it unsuitable for casual use: legitimate new domains get caught too, and unblocking one takes manual work.
 Worth knowing about if you want it, not worth defaulting to for this guide's setup.
 
@@ -1115,7 +1116,7 @@ Adding it as a subscription prevents a large category of false positives before 
    https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/whitelist-referral.txt
    ```
 
-1. Select **Add allowlist**
+1. Select **Add allowlist**.
 1. After you add all the lists, update Gravity in **Tools** > **Update Gravity** to apply them, or use the CLI:
 
    ```shell title="From the Pi"
@@ -1129,7 +1130,7 @@ Adding it as a subscription prevents a large category of false positives before 
 
 You can instruct Pi-hole to allow individual domains.
 
-This is different from the lists we added in previous sections.
+This is different from the lists you added in previous sections.
 
 If you encounter an error with a website or service, check the query log at `https://pi-hole.local/admin/queries`.
 Select **Advanced filtering** to filter by client or domain and sort by time.
@@ -1206,7 +1207,8 @@ Fixing playback requires allowlisting Google ad infrastructure domains, which de
 The better fix is to put the Paramount+ device in a bypass group so it skips filtering entirely.
 See [Skip Pi-hole for a Specific Device](#skip-pi-hole-for-a-specific-device) below.
 
-If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback, while `saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
+If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback.
+`saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
 This is partial at best: the server-stitched ads still get through.
 
 Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed July 28, 2026.)*
@@ -1221,11 +1223,11 @@ Google serves ads and content from the same domains and there is no DNS-level wa
 Pi-hole can block some banner ads on the YouTube website, but pre-roll and mid-roll video ads are unaffected.
 This is a fundamental limitation of DNS-based blocking, not a configuration problem.
 
-**What does work,** depending on where you watch:
+**What does work:** it depends on where you watch.
 
 - **In a browser:** an extension like [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo).
 - **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed July 28, 2026.)*
-- **ReVanced** patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
+- **A patched app:** ReVanced patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
 
 None of these are DNS-level fixes.
 They replace or modify the client instead, which is the only layer where YouTube's ads and content can still be told apart.
@@ -1302,10 +1304,10 @@ Roku is the most awkward device on this list, because it fights back in two ways
 
 **It hardcodes Google's DNS.** Roku ignores the DNS server your router hands out and talks to `8.8.8.8` and `8.8.4.4` directly, so Pi-hole never sees its queries.
 Bringing it back under filtering requires a redirect at the router, not the Pi.
-See [Force devices that ignore router DNS to use the Pi-hole](./network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
+See [Force Devices That Ignore Router DNS to Use the Pi-hole](./network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
 
 **Some ads aren't DNS-delivered at all.** The home screen banner and screensaver ads can be reduced but not removed, because parts of them ship with the platform rather than being fetched per-view.
-Roku's own Settings > Privacy options cut more of them than any blocklist does.
+Roku's own **Settings** > **Privacy** options cut more of them than any blocklist does.
 
 What you can block and allow:
 
@@ -1336,7 +1338,7 @@ sudo pihole allowlist ei.monday.com
 
 | Domain             | Why it's needed |
 |--------------------|------------------|
-| `ei.monday.com`    | Event-ingestion endpoint the app also uses for in-app signaling (for example, marking an export job complete). Blocking it can hang features like PDF export rather than erroring cleanly |
+| `ei.monday.com`    | Event-ingestion endpoint also used for in-app signaling |
 
 `track-visit.monday.com` is also blocked by HaGeZi Pro but never appeared in the query log during normal use.
 It's likely marketing/referral tracking rather than something the app itself needs, so it wasn't allowlisted here.
@@ -1349,7 +1351,7 @@ Pi-hole's group system lets you change that per device so that you can assign a 
 
 All blocklists are assigned to the `Default` group, and every device is in that group unless you change it.
 
-A device can be added to multiple groups at the same time and will follow the combined rules of all its groups.
+A device can be added to multiple groups at the same time and follows the combined rules of all its groups.
 
 ### Skip Pi-hole for a Specific Device
 
@@ -1442,7 +1444,7 @@ Source: https://edwardangert.com/docs/pi-hole/network-level-blocking/
 
 Before your device connects to anything, whether it's a page you visit or ads and trackers running in the background of that page, your device asks your DNS server for the address by name first.
 By default, this is handled by your router and ISP.
-When Pi-hole is enabled, it answers those requests and if the name is on a blocklist, Pi-hole blocks the lookup and the connection is never made.
+When Pi-hole is enabled, it answers those requests. If the name is on a blocklist, it blocks the lookup, and the connection is never made.
 
 Network traffic itself does not flow through the Pi-hole.
 
@@ -1459,14 +1461,14 @@ In your router's DHCP settings, set:
 - **Primary DNS** - your Pi-hole's IP address (for example, `192.168.1.25`)
 - **Secondary DNS** - `1.1.1.1` (Cloudflare) as a fallback
 
-This will look different for each router brand.
+This looks different for each router brand.
 Look for **DHCP**, **LAN**, or **DNS** settings.
 
 :::caution[A secondary DNS server is a fallback and a leak at the same time]
 Nothing in DNS requires a client to prefer the first server it was handed.
 
 Most Linux clients do try them in order and fall through only on timeout, which behaves like real failover.
-Windows, macOS, Android, and a lot of smart-device firmware instead query both or learn to prefer whichever answered fastest, and Cloudflare will usually beat a Raspberry Pi that's busy rebuilding gravity.
+Windows, macOS, Android, and a lot of smart-device firmware instead query both or learn to prefer whichever answered fastest, and Cloudflare usually beats a Raspberry Pi that's busy rebuilding gravity.
 
 The result is that some devices resolve past Pi-hole while it's perfectly healthy.
 The symptom is ads reappearing on one device and not another, with nothing in the query log to explain it, because the queries never reached the Pi.
@@ -1477,7 +1479,7 @@ Then keep [Teleporter backups](./maintenance/#back-up-your-configuration) curren
 
 If you're chasing intermittent blocking, check this before anything else, and see [Force Devices That Ignore Router DNS to Use the Pi-hole](#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole) for devices that bypass DHCP entirely.
 
-The resolver behavior described here is drawn from how the implementations document their own selection order, not from measurements on my network.
+The resolver behavior described here is drawn from how each operating system's resolver documents its own selection order, not from measurements on my network.
 The rest of this section is tested.
 :::
 
@@ -1490,7 +1492,7 @@ The rest of this section is tested.
 1. In the sidebar, under **Configuration**, select **Network Config** > **LAN**.
 1. Select the edit icon for the network that should use Pi-hole.
 1. Next to **DHCP Server**, select **☑ Enable** to expand the DHCP options.
-1. Expand **Advanced Settings**
+1. Expand **Advanced Settings**.
 1. Next to **DNS Server**, select **Manual** and enter the Pi-hole's IP address in the first box.
 1. In the second box, enter `1.1.1.1` to use Cloudflare as a backup DNS server.
 1. Select **Save** then **Apply** to save and apply the settings.
@@ -1538,9 +1540,10 @@ If you don't see a **DNS Proxy** tab under **Device Config**, your hardware or c
 
 Other prosumer-grade routers (OPNsense, pfSense, OpenWrt, and similar) generally offer the same capability under names like "DNS redirect," "transparent DNS proxy," or NAT/policy-routing rules, but the exact steps are specific enough to your router's software that they're out of scope for this guide.
 
-**If none of that is available to you**, the practical options are the ones already covered elsewhere in this guide: accept the device's own ads (as with Roku and Fire TV's captive-portal domains), or put the device in a bypass group so Pi-hole doesn't try to filter it at all - see [Skip Pi-hole for a Specific Device](./block-allow-lists/#skip-pi-hole-for-a-specific-device).
+**If none of that is available to you**, the practical options are the ones already covered elsewhere in this guide: accept the device's own ads (as with Roku and Fire TV's captive-portal domains), or put the device in a bypass group so Pi-hole doesn't try to filter it at all.
+See [Skip Pi-hole for a Specific Device](./block-allow-lists/#skip-pi-hole-for-a-specific-device) for how to set one up.
 
-Encrypted DNS (DNS-over-HTTPS or DNS-over-TLS) on Android and iOS is a separate problem: it isn't just hardcoded to one server, it's not plaintext DNS at all, so no redirect at any layer can catch it.
+Encrypted DNS (DNS-over-HTTPS or DNS-over-TLS) on Android and iOS is a separate problem: it isn't just hardcoded to one server, and it's not plaintext DNS at all, so no redirect at any layer can catch it.
 Blocking DoH requires blocking the IP addresses of known DoH providers instead, which is more aggressive and can break legitimate HTTPS traffic.
 
 ## Checkpoint
@@ -1612,7 +1615,7 @@ This works, but exposes those ports to the public internet and increases the ris
 
    You can learn more about key expiry in the [Tailscale docs](https://tailscale.com/docs/features/access-control/key-expiry).
 
-1. Note the Pi's Tailscale IP, you can copy it from the machine list or from the Tailscale app.
+1. Note the Pi's Tailscale IP. You can copy it from the machine list or from the Tailscale app.
 
 1. Allow all Tailscale traffic through UFW:
 
@@ -1653,7 +1656,7 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 
    The same trade applies here as in your router's DHCP settings: a second nameserver is a fallback and a leak at the same time, because clients aren't required to prefer the first one.
    See [A secondary DNS server is a fallback and a leak at the same time](./network-level-blocking/#configure-network-wide-blocking).
-   Leave this step out if you'd rather every tailnet query go to Pi-hole or fail.
+   Leave this step out if you'd rather every tailnet query either resolve through Pi-hole or fail outright, with no fallback.
 1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
 1. Select **Save**.
 
@@ -1703,10 +1706,10 @@ Advertising an exit node doesn't automatically route traffic through it.
 Each client enables its own exit node options.
 
 - **macOS / Windows**:
-  - Open the Tailscale menu bar app > **Exit Node** > select your Pi by name.
+  - Open the Tailscale menu bar app, go to **Exit Node**, then select your Pi by name.
 
 - **iOS / Android**:
-  - Open the Tailscale app > select your tailnet name > **Use exit node** > select the Pi.
+  - Open the Tailscale app, select your tailnet name, go to **Use exit node**, then select the Pi.
 
 - **Linux**:
   - Run on the client device (not the Pi), using the `100.x.x.x` Tailscale IP from above:
@@ -1742,7 +1745,7 @@ Source: https://edwardangert.com/docs/pi-hole/maintenance/
 
 [Verified: Tested, August 2026]
 
-After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, [use a USB drive to store logs](#offload-logs-to-a-usb-drive), or setting [how long query history is kept](#optional-set-pi-hole-database-retention).
+After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, [using a USB drive to store logs](#offload-logs-to-a-usb-drive), or setting [how long query history is kept](#optional-set-pi-hole-database-retention).
 
 All of these sections are optional.
 
@@ -2226,7 +2229,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
 By default, Pi-hole keeps 91 days of query history.
 
-If you want to change the database size:
+If you want to change how many days of history Pi-hole keeps:
 
 
 1. Set the number of days to keep the database in `pihole.toml`:
@@ -2290,7 +2293,7 @@ Your Pi-hole device and installation need to be functional for the command to wo
    Enter <kbd>y</kbd> to upload the log.
    The server automatically deletes the log file after 48 hours and isn't tied to any account.
 
-1. Log in to your account on the Pi-hole forum or create a new account then go to the [Help category](https://discourse.pi-hole.net/c/bugs-problems-issues/11) and select **New Topic**.
+1. Log in to your account on the Pi-hole forum or create a new account, then go to the [Help category](https://discourse.pi-hole.net/c/bugs-problems-issues/11) and select **New Topic**.
 
 1. Read and follow the template in the popup, and include a description of the problem you're seeing and the debug token.
 
@@ -2383,12 +2386,10 @@ The most common reason on a fresh install is a port 53 conflict - see [Port 53 c
 
 [Verified: Community-reported, August 2026]
 
-**Symptom**: Running `sudo pihole -g` exits with "DNS resolution is currently unavailable"
-or "list download failed: no cached list available."
+**Symptom**: Running `sudo pihole -g` exits with "DNS resolution is currently unavailable" or "list download failed: no cached list available."
 
 **Cause**: `/etc/resolv.conf` points to `127.0.0.1` (Pi-hole itself).
-If FTL isn't fully ready when Gravity runs - for example, immediately after install
-before the first restart - the DNS lookup for list URLs fails.
+If FTL isn't fully ready when Gravity runs - for example, immediately after install before the first restart - the DNS lookup for list URLs fails.
 
 **Fix**: Wait 30 seconds after install completes, confirm FTL is running, then re-run:
 
@@ -2460,7 +2461,7 @@ dig google.com @127.0.0.1 -p 5335
 
 If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
 
-**Check - unbound logs**:
+**Check unbound logs**:
 
 ```shell title="From the Pi"
 sudo journalctl -u unbound -n 100
@@ -2468,8 +2469,7 @@ sudo journalctl -u unbound -n 100
 
 Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
 
-**Fix - refresh root hints**:
-
+**Fix: refresh root hints.**
 `unbound-anchor` isn't included when you `apt install unbound` - install it separately first:
 
 ```shell title="From the Pi"
@@ -2671,7 +2671,8 @@ The errored entries are simply ignored.
 
 #### A list shows 0 domains after `sudo pihole -g`
 
-Check the format. Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
+Check the format.
+Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
 Wildcard TLD rules (`||*.tld^`) and AdGuard-specific modifiers (`$denyallow=`) are common culprits.
 
 Look for a Pi-hole-specific variant of the list.
@@ -2700,7 +2701,7 @@ If it's clean, the warning is stale.
 
 **Fix**: `sudo systemctl restart pihole-FTL` clears it.
 
-#### How to update deprecated HaGeZi URL lists to adblock format
+#### How to Update Deprecated HaGeZi URL Lists to Adblock Format
 
 [Verified: Tested, August 2026]
 
@@ -2740,9 +2741,9 @@ After 2026-08-01, the old `/domains/` and `/hosts/` URLs only work from HaGeZi's
 
 ## Tailscale
 
-[Verified: Tested, August 2026]
-
 ### DNS queries aren't showing in the Pi-hole query log
+
+[Verified: Tested, August 2026]
 
 If you've configured Tailscale to use your Pi-hole as a nameserver but queries from remote devices aren't appearing in the query log and nothing is getting blocked, Pi-hole is rejecting the queries.
 By default, Pi-hole only accepts DNS queries from the local subnet.
@@ -2757,6 +2758,8 @@ sudo systemctl restart pihole-FTL
 See [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](./tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) for the full setup.
 
 ### A device's queries appear under an unexpected IP address
+
+[Verified: Tested, August 2026]
 
 **Symptom**: You filter the query log by a device's LAN IP and see nothing, even though the device is online and browsing.
 
@@ -2777,6 +2780,8 @@ Filter the query log by the `100.x.x.x` address instead.
 
 ### A device on the tailnet ignores its group assignment
 
+[Verified: Tested, August 2026]
+
 **Symptom**: You put a device in a group with different blocklists, but while it's connected over Tailscale it gets the `Default` group's blocking instead.
 
 Pi-hole identifies clients by MAC address, and MAC lookups depend on ARP, which only works on your local network.
@@ -2790,12 +2795,16 @@ See [Control Blocking Per Device with Groups](./block-allow-lists/#control-block
 
 ### Pi-hole web interface loads but DNS isn't filtering
 
+[Verified: Tested, August 2026]
+
 Confirm **Override local DNS** is enabled in the Tailscale admin DNS settings.
 If it's off, devices use their own local resolver, not Pi-hole.
 
 Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it should be the `100.x.x.x` address, not the Pi's LAN IP.
 
 ### Exit node connected but traffic isn't routing through the Pi
+
+[Verified: Tested, August 2026]
 
 
 1. Confirm IP forwarding is active:
@@ -2818,6 +2827,8 @@ Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it sh
 
 ### SSH into the Pi from anywhere on your tailnet
 
+[Verified: Tested, August 2026]
+
 SSH to the Pi using either its Tailscale IP or its machine name.
 Both work as long as the client device is connected to Tailscale, with or without the exit node active:
 
@@ -2832,6 +2843,8 @@ If SSH stops working when you enable the exit node, enable **Allow Local Network
 Without it, all traffic including the SSH connection routes through the exit node, which creates a loop back to the Pi itself.
 
 ### SSH works over Tailscale but the Pi-hole web interface doesn't load
+
+[Verified: Tested, August 2026]
 
 
 1. Confirm the `tailscale0` UFW rule is in place:
@@ -2856,27 +2869,27 @@ Without it, all traffic including the SSH connection routes through the exit nod
 After you complete the Pi-hole setup:
 
 
-1. Check the dashboard:
-   - Total queries should be increasing as devices make DNS requests.
+1. Check the dashboard.
+   Total queries should be increasing as devices make DNS requests.
    A non-zero "Queries Blocked" percentage confirms blocking is active.
    Blocking percentage varies by household - update this with your own numbers after a week of use.
 
-1. Test blocking:
-   - On a device using Pi-hole as its DNS server, go to:
+1. Test blocking.
+   On a device using Pi-hole as its DNS server, go to:
 
-     ```url
-     http://doubleclick.net
-     ```
+   ```url
+   http://doubleclick.net
+   ```
 
-     You should see a connection error or blank page.
+   You should see a connection error or blank page.
 
-1. Test allowlisting:
-   - Make sure normal browsing works.
+1. Test allowlisting.
+   Make sure normal browsing works.
    Try loading a few common sites and use your smart TV or devices to stream media.
    If anything breaks, check the Query Log for blocked domains and allowlist as needed.
 
-1. Check all devices:
-   - Pi-hole only works for devices using it as their DNS server.
+1. Check all devices.
+   Pi-hole only works for devices using it as their DNS server.
    If you configured it in your router's DHCP settings, devices need to renew their DHCP lease to pick up the new DNS server.
    You can force this by disconnecting and reconnecting Wi-Fi, or restarting the device.
 
@@ -2890,8 +2903,8 @@ Give Claude Code limited access to Pi-hole logs and the query database so that i
 
 The access you give Claude Code with these steps is read-only, and limited in scope to Pi-hole-specific files.
 
-To do this, we configure Access Control List (ACL) grants based on how you access your Pi and Claude Code (outlined in [Choose Your Setup](./claude-code-access/#choose-your-setup)).
-In this case, ACL is basically a finer-grain way to grant or restrict Linux user and group, file access.
+To do this, you configure Access Control List (ACL) grants based on how you access your Pi and Claude Code (outlined in [Choose Your Setup](./claude-code-access/#choose-your-setup)).
+In this case, ACL is basically a finer-grained way to grant or restrict Linux user, group, and file access.
 You can learn more about ACL in the [Red Hat documentation](https://docs.redhat.com/en/documentation/red_hat_gluster_storage/3/html/administration_guide/sect-posix_access_control_lists).
 
 Skip to [Choose Your Setup](./claude-code-access/#choose-your-setup) for the commands and configuration.
@@ -2899,8 +2912,9 @@ Skip to [Choose Your Setup](./claude-code-access/#choose-your-setup) for the com
 ## Should Claude Code Have Root or Use sudo?
 
 No.
-For the most part, to limit the risk of vulnerability an application or agent running on your device shouldn't have root or non-root `sudo` access.
-This helps keep the application or agent from running commands that could compromise your device's security, and if the account itself is compromised by a malicious actor or code, the limited access can help mitigate the amount of damage that actor or code could do.
+For the most part, an application or agent running on your device shouldn't have root or non-root `sudo` access, to limit the risk of a vulnerability.
+This helps keep the application or agent from running commands that could compromise your device's security.
+If the account itself is compromised by a malicious actor or code, the limited access also helps mitigate the amount of damage that actor or code could do.
 
 Two things can go wrong: `sudo` can fail outright inside Claude Code, or it can succeed silently because of a cached authentication from earlier in the same terminal.
 
@@ -2926,7 +2940,7 @@ For the rest of that time window, every `sudo` command it runs succeeds without 
 A command that needs `sudo` fails immediately, with the error below, instead of pausing to ask you for a password.
 
 Claude Code runs shell commands with no terminal attached.
-That means that it looks like a terminal, but it's not running in the way the shell session expects, and `sudo` needs a terminal to prompt:
+The shell environment looks like a terminal, but it doesn't behave like one in the way `sudo` needs, and `sudo` needs a terminal to prompt:
 
 ```shell title="How Claude Code's shell sees it"
 sudo cat /var/log/pihole/pihole.log
@@ -2942,7 +2956,7 @@ Claude Code can't display or prompt for the password.
 The error message above suggests two fixes: `-S`, or "configure an askpass helper."
 Neither works here.
 
-An askpass helper still has to produce your real password non-interactively, which means that password would need to live somewhere Claude Code's user account (current user) can read it, like a file, an environment variable, or a secrets store it shells out to.
+An askpass helper still has to produce your real password non-interactively, which means the password would need to live somewhere Claude Code's user account (current user) can read it, like a file, an environment variable, or a secrets store it shells out to.
 
 ### If sudo Is Passwordless
 
@@ -3040,12 +3054,12 @@ If you would rather Claude Code apply list changes itself, see [Optional: Give C
 
 ## What Pi-hole Files Does Claude Code Need Access to?
 
+[Verified: Per vendor docs, August 2026]
+
 Every file has attributes that dictate who can access the file and what they can do with the file.
 This group of values is called a mode.
 
 The files need to be set so that owners can both read and write the file, and so that groups (or a single group) can read the file.
-
-[Verified: Per vendor docs, August 2026]
 
 Two things need a grant: the query database, and the log files.
 
@@ -3080,7 +3094,7 @@ Granting it would hand back exactly the write access this page's ACLs are built 
 
 :::note[GHSA-r7g8-3fj7-m5qq: cli_pw bypassed config protections on FTL 6.0-6.5]
 On unpatched installs, `/api/config` correctly rejected configuration changes from a `cli_pw` session, but `/api/teleporter` didn't get the same check until FTL 6.6.
-That means a `cli_pw` session could import a Teleporter archive and overwrite `pihole.toml` outright, including DNS settings, blocking status, DHCP config, upstream servers.
+That means a `cli_pw` session could import a Teleporter archive and overwrite `pihole.toml` outright, including DNS settings, blocking status, DHCP config, and upstream servers.
 
 The 6.6.x line has its own separate advisories, including a session-hijacking bug and two RCEs, plus a session-expiration bypass that reaches back to 6.0.
 All are fixed in **6.7**, so update there, not just to 6.6.
@@ -3171,7 +3185,7 @@ The `-t` is not optional. Without it there's no terminal on the far end, and `su
 Claude Code runs as you.
 Nothing to create, and the ACL grants go to your own account.
 
-Running as your login user, Claude Code's blast radius is everything you can read: your SSH keys, your dotfiles, your shell history.
+When Claude Code runs as your login user, its blast radius is everything you can read: your SSH keys, your dotfiles, your shell history.
 That may be entirely fine on a Pi you use for one thing.
 
 </TabItem>
@@ -3600,7 +3614,7 @@ The `queries` view resolves the internal integer IDs back to real domain and cli
 `status` stays numeric. The values worth knowing:
 
 | Status | Meaning |
-|---|---|
+|--------|---------|
 | `1` | Blocked by a blocklist (gravity) |
 | `2` | Forwarded upstream |
 | `3` | Answered from cache |
@@ -4587,7 +4601,7 @@ If you have root on the Pi, the ACL method above grants strictly less.
    </TabItem>
    </Tabs>
 
-   Use that port in the commands below. Every one of them targets `127.0.0.1`, meaning Pi-hole's own webserver, which only makes sense run on the Pi itself - if you're on a workstation, that's exactly why each command below runs over `ssh` rather than directly against the Pi's address.
+   Use that port in the commands below. Every one of them targets `127.0.0.1`, meaning Pi-hole's own webserver, which only makes sense to run on the Pi itself - if you're on a workstation, that's exactly why each command below runs over `ssh` rather than directly against the Pi's address.
 
 1. In the web interface, go to **Settings** > **Web interface / API**, switch to **Expert** mode, and generate an application password.
 
@@ -4678,12 +4692,11 @@ If you have root on the Pi, the ACL method above grants strictly less.
 Unlike the database, the API takes status names such as `GRAVITY` rather than the numeric codes.
 Add `disk=true` to read the long-term database rather than the in-memory buffer.
 
-Update to 6.7 or later if you haven't already.
-
 On FTL 6.7 and later, sessions last 30 minutes.
 Each authenticated request extends the window.
 
 Before the release of FTL 6.7, a logic bug ([GHSA-w8cr-2cwg-92cg](https://github.com/pi-hole/FTL/security/advisories/GHSA-w8cr-2cwg-92cg)) kept the expiry check from running, so a session would periodically never expire.
+Update to 6.7 or later if you haven't already.
 
 Generate a new application password to revoke active sessions, including your web interface login.
 

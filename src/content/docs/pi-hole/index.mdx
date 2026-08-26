@@ -19,8 +19,8 @@ Pi-hole is a DNS-based ad blocker for your whole network.
 
 ## What Pi-hole Does
 
-When a device on your network tries to access something from the Internet, it checks in with the Pi-hole first.
-The Pi-hole checks the address against a list you've configured, and if that resource isn't on the list, it allows the device to connect.
+When a device on your network tries to access something from the internet, it checks in with Pi-hole first.
+Pi-hole checks the address against a list you've configured, and if that resource isn't on the list, it allows the device to connect.
 
 Usually, the website itself still loads while the ads and trackers get blocked.
 
@@ -39,12 +39,12 @@ Pi-hole cannot block Hulu or Disney+ ads on their ad-supported plans without bre
 
 For most other services, you can [add service-specific rules to the allowlists](/docs/pi-hole/block-allow-lists/#fix-streaming-services-and-other-broken-sites) when you get to that page, or skip ahead if that's your main use case.
 
-You can set up a Pi-hole to reduce the advertising noise of the Internet.
+You can set up a Pi-hole to reduce the advertising noise of the internet.
 But if you're looking for a way to remove the essay before a recipe, this isn't it.
 
 ## Why This Guide Exists
 
-Due to some hardware issues in the past, I've had to rebuild this setup several times, collecting steps from around the Internet each time.
+Due to some hardware issues in the past, I've had to rebuild this setup several times, collecting steps from around the internet each time.
 This guide is a collection of my notes, organized into documentation to help other people set up or rebuild their Pi-hole.
 
 The steps in this guide document how I set up Pi-hole v6 with:
@@ -68,7 +68,7 @@ This guide is written for Pi-hole v6 as an opinionated copy-and-paste solution t
 If you have Pi-hole v5 installed, many of the concepts remain the same in v6.
 You can still access the [older version of this guide on GitHub](https://github.com/EdwardAngert/edwardangert.github.io/blob/551b9d08bb444c42ed2b56dcbc928105984da7bd/src/content/docs/pi-hole/index.mdx).
 
-If you identify any errors or areas for improvement, please [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new) or select **Edit page** at the bottom of any page to suggest a change.
+If you identify any errors or areas for improvement, [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new) or select **Edit page** at the bottom of any page to suggest a change.
 
 ## Prerequisites
 
@@ -79,7 +79,8 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
 
     This is usually your gateway IP.
 - [Raspberry Pi](https://www.raspberrypi.com)
-  - You can use another always-on device on your local network or even a VPS and most of the steps in this guide will still work, but it's outside the scope of this guide and some steps might differ.
+  - You can use another always-on device on your local network, or even a VPS.
+    Most of the steps in this guide will still work, but that's outside this guide's scope and some steps might differ.
 - microSD card, 8 GB or larger, with a way to plug it into your computer.
 - Familiarity with a terminal and the command line, or at least comfort following terminal commands.
   Most commands in this guide can be copied and pasted, and I try to explain the ones that can't be.
@@ -94,7 +95,7 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
   - Choose a blocklist tier, add supplementary lists, allowlist streaming services and smart TVs, and use groups to control blocking per device (including how to bypass Pi-hole for a specific device or apply stricter rules for a child's device).
 - [Enable Network-Wide DNS Blocking with Pi-hole](/docs/pi-hole/network-level-blocking/)
   - Configure router DHCP so every device uses Pi-hole for DNS, including devices with hardcoded DNS like Chromecast or some smart TVs.
-- [Use Pi-hole as a VPN to Block Ads On the Go with Tailscale](/docs/pi-hole/tailscale/)
+- [Use Pi-hole as a VPN to Block Ads on the Go with Tailscale](/docs/pi-hole/tailscale/)
   - Block ads on your phone and laptop anywhere, remote admin access, no port forwarding required.
 - [Pi-hole Maintenance and Advanced Configuration](/docs/pi-hole/maintenance/)
   - Update Pi-hole, export/import backups with Teleporter, tune `pihole.toml`, offload logs to a USB drive.

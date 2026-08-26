@@ -608,7 +608,7 @@ If you have root on the Pi, the ACL method above grants strictly less.
    </TabItem>
    </Tabs>
 
-   Use that port in the commands below. Every one of them targets `127.0.0.1`, meaning Pi-hole's own webserver, which only makes sense run on the Pi itself - if you're on a workstation, that's exactly why each command below runs over `ssh` rather than directly against the Pi's address.
+   Use that port in the commands below. Every one of them targets `127.0.0.1`, meaning Pi-hole's own webserver, which only makes sense to run on the Pi itself - if you're on a workstation, that's exactly why each command below runs over `ssh` rather than directly against the Pi's address.
 
 1. In the web interface, go to **Settings** > **Web interface / API**, switch to **Expert** mode, and generate an application password.
 
@@ -700,12 +700,11 @@ If you have root on the Pi, the ACL method above grants strictly less.
 Unlike the database, the API takes status names such as `GRAVITY` rather than the numeric codes.
 Add `disk=true` to read the long-term database rather than the in-memory buffer.
 
-Update to 6.7 or later if you haven't already.
-
 On FTL 6.7 and later, sessions last 30 minutes.
 Each authenticated request extends the window.
 
 Before the release of FTL 6.7, a logic bug ([GHSA-w8cr-2cwg-92cg](https://github.com/pi-hole/FTL/security/advisories/GHSA-w8cr-2cwg-92cg)) kept the expiry check from running, so a session would periodically never expire.
+Update to 6.7 or later if you haven't already.
 
 Generate a new application password to revoke active sessions, including your web interface login.
 

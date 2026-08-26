@@ -21,7 +21,7 @@ import Verified from '../../../components/Verified.astro';
 
 The tools below are linked to their official download pages.
 
-macOS users can install tools both using [Homebrew](https://brew.sh/).
+macOS users can install both tools using [Homebrew](https://brew.sh/).
 Windows and Linux users can download installers directly from each link.
 
 - [SD Card Formatter](https://www.sdcard.org/downloads/formatter/)
@@ -91,7 +91,7 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 
         Accept the default file location, then set a passphrase or leave it blank.
 
-     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste in the contents of the `.pub` file (find it with `cat ~/.ssh/id_ed25519.pub`).
+     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste the contents of the `.pub` file (find it with `cat ~/.ssh/id_ed25519.pub`).
 
      This closes the gap between first boot and Fail2Ban's installation later in this guide, when password auth would otherwise be your only protection for SSH.
 
@@ -204,7 +204,7 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 ### Require a Password for sudo Commands
 
-The non-root user that Raspberry Pi Imager created may be able to run `sudo` commands without a password.
+The non-root user that Raspberry Pi Imager created might be able to run `sudo` commands without a password.
 
 Raspberry Pi OS grants that through a file in `/etc/sudoers.d/` named after the account, such as `010_pi-admin-nopasswd`.
 Remove the file so that sudo commands require authentication.
@@ -346,7 +346,7 @@ This helps minimize the risk of brute-force attacks.
    findtime = 10m
    ```
 
-   `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables (an alternative way to manage network access to the Pi) rules directly, keeping all firewall rules in one place.
+   `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables rules directly (iptables is an alternative way to manage network access to the Pi), keeping all firewall rules in one place.
 
    This ban is flat: an attacker who fails 4 attempts waits out the same 1-hour ban and can try again.
    That's deliberate here, because an escalating ban risks locking you out if you mistype your own password a few times.
@@ -425,7 +425,7 @@ Pi-hole is DNS infrastructure for your whole network, so it's worth patching pro
 ### Set a Static IP Address
 
 Pi-hole needs a stable IP address.
-If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the Internet.
+If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the internet.
 
 These steps use `nmcli` to lock the IP.
 They set the connection name as a temporary shell variable.
@@ -468,7 +468,7 @@ That's a separate setting you'll choose on the [next page](/docs/pi-hole/pihole-
    [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
    </details>
 
-   - If you do get locked out, you'll need to access the Pi directly.
+   - If you do get locked out, you'll need to access the Pi directly, with a monitor and keyboard.
      Then run this same command in the terminal with the correct IPs.
 
 1. Apply the changes:
@@ -539,7 +539,7 @@ That's a separate setting you'll choose on the [next page](/docs/pi-hole/pihole-
    [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
    </details>
 
-   - If you do get locked out, you'll need to access the Pi directly.
+   - If you do get locked out, you'll need to access the Pi directly, with a monitor and keyboard.
      Then run this same command in the terminal with the correct IPs.
 
 1. Apply the changes:

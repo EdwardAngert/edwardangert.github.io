@@ -1,6 +1,6 @@
 ---
 slug: docs/pi-hole/tailscale
-title: "Use Pi-hole as a VPN to Block Ads On the Go with Tailscale"
+title: "Use Pi-hole as a VPN to Block Ads on the Go with Tailscale"
 description: "How to use Tailscale with Pi-hole for remote ad blocking on any device, secure SSH access without port forwarding, and an optional exit node for a private VPN."
 category: "Personal Reference Documentation"
 prev:
@@ -66,7 +66,7 @@ This works, but exposes those ports to the public internet and increases the ris
 
    You can learn more about key expiry in the [Tailscale docs](https://tailscale.com/docs/features/access-control/key-expiry).
 
-1. Note the Pi's Tailscale IP, you can copy it from the machine list or from the Tailscale app.
+1. Note the Pi's Tailscale IP. You can copy it from the machine list or from the Tailscale app.
 
 1. Allow all Tailscale traffic through UFW:
 
@@ -109,7 +109,7 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 
    The same trade applies here as in your router's DHCP settings: a second nameserver is a fallback and a leak at the same time, because clients aren't required to prefer the first one.
    See [A secondary DNS server is a fallback and a leak at the same time](/docs/pi-hole/network-level-blocking/#configure-network-wide-blocking).
-   Leave this step out if you'd rather every tailnet query go to Pi-hole or fail.
+   Leave this step out if you'd rather every tailnet query either resolve through Pi-hole or fail outright, with no fallback.
 1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
 1. Select **Save**.
 
@@ -162,10 +162,10 @@ Advertising an exit node doesn't automatically route traffic through it.
 Each client enables its own exit node options.
 
 - **macOS / Windows**:
-  - Open the Tailscale menu bar app > **Exit Node** > select your Pi by name.
+  - Open the Tailscale menu bar app, go to **Exit Node**, then select your Pi by name.
 
 - **iOS / Android**:
-  - Open the Tailscale app > select your tailnet name > **Use exit node** > select the Pi.
+  - Open the Tailscale app, select your tailnet name, go to **Use exit node**, then select the Pi.
 
 - **Linux**:
   - Run on the client device (not the Pi), using the `100.x.x.x` Tailscale IP from above:

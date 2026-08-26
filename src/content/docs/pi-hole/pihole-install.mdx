@@ -48,7 +48,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
    sudo apt update && sudo apt upgrade -y
    ```
 
-   This can take 10-20 minutes even on a freshly installed OS.
+   This can take 10 to 20 minutes even on a freshly installed OS.
 
 1. Run the Pi-hole installer:
 
@@ -126,7 +126,7 @@ Add unbound if you prefer the additional privacy of recursive resolution.
        # harden-dnssec-stripped enables DNSSEC validation - unbound rejects responses
        # that fail cryptographic signature checks, protecting against DNS spoofing.
        harden-dnssec-stripped: yes
-       # Don't use Capitalization randomization
+       # Disable capitalization randomization
        use-caps-for-id: no
        # Reduce EDNS reassembly buffer size
        edns-buffer-size: 1232
@@ -216,7 +216,7 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
    ```
 
    Netdata's local dashboard has no login of its own.
-   Anyone who can reach the port can see it: CPU, memory, and (once you enable the collector below) the Fail2Ban jail status.
+   Anyone who can reach the port can see CPU and memory usage right away, and the Fail2Ban jail status too once you enable the collector below.
    A tunnel keeps the dashboard reachable only from the device you connect from, with no extra port open on the Pi.
 
    <details>

@@ -27,7 +27,7 @@ Many services depend on domains that look like tracking but are required to work
 Most streaming apps run a verification chain on launch: they contact telemetry or analytics domains, and if those fail, the streaming app refuses to play content.
 This can be frustrating and has led to a number of "why isn't the TV working" complaints in my house.
 
-If you're just here to add lists, you can skip to the section:
+If you're just here to add lists, you can skip to these sections:
 
 - [Add Blocklists to Pi-hole](#add-blocklists-to-pi-hole)
 - [Add Allowlists and Domains to Pi-hole](#add-allowlists-and-domains-to-pi-hole)
@@ -59,7 +59,7 @@ If the project goes inactive, the supplementary lists (Perflyst Smart-TV, BLP Ph
 :::note[Blocklists/Allowlists and Blacklists/Whitelists]
 As of Pi-hole v6, Pi-hole uses the words `blocklist` and `allowlist` instead of the legacy `whitelist` and `blacklist`.
 
-Some list maintainers still use some of the outdated languages in their descriptions and in the list URLs.
+Some list maintainers still use some of the outdated language in their descriptions and in the list URLs.
 :::
 
 ### Choose a HaGeZi Tier
@@ -166,7 +166,7 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
 
 </Steps>
 
-Not listed above on purpose: HaGeZi's [NRD/DGA list](https://github.com/hagezi/nrd), which blocks newly registered and algorithmically generated domains, a category malware command-and-control infrastructure relies on.
+Not listed above on purpose: HaGeZi's [NRD/DGA list](https://github.com/hagezi/nrd), which blocks newly registered and algorithmically generated domains, a category that malware command-and-control infrastructure relies on.
 HaGeZi's own docs call it unsuitable for casual use: legitimate new domains get caught too, and unblocking one takes manual work.
 Worth knowing about if you want it, not worth defaulting to for this guide's setup.
 
@@ -212,7 +212,7 @@ Adding it as a subscription prevents a large category of false positives before 
    https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/whitelist-referral.txt
    ```
 
-1. Select **Add allowlist**
+1. Select **Add allowlist**.
 1. After you add all the lists, update Gravity in **Tools** > **Update Gravity** to apply them, or use the CLI:
 
    ```shell title="From the Pi"
@@ -227,7 +227,7 @@ Adding it as a subscription prevents a large category of false positives before 
 
 You can instruct Pi-hole to allow individual domains.
 
-This is different from the lists we added in previous sections.
+This is different from the lists you added in previous sections.
 
 If you encounter an error with a website or service, check the query log at `https://pi-hole.local/admin/queries`.
 Select **Advanced filtering** to filter by client or domain and sort by time.
@@ -304,7 +304,8 @@ Fixing playback requires allowlisting Google ad infrastructure domains, which de
 The better fix is to put the Paramount+ device in a bypass group so it skips filtering entirely.
 See [Skip Pi-hole for a Specific Device](#skip-pi-hole-for-a-specific-device) below.
 
-If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback, while `saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
+If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback.
+`saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
 This is partial at best: the server-stitched ads still get through.
 
 Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed July 28, 2026.)*
@@ -319,11 +320,11 @@ Google serves ads and content from the same domains and there is no DNS-level wa
 Pi-hole can block some banner ads on the YouTube website, but pre-roll and mid-roll video ads are unaffected.
 This is a fundamental limitation of DNS-based blocking, not a configuration problem.
 
-**What does work,** depending on where you watch:
+**What does work:** it depends on where you watch.
 
 - **In a browser:** an extension like [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo).
 - **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed July 28, 2026.)*
-- **ReVanced** patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
+- **A patched app:** ReVanced patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
 
 None of these are DNS-level fixes.
 They replace or modify the client instead, which is the only layer where YouTube's ads and content can still be told apart.
@@ -400,10 +401,10 @@ Roku is the most awkward device on this list, because it fights back in two ways
 
 **It hardcodes Google's DNS.** Roku ignores the DNS server your router hands out and talks to `8.8.8.8` and `8.8.4.4` directly, so Pi-hole never sees its queries.
 Bringing it back under filtering requires a redirect at the router, not the Pi.
-See [Force devices that ignore router DNS to use the Pi-hole](/docs/pi-hole/network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
+See [Force Devices That Ignore Router DNS to Use the Pi-hole](/docs/pi-hole/network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
 
 **Some ads aren't DNS-delivered at all.** The home screen banner and screensaver ads can be reduced but not removed, because parts of them ship with the platform rather than being fetched per-view.
-Roku's own Settings > Privacy options cut more of them than any blocklist does.
+Roku's own **Settings** > **Privacy** options cut more of them than any blocklist does.
 
 What you can block and allow:
 
@@ -434,7 +435,7 @@ sudo pihole allowlist ei.monday.com
 
 | Domain             | Why it's needed |
 |--------------------|------------------|
-| `ei.monday.com`    | Event-ingestion endpoint the app also uses for in-app signaling (for example, marking an export job complete). Blocking it can hang features like PDF export rather than erroring cleanly |
+| `ei.monday.com`    | Event-ingestion endpoint also used for in-app signaling |
 
 `track-visit.monday.com` is also blocked by HaGeZi Pro but never appeared in the query log during normal use.
 It's likely marketing/referral tracking rather than something the app itself needs, so it wasn't allowlisted here.
@@ -447,7 +448,7 @@ Pi-hole's group system lets you change that per device so that you can assign a 
 
 All blocklists are assigned to the `Default` group, and every device is in that group unless you change it.
 
-A device can be added to multiple groups at the same time and will follow the combined rules of all its groups.
+A device can be added to multiple groups at the same time and follows the combined rules of all its groups.
 
 ### Skip Pi-hole for a Specific Device
 

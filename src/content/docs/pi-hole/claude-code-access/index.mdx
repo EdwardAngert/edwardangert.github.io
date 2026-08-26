@@ -20,8 +20,8 @@ Give Claude Code limited access to Pi-hole logs and the query database so that i
 
 The access you give Claude Code with these steps is read-only, and limited in scope to Pi-hole-specific files.
 
-To do this, we configure Access Control List (ACL) grants based on how you access your Pi and Claude Code (outlined in [Choose Your Setup](/docs/pi-hole/claude-code-access/#choose-your-setup)).
-In this case, ACL is basically a finer-grain way to grant or restrict Linux user and group, file access.
+To do this, you configure Access Control List (ACL) grants based on how you access your Pi and Claude Code (outlined in [Choose Your Setup](/docs/pi-hole/claude-code-access/#choose-your-setup)).
+In this case, ACL is basically a finer-grained way to grant or restrict Linux user, group, and file access.
 You can learn more about ACL in the [Red Hat documentation](https://docs.redhat.com/en/documentation/red_hat_gluster_storage/3/html/administration_guide/sect-posix_access_control_lists).
 
 Skip to [Choose Your Setup](/docs/pi-hole/claude-code-access/#choose-your-setup) for the commands and configuration.
@@ -29,8 +29,9 @@ Skip to [Choose Your Setup](/docs/pi-hole/claude-code-access/#choose-your-setup)
 ## Should Claude Code Have Root or Use sudo?
 
 No.
-For the most part, to limit the risk of vulnerability an application or agent running on your device shouldn't have root or non-root `sudo` access.
-This helps keep the application or agent from running commands that could compromise your device's security, and if the account itself is compromised by a malicious actor or code, the limited access can help mitigate the amount of damage that actor or code could do.
+For the most part, an application or agent running on your device shouldn't have root or non-root `sudo` access, to limit the risk of a vulnerability.
+This helps keep the application or agent from running commands that could compromise your device's security.
+If the account itself is compromised by a malicious actor or code, the limited access also helps mitigate the amount of damage that actor or code could do.
 
 Two things can go wrong: `sudo` can fail outright inside Claude Code, or it can succeed silently because of a cached authentication from earlier in the same terminal.
 
@@ -56,7 +57,7 @@ For the rest of that time window, every `sudo` command it runs succeeds without 
 A command that needs `sudo` fails immediately, with the error below, instead of pausing to ask you for a password.
 
 Claude Code runs shell commands with no terminal attached.
-That means that it looks like a terminal, but it's not running in the way the shell session expects, and `sudo` needs a terminal to prompt:
+The shell environment looks like a terminal, but it doesn't behave like one in the way `sudo` needs, and `sudo` needs a terminal to prompt:
 
 ```shell title="How Claude Code's shell sees it"
 sudo cat /var/log/pihole/pihole.log
@@ -72,7 +73,7 @@ Claude Code can't display or prompt for the password.
 The error message above suggests two fixes: `-S`, or "configure an askpass helper."
 Neither works here.
 
-An askpass helper still has to produce your real password non-interactively, which means that password would need to live somewhere Claude Code's user account (current user) can read it, like a file, an environment variable, or a secrets store it shells out to.
+An askpass helper still has to produce your real password non-interactively, which means the password would need to live somewhere Claude Code's user account (current user) can read it, like a file, an environment variable, or a secrets store it shells out to.
 
 ### If sudo Is Passwordless
 
@@ -172,12 +173,12 @@ If you would rather Claude Code apply list changes itself, see [Optional: Give C
 
 ## What Pi-hole Files Does Claude Code Need Access to?
 
+<Verified date="2026-08" method="vendor-docs" />
+
 Every file has attributes that dictate who can access the file and what they can do with the file.
 This group of values is called a mode.
 
 The files need to be set so that owners can both read and write the file, and so that groups (or a single group) can read the file.
-
-<Verified date="2026-08" method="vendor-docs" />
 
 Two things need a grant: the query database, and the log files.
 
@@ -212,7 +213,7 @@ Granting it would hand back exactly the write access this page's ACLs are built 
 
 :::note[GHSA-r7g8-3fj7-m5qq: cli_pw bypassed config protections on FTL 6.0-6.5]
 On unpatched installs, `/api/config` correctly rejected configuration changes from a `cli_pw` session, but `/api/teleporter` didn't get the same check until FTL 6.6.
-That means a `cli_pw` session could import a Teleporter archive and overwrite `pihole.toml` outright, including DNS settings, blocking status, DHCP config, upstream servers.
+That means a `cli_pw` session could import a Teleporter archive and overwrite `pihole.toml` outright, including DNS settings, blocking status, DHCP config, and upstream servers.
 
 The 6.6.x line has its own separate advisories, including a session-hijacking bug and two RCEs, plus a session-expiration bypass that reaches back to 6.0.
 All are fixed in **6.7**, so update there, not just to 6.6.
@@ -303,7 +304,7 @@ The `-t` is not optional. Without it there's no terminal on the far end, and `su
 Claude Code runs as you.
 Nothing to create, and the ACL grants go to your own account.
 
-Running as your login user, Claude Code's blast radius is everything you can read: your SSH keys, your dotfiles, your shell history.
+When Claude Code runs as your login user, its blast radius is everything you can read: your SSH keys, your dotfiles, your shell history.
 That may be entirely fine on a Pi you use for one thing.
 
 </TabItem>

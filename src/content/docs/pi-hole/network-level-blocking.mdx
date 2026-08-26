@@ -18,7 +18,7 @@ import Verified from '../../../components/Verified.astro';
 
 Before your device connects to anything, whether it's a page you visit or ads and trackers running in the background of that page, your device asks your DNS server for the address by name first.
 By default, this is handled by your router and ISP.
-When Pi-hole is enabled, it answers those requests and if the name is on a blocklist, Pi-hole blocks the lookup and the connection is never made.
+When Pi-hole is enabled, it answers those requests. If the name is on a blocklist, it blocks the lookup, and the connection is never made.
 
 Network traffic itself does not flow through the Pi-hole.
 
@@ -35,14 +35,14 @@ In your router's DHCP settings, set:
 - **Primary DNS** - your Pi-hole's IP address (for example, `192.168.1.25`)
 - **Secondary DNS** - `1.1.1.1` (Cloudflare) as a fallback
 
-This will look different for each router brand.
+This looks different for each router brand.
 Look for **DHCP**, **LAN**, or **DNS** settings.
 
 :::caution[A secondary DNS server is a fallback and a leak at the same time]
 Nothing in DNS requires a client to prefer the first server it was handed.
 
 Most Linux clients do try them in order and fall through only on timeout, which behaves like real failover.
-Windows, macOS, Android, and a lot of smart-device firmware instead query both or learn to prefer whichever answered fastest, and Cloudflare will usually beat a Raspberry Pi that's busy rebuilding gravity.
+Windows, macOS, Android, and a lot of smart-device firmware instead query both or learn to prefer whichever answered fastest, and Cloudflare usually beats a Raspberry Pi that's busy rebuilding gravity.
 
 The result is that some devices resolve past Pi-hole while it's perfectly healthy.
 The symptom is ads reappearing on one device and not another, with nothing in the query log to explain it, because the queries never reached the Pi.
@@ -53,7 +53,7 @@ Then keep [Teleporter backups](/docs/pi-hole/maintenance/#back-up-your-configura
 
 If you're chasing intermittent blocking, check this before anything else, and see [Force Devices That Ignore Router DNS to Use the Pi-hole](#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole) for devices that bypass DHCP entirely.
 
-The resolver behavior described here is drawn from how the implementations document their own selection order, not from measurements on my network.
+The resolver behavior described here is drawn from how each operating system's resolver documents its own selection order, not from measurements on my network.
 The rest of this section is tested.
 :::
 
@@ -67,7 +67,7 @@ The rest of this section is tested.
 1. In the sidebar, under **Configuration**, select **Network Config** > **LAN**.
 1. Select the edit icon for the network that should use Pi-hole.
 1. Next to **DHCP Server**, select **☑ Enable** to expand the DHCP options.
-1. Expand **Advanced Settings**
+1. Expand **Advanced Settings**.
 1. Next to **DNS Server**, select **Manual** and enter the Pi-hole's IP address in the first box.
 1. In the second box, enter `1.1.1.1` to use Cloudflare as a backup DNS server.
 1. Select **Save** then **Apply** to save and apply the settings.
@@ -118,9 +118,10 @@ If you don't see a **DNS Proxy** tab under **Device Config**, your hardware or c
 
 Other prosumer-grade routers (OPNsense, pfSense, OpenWrt, and similar) generally offer the same capability under names like "DNS redirect," "transparent DNS proxy," or NAT/policy-routing rules, but the exact steps are specific enough to your router's software that they're out of scope for this guide.
 
-**If none of that is available to you**, the practical options are the ones already covered elsewhere in this guide: accept the device's own ads (as with Roku and Fire TV's captive-portal domains), or put the device in a bypass group so Pi-hole doesn't try to filter it at all - see [Skip Pi-hole for a Specific Device](/docs/pi-hole/block-allow-lists/#skip-pi-hole-for-a-specific-device).
+**If none of that is available to you**, the practical options are the ones already covered elsewhere in this guide: accept the device's own ads (as with Roku and Fire TV's captive-portal domains), or put the device in a bypass group so Pi-hole doesn't try to filter it at all.
+See [Skip Pi-hole for a Specific Device](/docs/pi-hole/block-allow-lists/#skip-pi-hole-for-a-specific-device) for how to set one up.
 
-Encrypted DNS (DNS-over-HTTPS or DNS-over-TLS) on Android and iOS is a separate problem: it isn't just hardcoded to one server, it's not plaintext DNS at all, so no redirect at any layer can catch it.
+Encrypted DNS (DNS-over-HTTPS or DNS-over-TLS) on Android and iOS is a separate problem: it isn't just hardcoded to one server, and it's not plaintext DNS at all, so no redirect at any layer can catch it.
 Blocking DoH requires blocking the IP addresses of known DoH providers instead, which is more aggressive and can break legitimate HTTPS traffic.
 
 ## Checkpoint
