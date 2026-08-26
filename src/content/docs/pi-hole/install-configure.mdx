@@ -68,7 +68,7 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 1. **Customisation: Choose username**: Create a user account.
    - The examples in this guide use the username `pi-admin`.
 1. **Customisation: Choose Wi-Fi** to configure the wireless network connection.
-   - Select **Next** if you will connect using Ethernet.
+   - Select **Next** if you plan to use the Ethernet connection.
 1. **Customisation: SSH authentication**: Enable SSH and select **Use password authentication**.
    - Optionally, [use public key authentication](https://www.raspberrypi.com/documentation/computers/remote-access.html#configure-ssh-without-a-password) for more secure access.
 
@@ -142,7 +142,7 @@ Pi-hole v6 needs Debian 11 (Bullseye) or later, since FTL requires glibc 2.28.
 If you're on an existing Pi, use `cat /etc/os-release | grep PRETTY_NAME` to confirm the release version before you continue:
 
 ```shellsession title="From the Pi"
-pi-admin@pi-hole:~ $ cat /etc/os-release | grep PRETTY_NAME
+$ cat /etc/os-release | grep PRETTY_NAME
 PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 ```
 
@@ -198,15 +198,29 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 1. If you configured Wi-Fi and also plugged the Pi in via Ethernet, your Pi will have two IP addresses.
 
-   To make it easier to [enable network-wide blocking](/docs/pi-hole/network-level-blocking/#set-up-network-wide-pi-hole-on-a-tp-link-omada-controller) later, identify the Pi's Ethernet IP address.
+   To make it easier to [enable network-wide blocking](/docs/pi-hole/network-level-blocking/#set-up-network-wide-pi-hole-on-a-tp-link-omada-controller) later, identify the Pi's IP address for the connection it will use.
 
-   Confirm the Ethernet IP address from inside the SSH session on the Pi:
+   Confirm the IP address from inside the SSH session on the Pi:
+
+   <Tabs syncKey="net-connection">
+
+   <TabItem label="Ethernet">
 
    ```shell title="From the Pi"
    ip addr show eth0
    ```
 
-   If you're running Wi-Fi only, use `ip addr show wlan0` instead, and use that address later on.
+   </TabItem>
+
+   <TabItem label="Wi-Fi">
+
+   ```shell title="From the Pi"
+   ip addr show wlan0
+   ```
+
+   </TabItem>
+
+   </Tabs>
 
 </Steps>
 
@@ -269,7 +283,7 @@ SSH is allowed for remote administration.
    ```
 
    If you don't have a preferred terminal-based text editor, you can use `sudo nano /etc/ufw/applications.d/pihole`.
-   That will create the file and open the nano editor so you can add the rule.
+   That creates the file and opens the nano editor so you can add the rule.
 
    To save and exit nano: <kbd>CTRL+X</kbd>, then <kbd>Y</kbd>, then <kbd>Enter</kbd>.
 
@@ -366,7 +380,7 @@ The Pi doesn't need this if you already have a display attached, or if you don't
 
 1. Create a new configuration file, `/etc/ssh/sshd_config.d/60-disable-x11-forwarding.conf`, to disable it:
 
-   ```ini title="/etc/ssh/sshd_config.d/60-disable-x11-forwarding.conf"
+   ```java title="/etc/ssh/sshd_config.d/60-disable-x11-forwarding.conf"
    X11Forwarding no
    ```
 
@@ -394,7 +408,8 @@ Install `unattended-upgrades` to apply security patches automatically.
    Confirm both:
 
    ```shell title="From the Pi"
-   grep -A5 "Origins-Pattern" /etc/apt/apt.conf.d/50unattended-upgrades && grep "Automatic-Reboot \"" /etc/apt/apt.conf.d/50unattended-upgrades
+   grep -A5 "Origins-Pattern" /etc/apt/apt.conf.d/50unattended-upgrades && \
+   grep "Automatic-Reboot \"" /etc/apt/apt.conf.d/50unattended-upgrades
    ```
 
    Leave automatic reboot commented out (disabled) unless you specifically want the Pi to reboot itself after a kernel update.
@@ -403,7 +418,8 @@ Install `unattended-upgrades` to apply security patches automatically.
 1. Confirm the service is enabled, then do a dry run to see what it would install:
 
    ```shell title="From the Pi"
-   systemctl is-enabled unattended-upgrades && sudo unattended-upgrade --dry-run --debug
+   systemctl is-enabled unattended-upgrades && \
+   sudo unattended-upgrade --dry-run --debug
    ```
 
 </Steps>
@@ -418,7 +434,7 @@ They set the connection name as a temporary shell variable.
 The variable is cleared when you exit the session.
 
 The `ipv4.dns` value below sets the Pi's own OS-level resolver, which it uses to look things up before Pi-hole is installed.
-It's not what Pi-hole will serve to the rest of your network.
+It's not what Pi-hole serves to the rest of your network.
 That's a separate setting you choose on the [next page](/docs/pi-hole/pihole-install/) when you pick Pi-hole's upstream DNS provider.
 
 <Steps>

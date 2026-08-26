@@ -13,122 +13,131 @@ prev:
 import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 import Verified from '../../../../components/Verified.astro';
 
-Everything on this page is optional, apart from [Revoke Access](#revoke-access).
+Apart from [Revoke Access](#revoke-access), everything on this page is optional.
+
 Start at [Give Claude Code Access to Pi-hole](/docs/pi-hole/claude-code-access/) if you haven't set up access yet.
 
 ## Optional: Give Claude Code Write Access
 
 <Verified date="2026-08" method="vendor-docs" />
 
-Skip this unless you want Claude Code to apply fixes itself rather than hand them to you.
+Follow this section if you want Claude Code to apply fixes itself rather than suggest them to you.
+
+Don't follow this section if you want an agent that only reports.
 
 Granting read access to one file, `/etc/pihole/cli_pw`, lets Claude Code run `pihole allow`, `pihole deny`, `pihole enable`, and `pihole disable` with no `sudo` involved at all.
-It also gives it more than those four commands, which the caution below spells out.
-That file holds the password Pi-hole generates for its own `pihole` commands to authenticate against the API.
+`/etc/pihole/cli_pw` holds the password Pi-hole generates for its own `pihole` commands to authenticate against the API.
 
-:::caution[This grants more than the four commands above]
+It also gives it more than those four commands.
+
 Those four commands are the intended use, but the grant hands over a credential, not a command list.
-Anything that credential can do, Claude Code can do, by calling the API directly.
+Anything that credential can do, Claude Code can do by calling the API directly.
 
-In practice that means it can also rebuild gravity, restart DNS, delete DHCP leases and network device records, and **flush the query log**, which destroys the history you granted read access to in the first place.
+In practice that means it can also rebuild gravity, restart DNS, delete DHCP leases and network device records, and flush the query log, which destroys the history you granted read access to in the first place.
 It can remove lists as well as add them, and `pihole disable` turns off blocking for your whole network.
 
-Grant this if you want an agent that fixes things. Don't grant it if you want an agent that only reports.
-:::
+<Steps>
 
-<Tabs syncKey="cc-location">
-<TabItem label="On the Pi">
+1. Select where you run the commands from:
 
-<Tabs syncKey="cc-identity">
-<TabItem label="Your login user">
+   <Tabs syncKey="cc-location">
+   And who you run the commands as:
 
-```shell title="From the Pi"
-sudo setfacl -m "u:$USER:r" /etc/pihole/cli_pw
-```
+   <TabItem label="On the Pi">
 
-</TabItem>
-<TabItem label="Dedicated agent user">
+     <Tabs syncKey="cc-identity">
+     <TabItem label="Your login user">
 
-```shell title="From the Pi"
-sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw
-```
+     ```shell title="From the Pi"
+     sudo setfacl -m "u:${USER}:r" /etc/pihole/cli_pw
+     ```
 
-</TabItem>
-</Tabs>
+     </TabItem>
 
-</TabItem>
-<TabItem label="From a workstation">
+     <TabItem label="Dedicated agent user">
 
-<Tabs syncKey="cc-identity">
-<TabItem label="Your login user">
+     ```shell title="From the Pi"
+     sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw
+     ```
 
-Replace `pi-admin` with your own account name on the Pi:
+     </TabItem>
+     </Tabs>
 
-```shell title="From your workstation"
-ssh -t pi-hole-admin 'sudo setfacl -m u:pi-admin:r /etc/pihole/cli_pw'
-```
+   </TabItem>
+   <TabItem label="From a workstation">
 
-</TabItem>
-<TabItem label="Dedicated agent user">
+     <Tabs syncKey="cc-identity">
+     <TabItem label="Your login user">
 
-```shell title="From your workstation"
-ssh -t pi-hole-admin 'sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw'
-```
+     Replace `pi-admin` with your own account name on the Pi:
 
-</TabItem>
-</Tabs>
+     ```shell title="From your workstation"
+     ssh -t pi-hole-admin 'sudo setfacl -m u:pi-admin:r /etc/pihole/cli_pw'
+     ```
 
-</TabItem>
-</Tabs>
+     </TabItem>
+     <TabItem label="Dedicated agent user">
 
-Confirm it works by allowing a domain as that account, with no `sudo`:
+     ```shell title="From your workstation"
+     ssh -t pi-hole-admin 'sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw'
+     ```
 
-<Tabs syncKey="cc-location">
-<TabItem label="On the Pi">
+     </TabItem>
+     </Tabs>
 
-<Tabs syncKey="cc-identity">
-<TabItem label="Your login user">
+   </TabItem>
+   </Tabs>
 
-```shell title="From the Pi"
-pihole allow ads.example.com
-```
+1. Confirm it works by allowing a domain as that account, with no `sudo`:
 
-</TabItem>
-<TabItem label="Dedicated agent user">
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
 
-```shell title="From the Pi"
-sudo -u claude-agent pihole allow ads.example.com
-```
+     <Tabs syncKey="cc-identity">
+     <TabItem label="Your login user">
 
-</TabItem>
-</Tabs>
+     ```shell title="From the Pi"
+     pihole allow ads.example.com
+     ```
 
-</TabItem>
-<TabItem label="From a workstation">
+     </TabItem>
+     <TabItem label="Dedicated agent user">
 
-<Tabs syncKey="cc-identity">
-<TabItem label="Your login user">
+     ```shell title="From the Pi"
+     sudo -u claude-agent pihole allow ads.example.com
+     ```
 
-```shell title="From your workstation"
-ssh pi-hole-admin 'pihole allow ads.example.com'
-```
+     </TabItem>
+     </Tabs>
 
-</TabItem>
-<TabItem label="Dedicated agent user">
+   </TabItem>
+   <TabItem label="From a workstation">
 
-```shell title="From your workstation"
-ssh pi-hole-agent 'pihole allow ads.example.com'
-```
+     <Tabs syncKey="cc-identity">
+     <TabItem label="Your login user">
 
-</TabItem>
-</Tabs>
+     ```shell title="From your workstation"
+     ssh pi-hole-admin 'pihole allow ads.example.com'
+     ```
 
-</TabItem>
-</Tabs>
+     </TabItem>
+     <TabItem label="Dedicated agent user">
 
-If you grant this, uncomment the matching block in the **Privileges** section of your `CLAUDE.md`, so the agent knows it can run these commands directly.
+     ```shell title="From your workstation"
+     ssh pi-hole-agent 'pihole allow ads.example.com'
+     ```
 
-### Where the Limit Sits
+     </TabItem>
+     </Tabs>
+
+   </TabItem>
+   </Tabs>
+
+1. Uncomment the matching block in the **Privileges** section of your `CLAUDE.md`, so the agent knows it can run these commands directly.
+
+</Steps>
+
+### The Limit of FTL for Access
 
 The credential cannot change configuration or import a Teleporter backup.
 FTL enforces both, unconditionally, with no setting to turn them off:
@@ -137,22 +146,24 @@ FTL enforces both, unconditionally, with no setting to turn them off:
 The current CLI session is not allowed to modify Pi-hole config settings
 ```
 
-That is the entire restriction. Everything else the API offers stays available, which is why the caution above lists more than the four commands.
+That is the entire restriction.
+Everything else the API offers stays available, which is why the caution above lists more than the four commands.
 It's still a stronger guarantee than an application password, where that same config restriction disappears the moment `webserver.api.app_sudo` is set to `true`.
 
-Two practical limits are worth knowing before you rely on this.
+Two practical limitations of FTL:
 
-**It assumes the default DNS port.**
-`pihole allow` locates the API by asking FTL which port DNS runs on, and that lookup reads `pihole.toml`, which the agent account deliberately cannot read.
-It falls back to the default of `53`, so a stock install works.
-If you changed `dns.port`, these commands fail for the agent and warn that `pihole.toml` could not be read.
-Don't solve that by granting access to `pihole.toml`, which holds your password hashes. Run those commands yourself with `!` instead.
+- It assumes the default DNS port.
+  - `pihole allow` locates the API by asking FTL which port DNS runs on, and that lookup reads `pihole.toml`, which the agent account deliberately cannot read.
+    It falls back to the default of `53`, so a stock install works.
+    If you changed `dns.port`, these commands fail for the agent and warn that `pihole.toml` could not be read.
+    Don't solve that by granting access to `pihole.toml`, which holds your password hashes. Run those commands yourself with `!` instead.
 
-**The grant survives restarts.**
-FTL rewrites `cli_pw` every time it starts, but truncates the existing file rather than replacing it, so the ACL rides through exactly as the query database grant does.
-If you delete the file outright, re-run the grant above.
+- The grant survives restarts.
+  - FTL rewrites `cli_pw` every time it starts, but truncates the existing file rather than replacing it, so the ACL rides through exactly as the query database grant does.
+    If you delete the file outright, re-run the grant above.
 
-To take this back, remove that one entry. Everything else on this page keeps working:
+To take this back, remove that one entry.
+Everything else on this page keeps working:
 
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
@@ -204,12 +215,17 @@ ssh -t pi-hole-admin 'sudo setfacl -x u:claude-agent /etc/pihole/cli_pw'
 <Verified date="2026-08" method="tested" />
 
 A few things have no read-only path: `pihole debug`, `systemctl status pihole-FTL`, `journalctl`.
-If you want the agent to run those unattended, grant a password-free rule for a **wrapper script that takes no arguments**.
 
-Skip this section unless you need it. Nothing later depends on it.
+If you want the agent to run those unattended, grant a password-free rule for a wrapper script that takes no arguments.
+
+Skip this section unless you need it.
+Nothing depends on it in later sections.
+
+<details>
+<summary>Grant a password-free rule for a wrapper script that takes no arguments.</summary>
 
 :::caution[Never use a wildcard sudoers rule]
-A rule like `agent ALL=(root) NOPASSWD: /usr/bin/tail *` looks narrow and is total compromise.
+A rule like `agent ALL=(root) NOPASSWD: /usr/bin/tail *` looks narrow, but is a compromise.
 The wildcard accepts any path, so the agent can read anything on the system:
 
 ```shell
@@ -449,6 +465,8 @@ Pinning the arguments isn't enough either.
 If you add this, uncomment the matching block in the **Privileges** section of your `CLAUDE.md` so the agent knows the wrapper exists.
 Otherwise it will keep asking you to run diagnostics by hand.
 
+</details>
+
 ## Revoke Access
 
 <Tabs syncKey="cc-location">
@@ -457,7 +475,8 @@ Otherwise it will keep asking you to run diagnostics by hand.
 <Tabs syncKey="cc-identity">
 <TabItem label="Your login user">
 
-Remove the ACL entries. The `-R` matters, because rotated archives inherited the grant from the directory's default ACL:
+Remove the ACL entries.
+The `-R` matters, because rotated archives inherited the grant from the directory's default ACL:
 
 ```shell title="From the Pi"
 sudo setfacl -R -x "u:$USER" /var/log/pihole && \
@@ -547,7 +566,8 @@ ssh -t pi-hole-admin 'sudo setfacl -R -b /var/log/pihole && \
 </TabItem>
 </Tabs>
 
-Confirm nothing is left. No `user:` line should name the account you revoked:
+Confirm nothing is left.
+No `user:` line should name the account you revoked:
 
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
@@ -713,6 +733,7 @@ Generate a new application password to revoke active sessions, including your we
 <Verified date="2026-08" method="vendor-docs" />
 
 Read-only is not the same as private.
+
 Any of the methods on this page expose every DNS query from every device on your network, including which sites each device reached and when.
 Least privilege limits what an agent can change, not what it can see.
 

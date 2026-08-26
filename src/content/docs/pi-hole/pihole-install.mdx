@@ -61,7 +61,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
    - **Static IP Needed**: **Continue**
    - **Upstream DNS Provider**: **Cloudflare** - You can switch to unbound later.
    - **Blocklists**: **Yes** to include the default list.
-     We'll change it to a more curated set of lists later.
+     You'll change it to a more curated set of lists later.
    - **Enable Logging**: **Yes** - this helps diagnose issues like when streaming apps won't load.
    - **Select a privacy mode for FTL**: **0** - shows which site was blocked on which device. See the [official privacy level docs](https://docs.pi-hole.net/ftldns/privacylevels/) for other options.
 
@@ -146,10 +146,15 @@ Add unbound if you prefer the additional privacy of recursive resolution.
        private-address: fe80::/10
    ```
 
-1. Start unbound and verify that it's running on port 5335:
+1. Start unbound:
 
    ```shell title="From the Pi"
    sudo systemctl start unbound
+   ```
+
+1. Verify that it's running on port 5335:
+
+   ```shell title="From the Pi"
    dig google.com @127.0.0.1 -p 5335 | grep NOERROR
    ```
 
@@ -195,7 +200,9 @@ sudo systemctl restart pihole-FTL
 It shows query rate, cache hits, blocked domains, and FTL status alongside system metrics such as CPU, memory, temperature, and Fail2Ban statistics.
 
 The Pi-hole web interface already shows DNS stats.
-Add Netdata if you want system-level metrics alongside your Pi-hole data.
+
+<details>
+<summary>Add Netdata if you want system-level metrics alongside your Pi-hole data.</summary>
 
 <Steps>
 
@@ -252,6 +259,8 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
    The **Fail2Ban** section will appear in the dashboard showing currently banned IPs and active failures for each jail.
 
 </Steps>
+
+</details>
 
 ## Checkpoint
 

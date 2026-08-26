@@ -29,6 +29,7 @@ Skip to [Choose Your Setup](/docs/pi-hole/claude-code-access/#choose-your-setup)
 ## Should Claude Code Have Root or Use sudo?
 
 No.
+
 For the most part, an application or agent running on your device shouldn't have root or non-root `sudo` access, to limit the risk of a vulnerability.
 This helps keep the application or agent from running commands that could compromise your device's security.
 If the account itself is compromised by a malicious actor or code, the limited access also helps mitigate the amount of damage that actor or code could do.
@@ -59,19 +60,18 @@ A command that needs `sudo` fails immediately, with the error below, instead of 
 Claude Code runs shell commands with no terminal attached.
 The shell environment looks like a terminal, but it doesn't behave like one in the way `sudo` needs, and `sudo` needs a terminal to prompt:
 
-```shell title="How Claude Code's shell sees it"
+```shell title="In Claude Code"
 sudo cat /var/log/pihole/pihole.log
 ```
 
-```text
+```shellsession title="Output in Claude Code"
 sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
 sudo: a password is required
 ```
 
 Claude Code can't display or prompt for the password.
 
-The error message above suggests two fixes: `-S`, or "configure an askpass helper."
-Neither works here.
+Neither of the two fixes that the error message suggests work from Claude Code (`use the -S option to read from standard input or configure an askpass helper`).
 
 An askpass helper still has to produce your real password non-interactively, which means the password would need to live somewhere Claude Code's user account (current user) can read it, like a file, an environment variable, or a secrets store it shells out to.
 
@@ -207,6 +207,7 @@ pihole-FTL --config webserver.api.app_sudo
 Don't grant access to `cli_pw`.
 
 Without it, `pihole allow` and `pihole deny` don't fail with an error, they hang.
+In Claude Code, this shows up as a command that doesn't complete within its 120s timeout and gets moved to a background task.
 
 Both commands read `cli_pw` to open an API session, and a session opened this way can still manage lists.
 Granting it would hand back exactly the write access this page's ACLs are built to withhold.

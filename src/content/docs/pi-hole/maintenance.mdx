@@ -59,10 +59,15 @@ This matters more if you're rebuilding on an older image or setting up an existi
    This prints nothing when passwordless `sudo` is off.
    Any file it names still grants it, and you should read that file before removing it.
 
-1. Log out of the SSH session, then log back in:
+1. Log out of the SSH session:
 
    ```shell
    exit
+   ```
+
+1. Log back in:
+
+   ```shell
    ssh pi-admin@pi-hole.local
    ```
 
@@ -123,18 +128,22 @@ sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
 
 ### Example: Change Upstream DNS
 
-In the `[dns]` section of `pihole.toml`:
+Change the addresses in the `[dns]` section of `pihole.toml`:
 
-```toml title="pihole.toml"
+```toml "127.0.0.1#5335" title="pihole.toml"
+...
 [dns]
-upstreams = ["127.0.0.1#5335", "1.1.1.1"]  # unbound on localhost, Cloudflare backup
+ upstreams = ["127.0.0.1#5335", "1.1.1.1"]  # unbound on localhost, Cloudflare backup
+...
 ```
 
 Or for Cloudflare directly:
 
-```toml title="pihole.toml"
+```toml "1.1.1.1" title="pihole.toml"
+...
 [dns]
-upstreams = ["1.1.1.1", "1.0.0.1"]
+ upstreams = ["1.1.1.1", "1.0.0.1"]
+...
 ```
 
 ### Reference: Full pihole.toml
@@ -145,7 +154,7 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
 <details>
 <summary>pihole.toml (v6.7, comments stripped)</summary>
 
-<Code code={piholeToml} lang="toml" mark={highlights} />
+<Code code={piholeToml} lang="toml" mark={highlights} showLineNumbers="true" />
 
 </details>
 
@@ -192,7 +201,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Add an entry to `/etc/fstab` to auto-mount on boot.
    Open the file and add this line at the bottom, replacing `YOUR-UUID` with the UUID you copied:
 
-   ```ini title="/etc/fstab"
+   ```ini "YOUR-UUID" title="/etc/fstab"
    UUID=YOUR-UUID  /mnt/pihole-logs  ext4  defaults,noatime  0  2
    ```
 
@@ -202,7 +211,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    <details>
    <summary>If you need to format the drive first</summary>
 
-   This will delete everything on the drive.
+   This deletes everything on the drive.
 
    <Steps>
 
@@ -215,7 +224,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
       Match the size and label to your USB drive.
       Don't guess: an internal disk can share the same `/dev/sdX` naming scheme, and `mkfs` won't ask for confirmation before it formats.
 
-      It will delete everything on the drive.
+      It deletes everything on the drive.
 
    1. Format the partition.
 
@@ -267,11 +276,13 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    Find the `[files]` section and set:
 
    ```toml title="pihole.toml"
+   ...
    [files]
      database = "/mnt/pihole-logs/pihole-FTL.db"
 
      [files.log]
        dnsmasq = "/mnt/pihole-logs/pihole.log"
+   ...
    ```
 
    `log` is a subsection (`[files.log]`), not a single value.
@@ -281,7 +292,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Start FTL and verify it comes up cleanly:
 
    ```shell title="From the Pi"
-   sudo systemctl start pihole-FTL
+   sudo systemctl start pihole-FTL && \
    sudo systemctl status pihole-FTL
    ```
 
@@ -300,7 +311,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Verify that the USB drive mounts and Pi-hole starts correctly:
 
    ```shell title="From the Pi"
-   lsblk
+   lsblk && \
    systemctl status pihole-FTL
    ```
 
@@ -322,9 +333,11 @@ If you want to change how many days of history Pi-hole keeps:
 
 1. Set the number of days to keep the database in `pihole.toml`:
 
-   ```toml title="pihole.toml"
+   ```toml "180" title="pihole.toml"
+   ...
    [database]
-   maxDBdays = 180
+    maxDBdays = 180
+   ...
    ```
 
 1. Restart FTL after changing this:

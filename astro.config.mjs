@@ -34,6 +34,14 @@ export default defineConfig({
 			tagline: 'Technical writer, team leader, relationship-builder',
 			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css'],
 			disable404Route: true,
+			expressiveCode: {
+				shiki: {
+					// Allow using the alias 'mjs' for the 'javascript' language
+					langAlias: {
+						url: 'txt',
+					},
+				},
+			},
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
 				Head: './src/components/Head.astro',

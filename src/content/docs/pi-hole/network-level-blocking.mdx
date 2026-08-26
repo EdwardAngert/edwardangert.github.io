@@ -43,14 +43,15 @@ Look for **DHCP**, **LAN**, or **DNS** settings.
 Nothing in DNS requires a client to prefer the first server it was handed.
 
 Most Linux clients do try them in order and fall through only on timeout, which behaves like real failover.
-Windows, macOS, Android, and a lot of smart-device firmware instead query both or learn to prefer whichever answered fastest, and Cloudflare usually beats a Raspberry Pi that's busy rebuilding gravity.
+Windows, macOS, Android, and a lot of smart-device firmware instead query both or learn to prefer whichever answered fastest, and Cloudflare might beat a Raspberry Pi to the response.
 
-The result is that some devices resolve past Pi-hole while it's perfectly healthy.
+The result is that some devices resolve past Pi-hole, even while it's working normally.
 The symptom is ads reappearing on one device and not another, with nothing in the query log to explain it, because the queries never reached the Pi.
 
-This guide keeps `1.1.1.1` anyway, on the trade that a dead Pi taking the whole house offline is worse than some devices leaking past it.
+This guide keeps `1.1.1.1` anyway, on the trade that if DNS response from the Pi fails, it would be worse to have it seem like "the internet is down" than it would be for some ads to come through.
+
 If you'd rather close the leak, leave **Secondary DNS** empty and set only the Pi-hole.
-Then keep [Teleporter backups](/docs/pi-hole/maintenance/#back-up-your-configuration) current, because the Pi becomes a single point of failure for your network's DNS.
+Keep [Teleporter backups](/docs/pi-hole/maintenance/#back-up-your-configuration) current, because the Pi becomes a single point of failure for your network's DNS.
 
 If you're chasing intermittent blocking, check this before anything else, and see [Force Devices That Ignore Router DNS to Use the Pi-hole](#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole) for devices that bypass DHCP entirely.
 
@@ -58,6 +59,8 @@ The resolver behavior described here is drawn from how each operating system's r
 The rest of this section is tested.
 
 ### Set Up Network-Wide Pi-hole on a TP-Link Omada Controller
+
+These steps are Omada controller-specific, but the language might be similar on other hardware.
 
 ![Omada controller DNS server settings](./screenshots/omada-dns-server-settings.png)
 
@@ -91,15 +94,18 @@ Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server y
 - **Samsung Smart TVs** may use `8.8.8.8` for some services even when a different DNS is assigned.
 - **Android and iOS** support encrypted DNS (DNS-over-HTTPS or DNS-over-TLS), which can send queries directly to Google or Cloudflare, bypassing Pi-hole completely.
 
-**This can't be fixed from the Pi itself.**
+**This can't be fixed from the Pi itself**.
 Network traffic doesn't flow through the Pi-hole (as stated above), so a device's DNS query to `8.8.8.8` never reaches the Pi to intercept in the first place.
 Catching it requires a rule on whatever box actually sits between your devices and the internet: your router.
 
-**Blocking the hardcoded address outright doesn't work either.**
+**Blocking the hardcoded address outright doesn't work either**.
 Chromecast in particular refuses to function at all if `8.8.8.8` is unreachable, rather than falling back to the DNS server it was assigned.
 The fix has to be a transparent redirect that still gives the device a real answer, not a block.
 
-**If your router is a TP-Link Omada Gateway** (not just an Omada-managed switch or access point), it has a feature built for exactly this:
+<details>
+<summary>TP-Link Omada Gateway: DNS Override</summary>
+
+If your router is a TP-Link Omada Gateway (not just an Omada-managed switch or access point), use the built-in **DNS Override** feature:
 
 <Steps>
 
@@ -118,10 +124,15 @@ If you don't see a **DNS Proxy** tab under **Device Config**, your hardware or c
 
 Other prosumer-grade routers (OPNsense, pfSense, OpenWrt, and similar) generally offer the same capability under names like "DNS redirect," "transparent DNS proxy," or NAT/policy-routing rules, but the exact steps are specific enough to your router's software that they're out of scope for this guide.
 
-**If none of that is available to you**, the practical options are the ones already covered elsewhere in this guide: accept the device's own ads (as with Roku and Fire TV's captive-portal domains), or put the device in a bypass group so Pi-hole doesn't try to filter it at all.
+</details>
+
+If none of that is available to you, the practical options are the ones already covered elsewhere in this guide: accept the device's own ads (as with Roku and Fire TV's captive-portal domains), or put the device in a bypass group so Pi-hole doesn't try to filter it at all.
+
 See [Skip Pi-hole for a Specific Device](/docs/pi-hole/block-allow-lists/#skip-pi-hole-for-a-specific-device) for how to set one up.
 
-Encrypted DNS (DNS-over-HTTPS or DNS-over-TLS) on Android and iOS is a separate problem: it isn't just hardcoded to one server, and it's not plaintext DNS at all, so no redirect at any layer can catch it.
+Encrypted DNS (DNS-over-HTTPS or DNS-over-TLS) on Android and iOS is a separate, additional problem, not covered in this guide.
+Queries are encrypted and aren't hardcoded to a single server.
+It's not plaintext DNS and no redirect at any layer can catch it.
 Blocking DoH requires blocking the IP addresses of known DoH providers instead, which is more aggressive and can break legitimate HTTPS traffic.
 
 ## Checkpoint

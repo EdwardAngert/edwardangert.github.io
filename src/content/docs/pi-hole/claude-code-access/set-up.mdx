@@ -14,6 +14,7 @@ next:
 ---
 
 import { Steps, Tabs, TabItem, Code } from '@astrojs/starlight/components';
+import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers'
 import Verified from '../../../../components/Verified.astro';
 import claudeMd from '../CLAUDE.md.example?raw';
 
@@ -211,20 +212,30 @@ Install from the apt repository instead, which puts it on the system path for ev
 1. Install it:
 
    ```shell title="From the Pi"
-   sudo apt update && sudo apt install claude-code
+   sudo apt update && \
+   sudo apt install claude-code
    ```
 
-1. Enter the agent account and log in **as that account**.
+1. Enter the agent account and log in as that account.
 
    This is the one time you switch users, and it's interactive, so the password prompt is fine here:
 
+   1. Log in:
+
    ```shell title="From the Pi"
    sudo -u claude-agent -i
-   cd ~/pihole && claude
    ```
 
    The login shows a code rather than redirecting, because the browser can't reach a headless Pi.
-   Open the URL elsewhere, sign in, and paste the code back.
+
+   1. Change directories and start Claude Code:
+
+   ```shell title="From the Pi"
+   cd ~/pihole && \
+   claude
+   ```
+
+   Open the URL elsewhere when prompted, sign in, and paste the code back.
 
    This is a second login for the same Claude account, not a second subscription.
    To skip the browser flow, run `claude setup-token` on a machine you're already signed in on and set `CLAUDE_CODE_OAUTH_TOKEN` in the agent's shell instead.
@@ -243,7 +254,8 @@ Install Claude Code on your workstation using the [instructions for your platfor
 <TabItem label="Your login user">
 
 ```shell title="From your workstation"
-claude --version && ssh pi-hole-admin 'pihole status'
+claude --version && \
+ssh pi-hole-admin 'pihole status'
 ```
 
 </TabItem>
@@ -302,9 +314,9 @@ Every command in this section runs with `sudo` on the Pi.
    <TabItem label="Your login user">
 
    ```shell title="From the Pi"
-   sudo setfacl -R -m "u:$USER:rX" /var/log/pihole && \
-     sudo setfacl -m "d:u:$USER:r" /var/log/pihole && \
-     sudo setfacl -m "u:$USER:r" /etc/pihole/pihole-FTL.db
+   sudo setfacl -R -m "u:${USER}:rX" /var/log/pihole && \
+     sudo setfacl -m "d:u:${USER}:r" /var/log/pihole && \
+     sudo setfacl -m "u:${USER}:r" /etc/pihole/pihole-FTL.db
    ```
 
    </TabItem>
@@ -350,15 +362,17 @@ Every command in this section runs with `sudo` on the Pi.
 
 </Steps>
 
-Each line earns its place, and two of them are easy to get subtly wrong:
+Explanations:
 
-**`-R -m u:...:rX` on the log directory.** The capital `X` is load-bearing. It means "execute only on directories," so the directory gets `r-x` and every log file gets `r--`.
-
-Writing a lowercase `r` here instead breaks the whole grant, and it fails in a way that looks like the ACL never applied. A named-user entry replaces whatever the account was getting from the directory's "other" class, so `u:agent:r--` on the directory strips the execute bit it needs to enter the directory at all, and every read below it is denied.
-
-**`d:u:...:r` sets a *default* ACL, which is what survives log rotation.** Pi-hole rotates `pihole.log` daily and `FTL.log` weekly with `create 640 pihole pihole`, building a brand new file each time. An ACL set only on today's file is gone tomorrow. A default ACL is inherited by every file created in the directory afterward, including the compressed `.1` and `.2` archives.
-
-**The query database needs no directory ACL.** `/etc/pihole` is already world-traversable. This grant also survives Pi-hole restarts: FTL resets the database to mode `0640` every time it starts, and `chmod` rewrites an ACL's mask rather than removing named-user entries, so the read stays effective.
+- `-R -m u:...:rX` on the log directory
+  - `X` means "execute only on directories," so the directory gets `r-x` and every log file gets `r--`.
+  - A lowercase `r` here instead breaks the whole grant, and fails in a way that looks like the ACL never applied: a named-user entry replaces whatever the account was getting from the directory's "other" class, so `u:agent:r--` on the directory strips the execute bit it needs to enter the directory at all, and every read below it is denied.
+- `d:u:...:r` on the log directory
+  - Sets a default ACL, which is what survives log rotation.
+  - Pi-hole rotates `pihole.log` daily and `FTL.log` weekly with `create 640 pihole pihole`, building a brand new file each time. An ACL set only on today's file is gone tomorrow. A default ACL is inherited by every file created in the directory afterward, including the compressed `.1` and `.2` archives.
+- `u:...:r` on the query database
+  - Needs no directory ACL: `/etc/pihole` is already world-traversable.
+  - This grant also survives Pi-hole restarts. FTL resets the database to mode `0640` every time it starts, and `chmod` rewrites an ACL's mask rather than removing named-user entries, so the read stays effective.
 
 :::note[If you ever delete the FTL database]
 FTL creates a fresh `pihole-FTL.db` when the file is missing, and the new file has no ACL.
@@ -418,23 +432,25 @@ ssh pi-hole-agent "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
 </Tabs>
 
 The `queries` view resolves the internal integer IDs back to real domain and client strings, so you don't need to join anything.
-`status` stays numeric. The values worth knowing:
+`status` stays numeric.
+
+The values are:
 
 | Status | Meaning |
 |--------|---------|
-| `1` | Blocked by a blocklist (gravity) |
-| `2` | Forwarded upstream |
-| `3` | Answered from cache |
-| `4` | Blocked by a regex filter |
-| `5` | Blocked by the denylist |
+| `1`    | Blocked by a blocklist (gravity) |
+| `2`    | Forwarded upstream |
+| `3`    | Answered from cache |
+| `4`    | Blocked by a regex filter |
+| `5`    | Blocked by the denylist |
 
-The database lags live traffic by up to 60 seconds, because FTL flushes its in-memory buffer on `database.DBinterval`, which defaults to `60`.
+The database lags live traffic by up to 60 seconds because FTL flushes its in-memory buffer on `database.DBinterval`, which defaults to `60`.
 
 ## Verify the Boundaries
 
 <Verified date="2026-08" method="tested" />
 
-Confirming what the account *can't* do matters more than confirming what it can, and it has to be checked as that account rather than as yourself.
+Confirm what the account can't do as that account (rather than as yourself).
 
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
@@ -581,6 +597,7 @@ ssh pi-hole-admin 'getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db'
 <Verified date="2026-08" method="vendor-docs" />
 
 Permission rules are enforced by Claude Code, not the kernel.
+
 Claude's own documentation notes that Bash patterns constraining arguments are fragile, so these rules are defense in depth: they stop an honest mistake, and the ACL is what holds when a rule is bypassed.
 
 That ordering matters most for `pihole.toml`, since on a `0644` host the deny rule is the only thing standing between an agent and your password hashes.
@@ -625,9 +642,11 @@ Add to `.claude/settings.json` in the project directory you run Claude Code from
 }
 ```
 
-Be clear-eyed about what this does and doesn't do.
-`pi-hole-admin` is your own account, so that allow rule lets Claude Code run anything on the Pi as you, `sudo` included if your account has passwordless `sudo`.
-Nothing in this file changes that. The ACL and the file modes are the only real limits, which is the tradeoff you accepted by running as your login user.
+### What ACL for Claude Code Can and Can't Do
+
+`pi-hole-admin` is your own account, so the `allow` rule lets Claude Code run anything on the Pi as you, `sudo` included if your account has passwordless `sudo` (even if temporarily because you entered the password recently).
+
+The ACL and the file modes are the only real limits, which is the tradeoff you accepted by running as your login user.
 
 </TabItem>
 <TabItem label="Dedicated agent user">
@@ -646,8 +665,8 @@ Nothing in this file changes that. The ACL and the file modes are the only real 
 }
 ```
 
-The deny rules are the useful part: they keep Claude Code off the administrative alias, so it can't reach the account that has `sudo`.
-What restricts the agent alias itself is the `claude-agent` account's own permissions on the Pi, not anything in this file.
+The deny rules keep Claude Code off the administrative alias, so it can't reach the account that has `sudo`.
+`claude-agent` account's own permissions on the Pi restrict the agent alias itself, not the contents of this file.
 
 </TabItem>
 </Tabs>
@@ -658,18 +677,19 @@ What restricts the agent alias itself is the `claude-agent` account's own permis
 ## Give the Agent a Context File
 
 Access alone isn't enough.
-An agent that doesn't know how your network is put together will search for the wrong thing and report a confident non-answer.
+An agent that doesn't know how your network is put together can search for the wrong thing and report a confident non-answer.
 
 The file below is a working `CLAUDE.md` for this setup.
 Copy it to the directory you run Claude Code from and replace the host details with your own.
 
-The two sections that pay for themselves fastest are **Privileges**, which stops the agent from burning turns on `sudo` commands it can never run, and **Gotchas**, which encodes the failures that look like real findings rather than mistakes.
-
-The **Privileges** section carries two commented-out blocks. Uncomment the matching one if you add either optional grant below.
+- The **Privileges** section stops the agent from wasting tokens on `sudo` commands it can't run.
+  - Carries two commented-out blocks.
+    Uncomment the matching one if you add either optional grant below.
+- The **Gotchas** section encodes the failures that look like real findings rather than mistakes.
 
 <details>
 <summary>CLAUDE.md</summary>
 
-<Code code={claudeMd} lang="markdown" title="CLAUDE.md" />
+<Code code={claudeMd} lang="markdown" title="CLAUDE.md" showLineNumbers="true" />
 
 </details>

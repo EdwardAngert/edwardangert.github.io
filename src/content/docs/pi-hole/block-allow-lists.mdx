@@ -11,7 +11,7 @@ next:
   label: Enable Network-Wide DNS Blocking with Pi-hole
 ---
 
-import { Steps } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
 import Verified from '../../../components/Verified.astro';
 
 Pi-hole v6 manages blocklists and allowlists natively through the web interface or command line.
@@ -48,7 +48,7 @@ At the Normal tier it's comparable to OISD Big.
 At Pro and above it blocks significantly more, and OISD is still included as an upstream source.
 HaGeZi also offers supplementary category lists (threat intelligence, spam TLDs, smart TV telemetry) that don't have OISD equivalents.
 
-This guide uses HaGeZi because the tiered approach gives a clear choice between "fewest possible issues" and "maximum blocking," and the supplementary lists add coverage that a single all-in-one list can't match.
+This guide uses HaGeZi because the tiered approach balances between "fewest possible issues" and "maximum blocking," and the supplementary lists add coverage that a single all-in-one list can't match.
 
 Most of the setup in this guide relies on one maintainer.
 
@@ -166,9 +166,11 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
 
 </Steps>
 
-Not listed above on purpose: HaGeZi's [NRD/DGA list](https://github.com/hagezi/nrd), which blocks newly registered and algorithmically generated domains, a category that malware command-and-control infrastructure relies on.
-HaGeZi's own docs call it unsuitable for casual use: legitimate new domains get caught too, and unblocking one takes manual work.
-Worth knowing about if you want it, not worth defaulting to for this guide's setup.
+Not listed above, but worth knowing about:
+
+- HaGeZi [NRD/DGA list](https://github.com/hagezi/nrd)
+  - Blocks newly registered and algorithmically generated domains, a category that malware command-and-control infrastructure relies on.
+    This can improve your security posture, but can lead to more false positives.
 
 ## Add Blocklists to Pi-hole
 
@@ -458,12 +460,10 @@ Useful for a device where blocking breaks functionality and you can't or would r
 
 1. Find the device's IP address in **Tools** > **Network** or based on its traffic in the **Query Log**.
 
-1. Go to **Groups** and add a new group.
-   Name it something like `skip` or `unfiltered`.
-
 1. Go to **Clients** and search for or select the device from the **Known clients** dropdown.
+   Add a comment in the **Client description** to help identify the device later.
 
-1. Under **Group assignment**, uncheck `Default` and select your new group.
+1. Under **Group assignment**, uncheck `Default` to remove it from the group.
 
 1. Select **Add**.
 
@@ -495,17 +495,20 @@ This can be useful for a child's device or a school-issued laptop.
 
    Recommended lists for parental filtering (all from [HaGeZi](https://github.com/hagezi/dns-blocklists)):
 
-   | What it blocks                                           | URL |
-   |----------------------------------------------------------|-----|
-   | Social media (Facebook, Instagram, TikTok, X, Snapchat)  | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/social.txt` |
-   | NSFW and adult content                                   | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/nsfw.txt` |
-   | DoH/VPN/TOR bypass (prevents tunneling out of filtering) | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/doh-vpn-proxy-bypass.txt` |
+   | What it blocks                                                                                                                                 | URL |
+   |------------------------------------------------------------------------------------------------------------------------------------------------|-----|
+   | Social media (Facebook, Instagram, TikTok, X, Snapchat)                                                                                        | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/social.txt` |
+   | NSFW and adult content                                                                                                                         | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/nsfw.txt` |
+   | DoH/VPN/TOR bypass (prevents tunneling out of filtering)                                                                                       | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/doh-vpn-proxy-bypass.txt` |
+   | Domains registered in the last week and domains that look randomly generated. More info at [hagezi/nrd](https://github.com/hagezi/nrd#readme). | `https://cdn.jsdelivr.net/gh/hagezi/nrd@latest/adblock/dga7.txt` |
 
-   :::note
-   Blocking YouTube via DNS is all-or-nothing - there's no way to allow educational content while blocking everything else.
-   If your goal is "no YouTube at all," add `youtube.com` as a domain to the group's blocklist.
-   If your goal is "safe YouTube," DNS isn't the right tool - use YouTube's built-in parental controls or a browser extension instead.
-   :::
+   <Aside type="note" title="Blocking YouTube via DNS is all-or-nothing" icon="youtube">
+    There's no way to allow educational content while blocking everything else.
+
+    If your goal is "no YouTube at all," add `youtube.com` as a domain to the group's blocklist.
+    If your goal is "safe YouTube," DNS isn't the right tool.
+    Use YouTube's built-in parental controls or a browser extension instead.
+   </Aside>
 
 1. Go to **Clients** and add the device.
 
@@ -515,7 +518,7 @@ This can be useful for a child's device or a school-issued laptop.
 
 </Steps>
 
-The device is now blocked by everything in `Default` as well as the extra lists.
+The device is now blocked from everything in `Default` as well as the extra lists.
 Other devices that are not in the new group are unaffected.
 
 :::note

@@ -40,6 +40,8 @@ It does not diagnose errors in your operating system or networking configuration
 
 Your Pi-hole device and installation need to be functional for the command to work.
 
+If your Pi-hole is configured to log specific URLs, this log contains that list of URLs.
+
 <Steps>
 
 1. Collect a debug log for your Pi-hole:
@@ -78,7 +80,7 @@ For more information about Pi-hole debugging, visit the [official Pi-hole forum]
 **Fix**:
 
 ```shell title="From your device"
-ssh-keygen -R pi-hole.local
+ssh-keygen -R pi-hole.local && \
 ssh pi-admin@pi-hole.local
 ```
 
@@ -141,7 +143,7 @@ If it shows `8080`, try `http://pi-hole.local:8080/admin` as a temporary workaro
 **Secondary cause**: FTL is not running at all.
 
 ```shell title="From the Pi"
-sudo systemctl status pihole-FTL
+sudo systemctl status pihole-FTL && \
 sudo journalctl -u pihole-FTL -n 50
 ```
 
@@ -166,7 +168,7 @@ sudo pihole -g
 If Gravity still fails, verify outbound connectivity:
 
 ```shell title="From the Pi"
-dig raw.githubusercontent.com @1.1.1.1
+dig raw.githubusercontent.com @1.1.1.1 && \
 curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.txt
 ```
 
@@ -236,11 +238,13 @@ sudo journalctl -u unbound -n 100
 
 Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
 
-**Fix: refresh root hints.**
+**Fix**: Refresh root hints.
 `unbound-anchor` isn't included when you `apt install unbound` - install it separately first:
 
 ```shell title="From the Pi"
-sudo apt install unbound-anchor && sudo unbound-anchor -a /var/lib/unbound/root.key && sudo systemctl restart unbound
+sudo apt install unbound-anchor && \
+sudo unbound-anchor -a /var/lib/unbound/root.key && \
+sudo systemctl restart unbound
 ```
 
 ### FTL database grows too large and FTL fails to start
@@ -267,9 +271,11 @@ sudo systemctl start pihole-FTL
 
 **Prevention**: Verify your retention setting in `/etc/pihole/pihole.toml`:
 
-```toml title="/etc/pihole/pihole.toml"
+```toml "91" title="/etc/pihole/pihole.toml"
+...
 [database]
-maxDBdays = 91
+ maxDBdays = 91
+...
 ```
 
 Lower this further if disk space is a concern.
