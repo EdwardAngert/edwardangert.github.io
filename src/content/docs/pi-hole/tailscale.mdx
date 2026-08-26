@@ -108,7 +108,7 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
    This keeps DNS working on your tailnet if the Pi goes offline.
 
    The same trade applies here as in your router's DHCP settings: a second nameserver is a fallback and a leak at the same time, because clients aren't required to prefer the first one.
-   See [A secondary DNS server is a fallback and a leak at the same time](/docs/pi-hole/network-level-blocking/#configure-network-wide-blocking).
+   See [Devices Might Bypass Pi-hole in Favor of Secondary DNS](/docs/pi-hole/network-level-blocking/#devices-might-bypass-pi-hole-in-favor-of-secondary-dns).
    Leave this step out if you'd rather every tailnet query either resolve through Pi-hole or fail outright, with no fallback.
 1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
 1. Select **Save**.

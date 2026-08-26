@@ -38,7 +38,8 @@ In your router's DHCP settings, set:
 This looks different for each router brand.
 Look for **DHCP**, **LAN**, or **DNS** settings.
 
-:::caution[A secondary DNS server is a fallback and a leak at the same time]
+### Devices Might Bypass Pi-hole in Favor of Secondary DNS
+
 Nothing in DNS requires a client to prefer the first server it was handed.
 
 Most Linux clients do try them in order and fall through only on timeout, which behaves like real failover.
@@ -55,7 +56,6 @@ If you're chasing intermittent blocking, check this before anything else, and se
 
 The resolver behavior described here is drawn from how each operating system's resolver documents its own selection order, not from measurements on my network.
 The rest of this section is tested.
-:::
 
 ### Set Up Network-Wide Pi-hole on a TP-Link Omada Controller
 

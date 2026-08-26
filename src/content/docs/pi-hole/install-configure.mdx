@@ -91,7 +91,36 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 
         Accept the default file location, then set a passphrase or leave it blank.
 
-     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste the contents of the `.pub` file (find it with `cat ~/.ssh/id_ed25519.pub`).
+     1. Copy the contents of the `.pub` file to the clipboard:
+
+        <Tabs>
+        <TabItem label="Mac">
+
+        ```shell title="From your device"
+        pbcopy < ~/.ssh/id_ed25519.pub
+        ```
+
+        </TabItem>
+
+        <TabItem label="Windows">
+
+        ```shell title="From your device"
+        clip < ~/.ssh/id_ed25519.pub
+        ```
+
+        </TabItem>
+
+        <TabItem label="Linux">
+        Copy the output of:
+
+        ```shell title="From your device"
+        cat ~/.ssh/id_ed25519.pub
+        ```
+
+        </TabItem>
+        </Tabs>
+
+     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste the contents of the `.pub` file.
 
      This closes the gap between first boot and Fail2Ban's installation later in this guide, when password auth would otherwise be your only protection for SSH.
 
@@ -201,48 +230,6 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 ![Set fixed IP in Omada controller](./screenshots/omada-fixed-ip-address.png)
 
 </details>
-
-### Require a Password for sudo Commands
-
-The non-root user that Raspberry Pi Imager created might be able to run `sudo` commands without a password.
-
-Raspberry Pi OS grants that through a file in `/etc/sudoers.d/` named after the account, such as `010_pi-admin-nopasswd`.
-Remove the file so that sudo commands require authentication.
-
-Raspberry Pi OS 6.2 (April 2026) stopped creating that file on new installs, so a current image may not have one.
-The command below handles both cases.
-
-<Steps>
-
-1. Remove the configuration file if it exists:
-
-   ```shell title="From the Pi"
-   sudo sh -c 'rm -fv /etc/sudoers.d/*-nopasswd'
-   ```
-
-   The glob runs inside `sh -c` so that root expands it.
-   `/etc/sudoers.d/` is readable only by root, so your own shell can't match the filename before `sudo` starts.
-
-   A removed file is named in the output.
-   No output means there was nothing to remove.
-
-1. Confirm no passwordless rule survives anywhere else in the directory:
-
-   ```shell title="From the Pi"
-   sudo grep -rl NOPASSWD /etc/sudoers.d/
-   ```
-
-   This prints nothing when passwordless `sudo` is off.
-   Any file it names still grants it, and you should read that file before removing it.
-
-1. Log out of the SSH session, then log back in:
-
-   ```shell
-   exit
-   ssh pi-admin@pi-hole.local
-   ```
-
-</Steps>
 
 ### Set Up a Firewall on Your Pi with UFW
 
@@ -377,7 +364,7 @@ The Pi doesn't need this if you already have a display attached, or if you don't
 
 <Steps>
 
-1. Create a drop-in config to disable it:
+1. Create a new configuration file, `/etc/ssh/sshd_config.d/60-disable-x11-forwarding.conf`, to disable it:
 
    ```ini title="/etc/ssh/sshd_config.d/60-disable-x11-forwarding.conf"
    X11Forwarding no
@@ -393,8 +380,7 @@ The Pi doesn't need this if you already have a display attached, or if you don't
 
 ### Enable Automatic Security Updates
 
-Pi-hole is DNS infrastructure for your whole network, so it's worth patching promptly rather than waiting until you remember to run `apt upgrade`.
-`unattended-upgrades` installs security patches automatically.
+Install `unattended-upgrades` to apply security patches automatically.
 
 <Steps>
 
@@ -412,7 +398,7 @@ Pi-hole is DNS infrastructure for your whole network, so it's worth patching pro
    ```
 
    Leave automatic reboot commented out (disabled) unless you specifically want the Pi to reboot itself after a kernel update.
-   For a DNS server, rebooting on your own schedule is usually safer.
+   For a DNS server, it's usually safer to reboot manually for minimum interruption.
 
 1. Confirm the service is enabled, then do a dry run to see what it would install:
 
@@ -433,10 +419,7 @@ The variable is cleared when you exit the session.
 
 The `ipv4.dns` value below sets the Pi's own OS-level resolver, which it uses to look things up before Pi-hole is installed.
 It's not what Pi-hole will serve to the rest of your network.
-That's a separate setting you'll choose on the [next page](/docs/pi-hole/pihole-install/) when you pick Pi-hole's upstream DNS provider.
-
-<Tabs>
-<TabItem label="Wi-Fi">
+That's a separate setting you choose on the [next page](/docs/pi-hole/pihole-install/) when you pick Pi-hole's upstream DNS provider.
 
 <Steps>
 
@@ -445,76 +428,8 @@ That's a separate setting you'll choose on the [next page](/docs/pi-hole/pihole-
    This example is intentionally set to fail if you don't adjust `YOUR-PI-IP` and `YOUR-GATEWAY-IP`.
    This way you're less likely to get locked out if you don't change the example first:
 
-   ```shell "YOUR-PI-IP" "YOUR-GATEWAY-IP" title="From the Pi"
-   CON=$(nmcli -t -f NAME,DEVICE con show | grep wlan0 | cut -d: -f1) && \
-   echo $CON && \
-   sudo nmcli con mod "$CON" \
-     ipv4.addresses YOUR-PI-IP/24 \
-     ipv4.gateway YOUR-GATEWAY-IP \
-     ipv4.dns "1.1.1.1" \
-     ipv4.method manual
-   ```
-
-   <details>
-   <summary>Help with this step</summary>
-
-   - This setting uses the shell variable `CON` to make it easier to copy and paste the command consistently.
-     The first line finds the Wi-Fi connection's name, and sets it as the variable.
-     `echo $CON` on the second line displays it in the terminal for your information.
-   - Replace `YOUR-PI-IP` with the Pi's IP you found in [step 1 of Configure Raspberry Pi OS](#configure-raspberry-pi-os).
-   - Replace `YOUR-GATEWAY-IP` with your router's IP (or your gateway if you already know it).
-
-   For more about these settings, see the
-   [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
-   </details>
-
-   - If you do get locked out, you'll need to access the Pi directly, with a monitor and keyboard.
-     Then run this same command in the terminal with the correct IPs.
-
-1. Apply the changes:
-
-   ```shell title="From the Pi"
-   sudo nmcli con up "$CON"
-   ```
-
-1. If you changed the IP address, your SSH session will drop.
-
-   Still in the terminal, but on your local machine, remove the old cached keys and reconnect at the new IP:
-
-   ```shell "YOUR-OLD-PI-IP" "YOUR-PI-IP" title="From your device"
-   ssh-keygen -R YOUR-OLD-PI-IP
-   ssh pi-admin@YOUR-PI-IP
-   ```
-
-   Accept the new host key when prompted.
-
-1. Verify the settings persisted on the Pi:
-
-   ```shell title="From the Pi"
-   ip addr show wlan0
-   ```
-
-   Confirm your static IP is listed.
-
-1. Reboot the Pi:
-
-   ```shell title="From the Pi"
-   sudo reboot
-   ```
-
-   Wait a few minutes before you SSH back in.
-
-</Steps>
-
-</TabItem>
-<TabItem label="Ethernet">
-
-<Steps>
-
-1. Set the static IP, gateway, and DNS.
-
-   This example is intentionally set to fail if you don't adjust `YOUR-PI-IP` and `YOUR-GATEWAY-IP`.
-   This way you're less likely to get locked out if you don't change the example first:
+   <Tabs syncKey="net-connection">
+   <TabItem label="Ethernet">
 
    ```shell "YOUR-PI-IP" "YOUR-GATEWAY-IP" title="From the Pi"
    CON=$(nmcli -t -f NAME,DEVICE con show | grep eth0 | cut -d: -f1) && \
@@ -526,11 +441,28 @@ That's a separate setting you'll choose on the [next page](/docs/pi-hole/pihole-
      ipv4.method manual
    ```
 
+   </TabItem>
+
+   <TabItem label="Wi-Fi">
+
+   ```shell "YOUR-PI-IP" "YOUR-GATEWAY-IP" title="From the Pi"
+   CON=$(nmcli -t -f NAME,DEVICE con show | grep wlan0 | cut -d: -f1) && \
+   echo $CON && \
+   sudo nmcli con mod "$CON" \
+     ipv4.addresses YOUR-PI-IP/24 \
+     ipv4.gateway YOUR-GATEWAY-IP \
+     ipv4.dns "1.1.1.1" \
+     ipv4.method manual
+   ```
+
+   </TabItem>
+   </Tabs>
+
    <details>
    <summary>Help with this step</summary>
 
    - This setting uses the shell variable `CON` to make it easier to copy and paste the command consistently.
-     The first line finds the Ethernet connection's name, and sets it as the variable.
+     The first line finds the connection's name, and sets it as the variable.
      `echo $CON` on the second line displays it in the terminal for your information.
    - Replace `YOUR-PI-IP` with the Pi's IP you found in [step 1 of Configure Raspberry Pi OS](#configure-raspberry-pi-os).
    - Replace `YOUR-GATEWAY-IP` with your router's IP (or your gateway if you already know it).
@@ -561,9 +493,23 @@ That's a separate setting you'll choose on the [next page](/docs/pi-hole/pihole-
 
 1. Verify the settings persisted on the Pi:
 
+   <Tabs syncKey="net-connection">
+   <TabItem label="Ethernet">
+
    ```shell title="From the Pi"
    ip addr show eth0
    ```
+
+   </TabItem>
+
+   <TabItem label="Wi-Fi">
+
+   ```shell title="From the Pi"
+   ip addr show wlan0
+   ```
+
+   </TabItem>
+   </Tabs>
 
    Confirm your static IP is listed.
 
@@ -576,9 +522,6 @@ That's a separate setting you'll choose on the [next page](/docs/pi-hole/pihole-
    Wait a few minutes before you SSH back in.
 
 </Steps>
-
-</TabItem>
-</Tabs>
 
 ## Checkpoint
 

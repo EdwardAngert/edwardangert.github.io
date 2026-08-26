@@ -18,11 +18,55 @@ export const highlights = ["<redacted>", "### CHANGED"];
 
 <Verified date="2026-08" method="tested" />
 
-After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, [using a USB drive to store logs](#offload-logs-to-a-usb-drive), or setting [how long query history is kept](#optional-set-pi-hole-database-retention).
+After the Pi is set up and running, use this page as a reference for [confirming sudo requires a password](#optional-require-a-password-for-sudo-commands), [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, [using a USB drive to store logs](#offload-logs-to-a-usb-drive), or setting [how long query history is kept](#optional-set-pi-hole-database-retention).
 
 All of these sections are optional.
 
 Want Claude Code to help diagnose issues using these logs? See [Give Claude Code Access to Pi-hole Logs and Diagnostics](/docs/pi-hole/claude-code-access/).
+
+## Optional: Require a Password for sudo Commands
+
+<Verified date="2026-08" method="tested" />
+
+The non-root user that Raspberry Pi Imager created might be able to run `sudo` commands without a password.
+
+Raspberry Pi OS grants that through a file in `/etc/sudoers.d/` named after the account, such as `010_pi-admin-nopasswd`.
+Remove the file so that sudo commands require authentication.
+
+Raspberry Pi OS 6.2 (April 2026) stopped creating that file on new installs, so if you flashed your SD card with a current copy of Raspberry Pi Imager, you almost certainly don't have it.
+This matters more if you're rebuilding on an older image or setting up an existing device, but the command below handles both cases either way.
+
+<Steps>
+
+1. Remove the configuration file if it exists:
+
+   ```shell title="From the Pi"
+   sudo sh -c 'rm -fv /etc/sudoers.d/*-nopasswd'
+   ```
+
+   The glob runs inside `sh -c` so that root expands it.
+   `/etc/sudoers.d/` is readable only by root, so your own shell can't match the filename before `sudo` starts.
+
+   A removed file is named in the output.
+   No output means there was nothing to remove.
+
+1. Confirm no passwordless rule survives anywhere else in the directory:
+
+   ```shell title="From the Pi"
+   sudo grep -rl NOPASSWD /etc/sudoers.d/
+   ```
+
+   This prints nothing when passwordless `sudo` is off.
+   Any file it names still grants it, and you should read that file before removing it.
+
+1. Log out of the SSH session, then log back in:
+
+   ```shell
+   exit
+   ssh pi-admin@pi-hole.local
+   ```
+
+</Steps>
 
 ## Update Pi-hole
 
