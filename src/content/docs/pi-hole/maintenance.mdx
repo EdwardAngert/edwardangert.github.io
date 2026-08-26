@@ -1,11 +1,11 @@
 ---
 slug: docs/pi-hole/maintenance
 title: "Pi-hole Maintenance and Advanced Configuration"
-description: "How to update Pi-hole, back up your configuration with Teleporter, edit pihole.toml for advanced settings, and offload the FTL database to a USB drive to extend SD card lifespan."
+description: "How to update Pi-hole, back up your configuration with Teleporter, edit pihole.toml, and offload the FTL database to a USB drive to extend SD card lifespan."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/tailscale/
-  label: VPN with Tailscale
+  label: Use Pi-hole as a VPN to Block Ads on the Go with Tailscale
 next:
   link: /docs/pi-hole/troubleshooting/
   label: Common Pi-hole Issues and How to Fix Them
@@ -13,11 +13,65 @@ next:
 
 import { Steps, Code } from '@astrojs/starlight/components';
 import piholeToml from './pihole.toml.example?raw';
+import Verified from '../../../components/Verified.astro';
 export const highlights = ["<redacted>", "### CHANGED"];
 
-After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, or to [use a USB drive to store logs](#offload-logs-to-a-usb-drive).
+<Verified date="2026-08" method="tested" />
+
+After the Pi is set up and running, use this page as a reference for [confirming sudo requires a password](#optional-require-a-password-for-sudo-commands), [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, [using a USB drive to store logs](#offload-logs-to-a-usb-drive), or setting [how long query history is kept](#optional-set-pi-hole-database-retention).
 
 All of these sections are optional.
+
+Want Claude Code to help diagnose issues using these logs? See [Give Claude Code Access to Pi-hole Logs and Diagnostics](/docs/pi-hole/claude-code-access/).
+
+## Optional: Require a Password for sudo Commands
+
+<Verified date="2026-08" method="tested" />
+
+The non-root user that Raspberry Pi Imager created might be able to run `sudo` commands without a password.
+
+Raspberry Pi OS grants that through a file in `/etc/sudoers.d/` named after the account, such as `010_pi-admin-nopasswd`.
+Remove the file so that sudo commands require authentication.
+
+Raspberry Pi OS 6.2 (April 2026) stopped creating that file on new installs, so if you flashed your SD card with a current copy of Raspberry Pi Imager, you almost certainly don't have it.
+This matters more if you're rebuilding on an older image or setting up an existing device, but the command below handles both cases either way.
+
+<Steps>
+
+1. Remove the configuration file if it exists:
+
+   ```shell title="From the Pi"
+   sudo sh -c 'rm -fv /etc/sudoers.d/*-nopasswd'
+   ```
+
+   The glob runs inside `sh -c` so that root expands it.
+   `/etc/sudoers.d/` is readable only by root, so your own shell can't match the filename before `sudo` starts.
+
+   A removed file is named in the output.
+   No output means there was nothing to remove.
+
+1. Confirm no passwordless rule survives anywhere else in the directory:
+
+   ```shell title="From the Pi"
+   sudo grep -rl NOPASSWD /etc/sudoers.d/
+   ```
+
+   This prints nothing when passwordless `sudo` is off.
+   Any file it names still grants it, and you should read that file before removing it.
+
+1. Log out of the SSH session:
+
+   ```shell
+   exit
+   ```
+
+1. Log back in:
+
+   ```shell
+   ssh pi-admin@pi-hole.local
+   ```
+
+</Steps>
 
 ## Update Pi-hole
 
@@ -26,7 +80,7 @@ Update the Pi-hole software and refresh the Gravity database with updated lists.
 Run these whenever Pi-hole releases a new version, or after adding or changing blocklists.
 
 ```shell title="From the Pi"
-sudo pihole -up
+sudo pihole -up && \
 sudo pihole -g
 ```
 
@@ -45,6 +99,9 @@ To restore after a rebuild or SD card failure, use the **Import** option on the 
 
 Re-export after making significant changes to lists or settings.
 Store the backup file somewhere other than the Pi, such as on your local computer, a NAS, or cloud storage.
+
+Treat the file as sensitive.
+It includes your full configuration, so store it like any config backup that might hold credentials: never in a shared or public folder.
 
 ## Advanced Pi-hole Configuration with pihole.toml
 
@@ -69,23 +126,27 @@ sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
 
 :::
 
-### Example: change upstream DNS
+### Example: Change Upstream DNS
 
-In the `[dns]` section of `pihole.toml`:
+Change the addresses in the `[dns]` section of `pihole.toml`:
 
-```toml title="pihole.toml"
+```toml "127.0.0.1#5335" title="pihole.toml"
+...
 [dns]
-upstreams = ["127.0.0.1#5335", "1.1.1.1"]  # unbound on localhost, Cloudflare backup
+ upstreams = ["127.0.0.1#5335", "1.1.1.1"]  # unbound on localhost, Cloudflare backup
+...
 ```
 
 Or for Cloudflare directly:
 
-```toml title="pihole.toml"
+```toml "1.1.1.1" title="pihole.toml"
+...
 [dns]
-upstreams = ["1.1.1.1", "1.0.0.1"]
+ upstreams = ["1.1.1.1", "1.0.0.1"]
+...
 ```
 
-### Reference: full pihole.toml
+### Reference: Full pihole.toml
 
 This is the full `pihole.toml` from my setup, with comments stripped and the password hash redacted.
 Values marked `### CHANGED` were modified from the Pi-hole default.
@@ -93,21 +154,23 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
 <details>
 <summary>pihole.toml (v6.7, comments stripped)</summary>
 
-<Code code={piholeToml} lang="toml" mark={highlights} />
+<Code code={piholeToml} lang="toml" mark={highlights} showLineNumbers="true" />
 
 </details>
 
 ## Offload Logs to a USB Drive
 
+<Verified date="2026-08" method="community" />
+
 The Pi-hole FTL database (`pihole-FTL.db`) grows continuously and can wear out an SD card over months.
 Move the database and log file to a USB drive to protect the SD card and extend its life.
 
-### What you need
+### What You Need
 
 - A USB flash drive
 - The Pi running with Pi-hole installed
 
-### Mount the USB drive
+### Mount the USB Drive
 
 <Steps>
 
@@ -119,10 +182,12 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
    Look for a `/dev/` that wasn't there before, such as `/dev/sda` with a partition at `/dev/sda1`.
 
-1. Get the partition's UUID:
+1. Get the partition's UUID.
 
-   ```shell title="From the Pi"
-   sudo blkid /dev/sda1
+   This example is intentionally set to fail if you don't adjust `YOUR-USB-PARTITION` to the device you found in the previous step:
+
+   ```shell "YOUR-USB-PARTITION" title="From the Pi"
+   sudo blkid /dev/YOUR-USB-PARTITION
    ```
 
    Copy the UUID value from the output.
@@ -136,7 +201,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Add an entry to `/etc/fstab` to auto-mount on boot.
    Open the file and add this line at the bottom, replacing `YOUR-UUID` with the UUID you copied:
 
-   ```ini title="/etc/fstab"
+   ```ini "YOUR-UUID" title="/etc/fstab"
    UUID=YOUR-UUID  /mnt/pihole-logs  ext4  defaults,noatime  0  2
    ```
 
@@ -146,11 +211,30 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    <details>
    <summary>If you need to format the drive first</summary>
 
-   This will delete everything on the drive:
+   This deletes everything on the drive.
 
-   ```shell title="From the Pi"
-   sudo mkfs.ext4 /dev/sda1
-   ```
+   <Steps>
+
+   1. Confirm which device is the USB drive, not an internal disk:
+
+      ```shell title="From the Pi"
+      lsblk -o NAME,SIZE,LABEL,MOUNTPOINT
+      ```
+
+      Match the size and label to your USB drive.
+      Don't guess: an internal disk can share the same `/dev/sdX` naming scheme, and `mkfs` won't ask for confirmation before it formats.
+
+      It deletes everything on the drive.
+
+   1. Format the partition.
+
+      This example is intentionally set to fail if you don't adjust `YOUR-USB-PARTITION`:
+
+      ```shell "YOUR-USB-PARTITION" title="From the Pi"
+      sudo mkfs.ext4 /dev/YOUR-USB-PARTITION
+      ```
+
+   </Steps>
 
    </details>
 
@@ -170,7 +254,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
 </Steps>
 
-### Point Pi-hole to the USB drive
+### Point Pi-hole to the USB Drive
 
 <Steps>
 
@@ -183,8 +267,8 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Move the existing database to the USB drive (so you don't lose query history):
 
    ```shell title="From the Pi"
-   sudo systemctl stop pihole-FTL
-   sudo mv /etc/pihole/pihole-FTL.db /mnt/pihole-logs/
+   sudo systemctl stop pihole-FTL && \
+   sudo mv /etc/pihole/pihole-FTL.db /mnt/pihole-logs/ && \
    sudo mv /var/log/pihole/pihole.log /mnt/pihole-logs/ 2>/dev/null || true
    ```
 
@@ -192,17 +276,23 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    Find the `[files]` section and set:
 
    ```toml title="pihole.toml"
+   ...
    [files]
-   database = "/mnt/pihole-logs/pihole-FTL.db"
-   log = "/mnt/pihole-logs/pihole.log"
+     database = "/mnt/pihole-logs/pihole-FTL.db"
+
+     [files.log]
+       dnsmasq = "/mnt/pihole-logs/pihole.log"
+   ...
    ```
 
+   `log` is a subsection (`[files.log]`), not a single value.
+   Only `dnsmasq` needs to change here; `ftl` and `webserver` can stay on the SD card.
    If there is no `[files]` section, add it at the end of the file.
 
 1. Start FTL and verify it comes up cleanly:
 
-   ```shell
-   sudo systemctl start pihole-FTL
+   ```shell title="From the Pi"
+   sudo systemctl start pihole-FTL && \
    sudo systemctl status pihole-FTL
    ```
 
@@ -215,34 +305,39 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Reboot the Pi:
 
    ```shell title="From the Pi"
-   sudo reboot now
+   sudo reboot
    ```
 
 1. Verify that the USB drive mounts and Pi-hole starts correctly:
 
    ```shell title="From the Pi"
-   lsblk
+   lsblk && \
    systemctl status pihole-FTL
    ```
 
    The FTL service won't start if it can't find the database file.
    DNS queries from all network devices will fail until the mount is fixed.
+   See [FTL database grows too large and FTL fails to start](/docs/pi-hole/troubleshooting/#ftl-database-grows-too-large-and-ftl-fails-to-start) if FTL won't come back up.
 
 </Steps>
 
-### Optional: Set Pi-hole database retention
+## Optional: Set Pi-hole Database Retention
+
+<Verified date="2026-08" method="tested" />
 
 By default, Pi-hole keeps 91 days of query history.
 
-If you want to change the database size:
+If you want to change how many days of history Pi-hole keeps:
 
 <Steps>
 
-1. Set a the number of days to keep the database in `pihole.toml`:
+1. Set the number of days to keep the database in `pihole.toml`:
 
-   ```toml title="pihole.toml"
+   ```toml "180" title="pihole.toml"
+   ...
    [database]
-   maxDBdays = 180
+    maxDBdays = 180
+   ...
    ```
 
 1. Restart FTL after changing this:

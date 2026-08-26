@@ -1,22 +1,31 @@
 ---
 slug: docs/pi-hole/troubleshooting
 title: "Common Pi-hole Issues and How to Fix Them"
-description: "Troubleshooting guide for Pi-hole v6: fix installation issues, DNS failures, broken streaming services, blocklist errors, and Tailscale configuration. Includes a verification checklist."
+description: "Fix Pi-hole v6 issues: install errors, DNS failures, broken streaming, blocklist errors, and Tailscale problems, plus a verification checklist."
 category: "Personal Reference Documentation"
 prev:
   link: /docs/pi-hole/maintenance/
   label: Pi-hole Maintenance and Advanced Configuration
+next:
+  link: /docs/pi-hole/claude-code-access/
+  label: Give Claude Code Access to Pi-hole Logs and Diagnostics
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import Verified from '../../../components/Verified.astro';
+
+Want Claude Code to run checks like these for you?
+[Give Claude Code Access to Pi-hole Logs and Diagnostics](/docs/pi-hole/claude-code-access/).
 
 ## Enable/Disable Debug Logging
+
+<Verified date="2026-08" method="tested" />
 
 The Pi-hole debug tool turns on verbose logging flags when run.
 You can leave it on while you troubleshoot and turn it off when you're done:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config debug.all true
+sudo pihole-FTL --config debug.all true && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -24,10 +33,14 @@ Change `true` to `false` when you're done troubleshooting.
 
 ### How to Create and Share a Pi-hole Debug Log for Support
 
+<Verified date="2026-08" method="community" />
+
 This diagnoses Pi-hole configuration and errors that appear in the admin dashboard's **Tools** > **Pi-hole diagnosis** (`https://pi-hole.local/admin/messages`).
 It does not diagnose errors in your operating system or networking configuration.
 
 Your Pi-hole device and installation need to be functional for the command to work.
+
+If your Pi-hole is configured to log specific URLs, this log contains that list of URLs.
 
 <Steps>
 
@@ -46,7 +59,7 @@ Your Pi-hole device and installation need to be functional for the command to wo
    Enter <kbd>y</kbd> to upload the log.
    The server automatically deletes the log file after 48 hours and isn't tied to any account.
 
-1. Log in to your account on the Pi-hole forum or create a new account then go to the [Help category](https://discourse.pi-hole.net/c/bugs-problems-issues/11) and select **New Topic**.
+1. Log in to your account on the Pi-hole forum or create a new account, then go to the [Help category](https://discourse.pi-hole.net/c/bugs-problems-issues/11) and select **New Topic**.
 
 1. Read and follow the template in the popup, and include a description of the problem you're seeing and the debug token.
 
@@ -58,6 +71,8 @@ For more information about Pi-hole debugging, visit the [official Pi-hole forum]
 
 ### SSH host key mismatch after rebuild
 
+<Verified date="2026-08" method="tested" />
+
 **Symptom**: `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED` when SSHing to the Pi.
 
 **Cause**: You reformatted the SD card and reinstalled, or changed the IP address, but your computer still has the old SSH host key cached.
@@ -65,13 +80,16 @@ For more information about Pi-hole debugging, visit the [official Pi-hole forum]
 **Fix**:
 
 ```shell title="From your device"
-ssh-keygen -R pi-hole.local
+ssh-keygen -R pi-hole.local && \
 ssh pi-admin@pi-hole.local
 ```
 
 ### Port 53 conflict between Pi-hole and unbound
 
-**Symptom**: Pi-hole installs successfully, the web interface works, but DNS resolution fails on your network. The dashboard may show "DNS server failure."
+<Verified date="2026-08" method="community" />
+
+**Symptom**: Pi-hole installs successfully, the web interface works, but DNS resolution fails on your network.
+The dashboard might show `DNS server failure`.
 
 **Cause**: Both Pi-hole (via dnsmasq) and unbound are trying to listen on port 53.
 This happens if unbound was installed with its default configuration before Pi-hole.
@@ -87,11 +105,13 @@ Look for: `dnsmasq: failed to create listening socket for port 53: Address in us
 **Fix**: Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](/docs/pi-hole/pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
 
 ```shell title="From the Pi"
-sudo systemctl restart unbound
+sudo systemctl restart unbound && \
 sudo systemctl restart pihole-FTL
 ```
 
 ### Pi-hole web interface shows 403 Forbidden or won't load
+
+<Verified date="2026-08" method="community" />
 
 **Symptom**: `https://pi-hole.local/admin` returns 403 Forbidden or the page won't connect.
 
@@ -107,8 +127,8 @@ sudo systemctl status lighttpd
 **Fix**:
 
 ```shell title="From the Pi"
-sudo systemctl stop lighttpd
-sudo systemctl disable lighttpd
+sudo systemctl stop lighttpd && \
+sudo systemctl disable lighttpd && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -123,7 +143,7 @@ If it shows `8080`, try `http://pi-hole.local:8080/admin` as a temporary workaro
 **Secondary cause**: FTL is not running at all.
 
 ```shell title="From the Pi"
-sudo systemctl status pihole-FTL
+sudo systemctl status pihole-FTL && \
 sudo journalctl -u pihole-FTL -n 50
 ```
 
@@ -131,24 +151,24 @@ The most common reason on a fresh install is a port 53 conflict - see [Port 53 c
 
 ### Gravity fails to update
 
-**Symptom**: Running `sudo pihole -g` exits with "DNS resolution is currently unavailable"
-or "list download failed: no cached list available."
+<Verified date="2026-08" method="community" />
+
+**Symptom**: Running `sudo pihole -g` exits with "DNS resolution is currently unavailable" or "list download failed: no cached list available."
 
 **Cause**: `/etc/resolv.conf` points to `127.0.0.1` (Pi-hole itself).
-If FTL isn't fully ready when Gravity runs - for example, immediately after install
-before the first restart - the DNS lookup for list URLs fails.
+If FTL isn't fully ready when Gravity runs - for example, immediately after install before the first restart - the DNS lookup for list URLs fails.
 
 **Fix**: Wait 30 seconds after install completes, confirm FTL is running, then re-run:
 
 ```shell title="From the Pi"
-sudo systemctl status pihole-FTL
-pihole -g
+sudo systemctl status pihole-FTL && \
+sudo pihole -g
 ```
 
 If Gravity still fails, verify outbound connectivity:
 
 ```shell title="From the Pi"
-dig raw.githubusercontent.com @1.1.1.1
+dig raw.githubusercontent.com @1.1.1.1 && \
 curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.txt
 ```
 
@@ -156,6 +176,8 @@ curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.t
 If the dashboard shows an error but `sudo pihole -g` from the terminal succeeds, use the CLI.
 
 ### Maximum number of concurrent DNS queries reached
+
+<Verified date="2026-08" method="community" />
 
 **Symptom**: DNS becomes unresponsive. The FTL log shows:
 `Maximum number of concurrent DNS queries reached (max: 150)`
@@ -191,6 +213,8 @@ Find the root cause (DNS loop or misbehaving client) separately.
 
 ### Intermittent DNS failures with unbound
 
+<Verified date="2026-08" method="community" />
+
 **Symptom**: DNS works, then randomly stops for minutes several times a day.
 Restarting FTL or unbound temporarily fixes it.
 Switching to Cloudflare upstream eliminates the problem.
@@ -206,7 +230,7 @@ dig google.com @127.0.0.1 -p 5335
 
 If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
 
-**Check - unbound logs**:
+**Check unbound logs**:
 
 ```shell title="From the Pi"
 sudo journalctl -u unbound -n 100
@@ -214,15 +238,18 @@ sudo journalctl -u unbound -n 100
 
 Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
 
-**Fix - refresh root hints**:
-
+**Fix**: Refresh root hints.
 `unbound-anchor` isn't included when you `apt install unbound` - install it separately first:
 
 ```shell title="From the Pi"
-sudo apt install unbound-anchor && sudo unbound-anchor -a /var/lib/unbound/root.key && sudo systemctl restart unbound
+sudo apt install unbound-anchor && \
+sudo unbound-anchor -a /var/lib/unbound/root.key && \
+sudo systemctl restart unbound
 ```
 
 ### FTL database grows too large and FTL fails to start
+
+<Verified date="2026-08" method="tested" />
 
 **Symptom (weeks or months after setup)**: After a reboot, Pi-hole never comes back online.
 `systemctl status pihole-FTL` shows failed.
@@ -237,16 +264,18 @@ If you have Pi-hole v5 or upgraded from it, check your `maxDBdays` setting.
 **Quick fix (loses query history)**:
 
 ```shell title="From the Pi"
-sudo systemctl stop pihole-FTL
-sudo rm /etc/pihole/pihole-FTL.db
+sudo systemctl stop pihole-FTL && \
+sudo rm /etc/pihole/pihole-FTL.db && \
 sudo systemctl start pihole-FTL
 ```
 
 **Prevention**: Verify your retention setting in `/etc/pihole/pihole.toml`:
 
-```toml title="/etc/pihole/pihole.toml"
+```toml "91" title="/etc/pihole/pihole.toml"
+...
 [database]
-maxDBdays = 91
+ maxDBdays = 91
+...
 ```
 
 Lower this further if disk space is a concern.
@@ -254,6 +283,8 @@ Lower this further if disk space is a concern.
 Refer to the [example pihole.toml](/docs/pi-hole/maintenance/#reference-full-piholetoml) in the maintenance section for a full `pihole.toml` reference.
 
 ### "Disk shortage ahead" - Netdata fills up disk space
+
+<Verified date="2026-08" method="tested" />
 
 **Symptom**: Netdata is installed and disk usage climbs unexpectedly.
 
@@ -293,6 +324,8 @@ sudo du -sh /var/cache/apt/archives && apt list --installed 2>/dev/null | grep n
 
 ### NTP warnings in the Pi-hole dashboard
 
+<Verified date="2026-08" method="tested" />
+
 **Symptom**: Dashboard shows "No valid NTP replies received" or "Standard deviation of time offset is too large, rejecting synchronization."
 
 **Cause**: Pi-hole v6 has its own NTP client that runs alongside the OS time sync (`systemd-timesyncd`).
@@ -309,13 +342,18 @@ If `System clock synchronized: yes` and the time is correct, the warning is cosm
 **Optional fix**: Disable Pi-hole's NTP client since the OS handles time sync:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config ntp.sync.active false
+sudo pihole-FTL --config ntp.sync.active false && \
 sudo systemctl restart pihole-FTL
 ```
 
 ## Blocklists and Allowlists
 
 ### Troubleshoot a Broken Service
+
+<Verified date="2026-08" method="tested" />
+
+If the broken service is Disney+, Hulu, Paramount+, YouTube, Netflix, Max, Apple TV+, Samsung Smart TVs, Amazon Fire TV, Roku, or Monday.com, check [Fix Streaming Services and Other Broken Sites](/docs/pi-hole/block-allow-lists/#fix-streaming-services-and-other-broken-sites) first - it has tested domain lists for each.
+Use the general method below for anything else.
 
 #### Step 1: Check if Pi-hole is the problem
 
@@ -378,6 +416,8 @@ Options in those cases:
 
 ### Custom Filtering Rules
 
+<Verified date="2026-08" method="community" />
+
 Pi-hole v6 supports regex rules for both blocking and allowlisting.
 Add them via CLI or in the web interface under **Domains** > **Regex filter**.
 
@@ -385,6 +425,8 @@ These rules run against every queried domain in real time, so keep the list reas
 Regex rules can cause false positives that don't show up until something breaks.
 
 ### Fix List Health Issues
+
+<Verified date="2026-08" method="community" />
 
 #### Gravity shows "Invalid protocol" errors for domain names
 
@@ -412,7 +454,8 @@ The errored entries are simply ignored.
 
 #### A list shows 0 domains after `sudo pihole -g`
 
-Check the format. Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
+Check the format.
+Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
 Wildcard TLD rules (`||*.tld^`) and AdGuard-specific modifiers (`$denyallow=`) are common culprits.
 
 Look for a Pi-hole-specific variant of the list.
@@ -441,7 +484,9 @@ If it's clean, the warning is stale.
 
 **Fix**: `sudo systemctl restart pihole-FTL` clears it.
 
-#### How to update deprecated HaGeZi URL lists to adblock format
+#### How to Update Deprecated HaGeZi URL Lists to Adblock Format
+
+<Verified date="2026-08" method="tested" />
 
 **Symptom**: Sites, apps, or your smart TV start showing ads and trackers again after months of clean browsing, with no changes on your end.
 `sudo pihole -g` shows one of your HaGeZi lists 404ing or downloading 0 domains.
@@ -453,7 +498,7 @@ If you heard about this change and are looking to update your HaGeZi lists to th
 
 **Fix**: Switch the list to the `adblock` format, which HaGeZi is not deprecating and which Pi-hole v6 (FTL well past v5.22) supports natively.
 
-The lists in [Recommended blocklists](/docs/pi-hole/block-allow-lists/#recommended-blocklists) already use the `adblock` path, so if you copied your list URLs from there, no change is needed.
+The lists in [Recommended Blocklists](/docs/pi-hole/block-allow-lists/#recommended-blocklists) already use the `adblock` path, so if you copied your list URLs from there, no change is needed.
 
 If you added a HaGeZi list some other way and it's now broken, replace it with a new one:
 
@@ -463,7 +508,7 @@ If you added a HaGeZi list some other way and it's now broken, replace it with a
 1. Use the search box to find the list you want to replace and select the trash icon to remove it.
 1. In the **Add a new subscribed list** section, add the replacement list's URL in the **Address**.
 
-   See [Recommended blocklists](/docs/pi-hole/block-allow-lists/#recommended-blocklists) for the current HaGeZi URLs.
+   See [Recommended Blocklists](/docs/pi-hole/block-allow-lists/#recommended-blocklists) for the current HaGeZi URLs.
 
 1. Select **Add blocklist**.
 
@@ -483,19 +528,59 @@ After 2026-08-01, the old `/domains/` and `/hosts/` URLs only work from HaGeZi's
 
 ### DNS queries aren't showing in the Pi-hole query log
 
+<Verified date="2026-08" method="tested" />
+
 If you've configured Tailscale to use your Pi-hole as a nameserver but queries from remote devices aren't appearing in the query log and nothing is getting blocked, Pi-hole is rejecting the queries.
 By default, Pi-hole only accepts DNS queries from the local subnet.
 
 Run the following on the Pi:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config dns.listeningMode ALL
+sudo pihole-FTL --config dns.listeningMode ALL && \
 sudo systemctl restart pihole-FTL
 ```
 
 See [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](/docs/pi-hole/tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) for the full setup.
 
+### A device's queries appear under an unexpected IP address
+
+<Verified date="2026-08" method="tested" />
+
+**Symptom**: You filter the query log by a device's LAN IP and see nothing, even though the device is online and browsing.
+
+While a device is connected to your tailnet, its DNS queries reach Pi-hole over the Tailscale interface.
+The query log records the device's `100.x.x.x` address instead of its LAN address.
+The same laptop appears under either one depending on how it's connected at the time.
+
+Find the device's Tailscale IP on the Pi:
+
+```shell title="From the Pi"
+tailscale status
+```
+
+Each device is listed with its `100.x.x.x` address.
+Active peers also show the LAN address they connected from, such as `direct 203.0.113.42:41641`, which is how you match a tailnet address back to a device you know by its LAN IP.
+
+Filter the query log by the `100.x.x.x` address instead.
+
+### A device on the tailnet ignores its group assignment
+
+<Verified date="2026-08" method="tested" />
+
+**Symptom**: You put a device in a group with different blocklists, but while it's connected over Tailscale it gets the `Default` group's blocking instead.
+
+Pi-hole identifies clients by MAC address, and MAC lookups depend on ARP, which only works on your local network.
+A Tailscale connection has no ARP, so Pi-hole can't match a tailnet device to a client entry you created by MAC.
+Unmatched clients fall back to the `Default` group.
+
+**Fix**: Add a second client entry for the device's `100.x.x.x` address and put that entry in the same group as the MAC entry.
+Run `tailscale status` on the Pi to find the address.
+
+See [Control Blocking Per Device with Groups](/docs/pi-hole/block-allow-lists/#control-blocking-per-device-with-groups).
+
 ### Pi-hole web interface loads but DNS isn't filtering
+
+<Verified date="2026-08" method="tested" />
 
 Confirm **Override local DNS** is enabled in the Tailscale admin DNS settings.
 If it's off, devices use their own local resolver, not Pi-hole.
@@ -503,6 +588,8 @@ If it's off, devices use their own local resolver, not Pi-hole.
 Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it should be the `100.x.x.x` address, not the Pi's LAN IP.
 
 ### Exit node connected but traffic isn't routing through the Pi
+
+<Verified date="2026-08" method="tested" />
 
 <Steps>
 
@@ -527,6 +614,8 @@ Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it sh
 
 ### SSH into the Pi from anywhere on your tailnet
 
+<Verified date="2026-08" method="tested" />
+
 SSH to the Pi using either its Tailscale IP or its machine name.
 Both work as long as the client device is connected to Tailscale, with or without the exit node active:
 
@@ -541,6 +630,8 @@ If SSH stops working when you enable the exit node, enable **Allow Local Network
 Without it, all traffic including the SSH connection routes through the exit node, which creates a loop back to the Pi itself.
 
 ### SSH works over Tailscale but the Pi-hole web interface doesn't load
+
+<Verified date="2026-08" method="tested" />
 
 <Steps>
 
@@ -562,31 +653,33 @@ Without it, all traffic including the SSH connection routes through the exit nod
 
 ## Verify Pi-hole Is Working
 
+<Verified date="2026-08" method="tested" />
+
 After you complete the Pi-hole setup:
 
 <Steps>
 
-1. Check the dashboard:
-   - Total queries should be increasing as devices make DNS requests.
+1. Check the dashboard.
+   Total queries should be increasing as devices make DNS requests.
    A non-zero "Queries Blocked" percentage confirms blocking is active.
    Blocking percentage varies by household - update this with your own numbers after a week of use.
 
-1. Test blocking:
-   - On a device using Pi-hole as its DNS server, go to:
+1. Test blocking.
+   On a device using Pi-hole as its DNS server, go to:
 
-     ```url
-     http://doubleclick.net
-     ```
+   ```url
+   http://doubleclick.net
+   ```
 
-     You should see a connection error or blank page.
+   You should see a connection error or blank page.
 
-1. Test allowlisting:
-   - Make sure normal browsing works.
+1. Test allowlisting.
+   Make sure normal browsing works.
    Try loading a few common sites and use your smart TV or devices to stream media.
    If anything breaks, check the Query Log for blocked domains and allowlist as needed.
 
-1. Check all devices:
-   - Pi-hole only works for devices using it as their DNS server.
+1. Check all devices.
+   Pi-hole only works for devices using it as their DNS server.
    If you configured it in your router's DHCP settings, devices need to renew their DHCP lease to pick up the new DNS server.
    You can force this by disconnecting and reconnecting Wi-Fi, or restarting the device.
 

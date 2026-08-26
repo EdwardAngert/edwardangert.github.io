@@ -1,0 +1,135 @@
+# Pi-hole environment
+
+Context for Claude Code working on this Pi-hole install.
+Replace the placeholder values with your own before you use this.
+
+## Host
+
+- Pi-hole host: `pi-hole` at `192.168.0.153`, interface `eth0`
+- Router and gateway: `192.168.0.1`
+- Versions: Core v6.4.3, Web v6.6, FTL v6.7
+- My login account: `pi-admin`
+
+## Privileges
+
+You have no `sudo` access, and `sudo` cannot prompt for a password in your shell.
+Don't try privileged commands. They will fail with `a terminal is required to read the password`.
+
+If something genuinely needs root, print the command and ask me to run it.
+Tell me to run it in shell mode by typing `!` followed by the command at the Claude Code
+prompt, for example `! sudo pihole -g`. That runs it in my terminal, where a password
+prompt can actually reach me, and puts the output back into your context so you can
+keep going.
+
+You also can't change lists. `pihole allow` and `pihole deny` don't need root, but they
+authenticate by reading `/etc/pihole/cli_pw`, which you can't read, so instead of failing
+they hang waiting for a password prompt you can't see. Hand those commands to me the same way.
+
+<!-- If you granted read access to /etc/pihole/cli_pw, uncomment this:
+You can run `pihole allow`, `pihole deny`, `pihole enable`, and `pihole disable` directly,
+with no sudo. Ask me first before disabling blocking or removing a list.
+-->
+
+<!-- If you set up the diagnostic wrapper, uncomment this:
+`sudo -n /usr/local/sbin/pihole-agent-diag` runs without a password and prints FTL service
+status plus the last 100 FTL log lines. It takes no arguments.
+-->
+
+
+## What you can read
+
+Granted explicitly by ACL:
+
+- `/var/log/pihole/pihole.log`: raw dnsmasq query log
+- `/var/log/pihole/FTL.log`: FTL engine log, for startup and DNSSEC errors
+- `/etc/pihole/pihole-FTL.db`: long-term query database
+
+World-readable, no grant needed:
+
+- `/etc/pihole/gravity.db`: blocklists, groups, clients, adlists
+
+## What you must not read
+
+`/etc/pihole/pihole.toml` is off limits.
+It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` in plain text, and reading the file pulls my password hashes into this transcript.
+
+To read a single config value, read only that value:
+
+```shell
+pihole-FTL --config webserver.api.app_sudo
+```
+
+## Querying the data
+
+The standalone `sqlite3` binary isn't installed. Use the one built into FTL, always with `--readonly`:
+
+```shell
+pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+   FROM queries
+   WHERE client = '203.0.113.42'
+   ORDER BY timestamp DESC LIMIT 20;"
+```
+
+The `queries` view resolves internal integer IDs to real domain and client strings, so no joins are needed.
+`status` is numeric: `1` blocked by blocklist, `2` forwarded, `3` from cache, `4` blocked by regex, `5` blocked by denylist.
+
+The database lags live traffic by up to 60 seconds (`database.DBinterval`).
+If a query you just made is missing, wait a minute before concluding it didn't happen.
+
+Read `gravity.db` the same way:
+
+```shell
+pihole-FTL sqlite3 --readonly /etc/pihole/gravity.db "SELECT id, address, enabled FROM adlist;"
+```
+
+## Gotchas that have cost time before
+
+### Devices appear under their Tailscale IP
+
+Tailscale is in use here.
+While a device is connected to the tailnet, its DNS queries arrive over `tailscale0` and the query log records its `100.x.x.x` address, not its LAN IP.
+Filtering by the LAN IP returns nothing at all, which looks identical to "this device isn't using Pi-hole."
+
+Run `tailscale status` first and map the device both ways.
+Active peers show the LAN address they connected from, such as `direct 203.0.113.42:41641`.
+
+### Tailnet devices fall back to the Default group
+
+Pi-hole matches clients by MAC address, and MAC lookups depend on ARP, which doesn't exist on `tailscale0`.
+A device connected over Tailscale can't be matched to a client entry created by MAC, so it falls back to the `Default` group no matter what group I assigned it.
+
+Check which group a client actually resolves to before explaining its blocking behavior.
+FTL also matches clients by interface and prefers the interface queries actually arrive on, so a single client entry of `:tailscale0` covers every tailnet device at once.
+
+### Blocklists are split across group bundles
+
+Adlists are grouped into reusable bundles rather than assigned per device.
+Read the current mapping instead of assuming:
+
+```shell
+pihole-FTL sqlite3 --readonly /etc/pihole/gravity.db \
+  "SELECT g.name, group_concat(a.id) FROM 'group' g
+   LEFT JOIN adlist_by_group abg ON abg.group_id = g.id
+   LEFT JOIN adlist a ON a.id = abg.adlist_id
+   GROUP BY g.id;"
+```
+
+Group membership is a union, not an override.
+A client in two groups gets the blocklists of both.
+
+### Blocklist files use Adblock Plus syntax
+
+The HaGeZi lists in `/etc/pihole/listsCache/` and the `gravity` table store entries as `||example.com^`, not bare domains.
+Grepping for `^example\.com$` returns nothing and looks like a real absence.
+Match on `\|\|example\.com\^` instead.
+
+### Allow and deny changes don't need a gravity rebuild
+
+`pihole allow` and `pihole deny` write to the `domainlist` table and FTL picks them up immediately.
+Only adlist changes need `pihole -g`, which takes several minutes and rewrites the whole gravity database.
+
+### Comments reject some punctuation
+
+`pihole allow --comment` accepts only `[a-zA-Z0-9_#:/.,\ -]`.
+A `+` in a comment fails the whole command.

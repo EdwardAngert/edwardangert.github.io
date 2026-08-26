@@ -1,10 +1,8 @@
 ---
 slug: docs/pi-hole/block-allow-lists
 title: "Add Blocklists and Allowlists to Pi-hole"
-description: "How to set up Pi-hole v6 blocklists and allowlists: choose a HaGeZi tier, fix streaming services broken by Pi-hole, and control blocking per device with groups."
+description: "Choose a HaGeZi blocklist tier for Pi-hole v6, fix Disney+, Hulu, and other streaming services it breaks, and control blocking per device with groups."
 category: "Personal Reference Documentation"
-applies-to:
-  pihole: "v6"
 prev:
   link: /docs/pi-hole/pihole-install/
   label: Install Pi-hole v6
@@ -13,7 +11,7 @@ next:
   label: Enable Network-Wide DNS Blocking with Pi-hole
 ---
 
-import { Steps } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
 import Verified from '../../../components/Verified.astro';
 
 Pi-hole v6 manages blocklists and allowlists natively through the web interface or command line.
@@ -29,10 +27,11 @@ Many services depend on domains that look like tracking but are required to work
 Most streaming apps run a verification chain on launch: they contact telemetry or analytics domains, and if those fail, the streaming app refuses to play content.
 This can be frustrating and has led to a number of "why isn't the TV working" complaints in my house.
 
-If you're just here to add lists, you can skip to the section:
+If you're just here to add lists, you can skip to these sections:
 
 - [Add Blocklists to Pi-hole](#add-blocklists-to-pi-hole)
 - [Add Allowlists and Domains to Pi-hole](#add-allowlists-and-domains-to-pi-hole)
+- [Fix Streaming Services and Other Broken Sites](#fix-streaming-services-and-other-broken-sites)
 
 ## How to Choose the Best Pi-hole Blocklist
 
@@ -44,12 +43,12 @@ The difference is how much control you want:
 **OISD Big** is a single URL, maintained by one person, optimized for zero breakage.
 If you want to set it and never think about it again, use `https://big.oisd.nl/`.
 
-**HaGeZi** aggregates dozens of upstream sources including OISD, StevenBlack, EasyList, EasyPrivacy, URLHaus, and PhishTank into tiered lists you can dial up or down.
+**HaGeZi** aggregates over 200 upstream sources including OISD, EasyList, EasyPrivacy, URLhaus, and Phishing Army into tiered lists you can dial up or down.
 At the Normal tier it's comparable to OISD Big.
 At Pro and above it blocks significantly more, and OISD is still included as an upstream source.
 HaGeZi also offers supplementary category lists (threat intelligence, spam TLDs, smart TV telemetry) that don't have OISD equivalents.
 
-This guide uses HaGeZi because the tiered approach gives a clear choice between "fewest possible issues" and "maximum blocking," and the supplementary lists add coverage that a single all-in-one list can't match.
+This guide uses HaGeZi because the tiered approach balances between "fewest possible issues" and "maximum blocking," and the supplementary lists add coverage that a single all-in-one list can't match.
 
 Most of the setup in this guide relies on one maintainer.
 
@@ -60,10 +59,10 @@ If the project goes inactive, the supplementary lists (Perflyst Smart-TV, BLP Ph
 :::note[Blocklists/Allowlists and Blacklists/Whitelists]
 As of Pi-hole v6, Pi-hole uses the words `blocklist` and `allowlist` instead of the legacy `whitelist` and `blacklist`.
 
-Some list maintainers still use some of the outdated languages in their descriptions and in the list URLs.
+Some list maintainers still use some of the outdated language in their descriptions and in the list URLs.
 :::
 
-### Choose a HaGeZi tier
+### Choose a HaGeZi Tier
 
 - **HaGeZi Normal**
   - Balanced blocking with minimal false positives.
@@ -82,7 +81,7 @@ Some list maintainers still use some of the outdated languages in their descript
 For quick reference, the full tier progression is: Light > Normal > Pro > Pro++ > Ultimate.
 See [HaGeZi's README](https://github.com/hagezi/dns-blocklists) for descriptions of each.
 
-### Recommended blocklists
+### Recommended Blocklists
 
 If you enabled the default blocklist or previously used [The Firebog](https://firebog.net/), [StevenBlack/hosts](https://github.com/StevenBlack/hosts), or [1Hosts](https://github.com/badmojr/1Hosts), you can disable them in favor of the lists on this page.
 
@@ -124,7 +123,10 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
 
    - HaGeZi Bad Hoster
 
-     Known bad hosting providers
+     Blocks entire hosting providers that repeatedly host malware in user-uploaded content, not individual bad domains.
+     Legitimate sites sharing that hosting get blocked too, with no built-in path to unblock just the one you need.
+     HaGeZi scopes this list for high-security environments, not casual use.
+     Skip it unless you're prepared to hand-unblock the occasional legitimate site yourself.
 
      ```url
      https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/hoster.txt
@@ -164,6 +166,12 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
 
 </Steps>
 
+Not listed above, but worth knowing about:
+
+- HaGeZi [NRD/DGA list](https://github.com/hagezi/nrd)
+  - Blocks newly registered and algorithmically generated domains, a category that malware command-and-control infrastructure relies on.
+    This can improve your security posture, but can lead to more false positives.
+
 ## Add Blocklists to Pi-hole
 
 To add a list:
@@ -185,14 +193,14 @@ To add a list:
 
 ## Add Allowlists and Domains to Pi-hole
 
-There are two ways to allowlist in Pi-hole v6:
+Pi-hole v6 offers two ways to allowlist:
 
 - **List subscriptions**: Subscribe to a URL and Pi-hole manages it automatically, like a blocklist.
   Best for maintained collections of domains.
 - **Individual domain entries**: Add a single domain directly in **Domains** > **Allowlist** in the web interface.
   Best for one-off fixes when a specific service breaks.
 
-### Subscribe to a referral allowlist
+### Subscribe to a Referral Allowlist
 
 The HaGeZi Referral Allowlist is a maintained collection of domains that blocklists commonly block but that services legitimately need.
 Adding it as a subscription prevents a large category of false positives before they happen.
@@ -203,10 +211,10 @@ Adding it as a subscription prevents a large category of false positives before 
 1. Paste the allowlist:
 
    ```url
-   https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/whitelist-referral.txt
+   https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/whitelist-referral.txt
    ```
 
-1. Select **Add allowlist**
+1. Select **Add allowlist**.
 1. After you add all the lists, update Gravity in **Tools** > **Update Gravity** to apply them, or use the CLI:
 
    ```shell title="From the Pi"
@@ -221,7 +229,7 @@ Adding it as a subscription prevents a large category of false positives before 
 
 You can instruct Pi-hole to allow individual domains.
 
-This is different from the lists we added in previous sections.
+This is different from the lists you added in previous sections.
 
 If you encounter an error with a website or service, check the query log at `https://pi-hole.local/admin/queries`.
 Select **Advanced filtering** to filter by client or domain and sort by time.
@@ -233,6 +241,8 @@ See [Troubleshoot a Broken Service](/docs/pi-hole/troubleshooting/#troubleshoot-
 
 If a service stops working after you set up Pi-hole, the likely cause is a blocked domain.
 The sections below list known fixes for common services.
+
+If your service isn't listed below, see [Troubleshoot a Broken Service](/docs/pi-hole/troubleshooting/#troubleshoot-a-broken-service) for how to find the blocked domain yourself.
 
 You can use the Pi-hole dashboard to add multiple domains one at a time through the **Domains** section at `https://pi-hole.local/admin/groups/domains`.
 
@@ -270,7 +280,7 @@ On Hulu's ad-supported plan, ad-serving domains share infrastructure with conten
 This is server-side ad insertion (SSAI): the ads are stitched into the video stream before it reaches your device, so there is no separate ad request for Pi-hole to answer.
 Blocking at the DNS level breaks playback entirely rather than removing the ads.
 
-There is no domain you can allowlist to block the ads on the Hulu app.
+No domain exists that you can allowlist to block the ads on the Hulu app.
 DNS filtering cannot fix this on a smart TV, a Roku, a Fire Stick, or a phone, because the ads and the show arrive as one stream.
 
 **What does work:** on the desktop web player, browser extensions can still strip Hulu's ads, because they operate on the page rather than on DNS.
@@ -296,10 +306,11 @@ Fixing playback requires allowlisting Google ad infrastructure domains, which de
 The better fix is to put the Paramount+ device in a bypass group so it skips filtering entirely.
 See [Skip Pi-hole for a Specific Device](#skip-pi-hole-for-a-specific-device) below.
 
-If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback, while `saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
+If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback.
+`saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
 This is partial at best: the server-stitched ads still get through.
 
-Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed 28 July 2026.)*
+Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed July 28, 2026.)*
 
 #### YouTube
 
@@ -311,16 +322,18 @@ Google serves ads and content from the same domains and there is no DNS-level wa
 Pi-hole can block some banner ads on the YouTube website, but pre-roll and mid-roll video ads are unaffected.
 This is a fundamental limitation of DNS-based blocking, not a configuration problem.
 
-**What does work,** depending on where you watch:
+**What does work:** it depends on where you watch.
 
 - **In a browser:** an extension like [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo).
-- **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed 28 July 2026.)*
-- **ReVanced** patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
+- **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed July 28, 2026.)*
+- **A patched app:** ReVanced patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
 
 None of these are DNS-level fixes.
 They replace or modify the client instead, which is the only layer where YouTube's ads and content can still be told apart.
 
 #### Netflix, Max, Apple TV+
+
+<Verified date="2026-08" method="tested" />
 
 These services generally work without individual domain allowlisting.
 If thumbnails fail to load or playback fails, check the query log for blocked CDN domains and allowlist as needed.
@@ -349,12 +362,12 @@ Sources disagree on whether the time-sync domain is `.net` or `.com`, so the com
 Note that this allowlists the specific subdomains, not the bare `samsungcloudsolution.com`.
 Blocking the bare domain without allowing these subdomains is what breaks the platform.
 
-Compiled from [techjunctions' Samsung TV ad blocker guide](https://techjunctions.com/samsung-tv-ad-blocker/) (updated April 2026) and [Perflyst/PiHoleBlocklist issue #10](https://github.com/Perflyst/PiHoleBlocklist/issues/10). *(Accessed 28 July 2026.)*
+Compiled from [techjunctions' Samsung TV ad blocker guide](https://techjunctions.com/samsung-tv-ad-blocker/) (updated April 2026) and [Perflyst/PiHoleBlocklist issue #10](https://github.com/Perflyst/PiHoleBlocklist/issues/10). *(Accessed July 28, 2026.)*
 Not tested on my own hardware.
 
 #### Amazon Fire TV / Fire Stick
 
-<Verified date="2025-01" method="community" />
+<Verified date="2026-08" method="community" />
 
 Fire TV uses a captive-portal check to decide whether it has internet.
 If that check is blocked, the device shows a network error or hangs on the home screen.
@@ -369,10 +382,17 @@ sudo pihole allowlist fireoscaptiveportal.com firetvcaptiveportal.com dp-discove
 | `firetvcaptiveportal.com`        | Second connectivity-check domain, polled roughly every two minutes |
 | `dp-discovery-na-ext.amazon.com` | App discovery and store |
 
-Both captive-portal domains are real and separately registered to Amazon, and guidance differs on which one a given device generation uses.
-Allowing both costs nothing.
+Both captive-portal domains are real, separately registered through Amazon's corporate registrar, and still actively maintained: `fireoscaptiveportal.com` was created in 2017 and `firetvcaptiveportal.com` in 2020, and both had registration records updated in 2026.
+Guidance differs on which one a given device generation uses, and allowing both costs nothing.
 
-Compiled from the [hkamran80 smart TV blocklist](https://gist.github.com/hkamran80/779019103fcd306979411d44c8d38459) comment history, where both domains were removed from the blocklist after users reported Fire Sticks failing. *(Accessed 28 July 2026.)*
+`fireoscaptiveportal.com` comes from [hkamran80's smart TV blocklist](https://github.com/hkamran80/blocklists), which removed it after a user reported it breaking their Fire Stick with a network error.
+Neither captive-portal domain appears in [the current `smart-tv.txt`](https://raw.githubusercontent.com/hkamran80/blocklists/main/smart-tv.txt), which is the evidence for allowing them.
+That list was last updated in September 2025, so treat it as stable rather than actively curated.
+
+`firetvcaptiveportal.com` was never on that list to begin with.
+It's included here on the registration evidence above and on wider community reports.
+
+*(Sources and domain registrations re-checked August 23, 2026.)*
 Not tested on my own hardware.
 
 #### Roku
@@ -382,11 +402,11 @@ Not tested on my own hardware.
 Roku is the most awkward device on this list, because it fights back in two ways.
 
 **It hardcodes Google's DNS.** Roku ignores the DNS server your router hands out and talks to `8.8.8.8` and `8.8.4.4` directly, so Pi-hole never sees its queries.
-You have to intercept port 53 at the router or the Pi to bring it back under filtering.
-See [Force devices that ignore router DNS to use the Pi-hole](/docs/pi-hole/network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
+Bringing it back under filtering requires a redirect at the router, not the Pi.
+See [Force Devices That Ignore Router DNS to Use the Pi-hole](/docs/pi-hole/network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
 
 **Some ads aren't DNS-delivered at all.** The home screen banner and screensaver ads can be reduced but not removed, because parts of them ship with the platform rather than being fetched per-view.
-Roku's own Settings > Privacy options cut more of them than any blocklist does.
+Roku's own **Settings** > **Privacy** options cut more of them than any blocklist does.
 
 What you can block and allow:
 
@@ -400,7 +420,7 @@ What you can block and allow:
 Blocked telemetry domains are also what cause apps to load with no thumbnails, or video that won't start.
 If that happens, use the query log method above rather than guessing, because the exact domains vary by region and Roku model.
 
-Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [cybernews' Roku ad blocking guide](https://cybernews.com/best-ad-blockers/how-to-block-ads-on-roku-tv/). *(Accessed 28 July 2026.)*
+Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [cybernews' Roku ad blocking guide](https://cybernews.com/best-ad-blockers/how-to-block-ads-on-roku-tv/). *(Accessed July 28, 2026.)*
 Not tested on my own hardware.
 
 #### Monday.com
@@ -417,7 +437,7 @@ sudo pihole allowlist ei.monday.com
 
 | Domain             | Why it's needed |
 |--------------------|------------------|
-| `ei.monday.com`    | Event-ingestion endpoint the app also uses for in-app signaling (for example, marking an export job complete). Blocking it can hang features like PDF export rather than erroring cleanly |
+| `ei.monday.com`    | Event-ingestion endpoint also used for in-app signaling |
 
 `track-visit.monday.com` is also blocked by HaGeZi Pro but never appeared in the query log during normal use.
 It's likely marketing/referral tracking rather than something the app itself needs, so it wasn't allowlisted here.
@@ -430,7 +450,7 @@ Pi-hole's group system lets you change that per device so that you can assign a 
 
 All blocklists are assigned to the `Default` group, and every device is in that group unless you change it.
 
-A device can be added to multiple groups at the same time and will follow the combined rules of all its groups.
+A device can be added to multiple groups at the same time and follows the combined rules of all its groups.
 
 ### Skip Pi-hole for a Specific Device
 
@@ -440,12 +460,10 @@ Useful for a device where blocking breaks functionality and you can't or would r
 
 1. Find the device's IP address in **Tools** > **Network** or based on its traffic in the **Query Log**.
 
-1. Go to **Groups** and add a new group.
-   Name it something like `skip` or `unfiltered`.
-
 1. Go to **Clients** and search for or select the device from the **Known clients** dropdown.
+   Add a comment in the **Client description** to help identify the device later.
 
-1. Under **Group assignment**, uncheck `Default` and select your new group.
+1. Under **Group assignment**, uncheck `Default` to remove it from the group.
 
 1. Select **Add**.
 
@@ -477,17 +495,20 @@ This can be useful for a child's device or a school-issued laptop.
 
    Recommended lists for parental filtering (all from [HaGeZi](https://github.com/hagezi/dns-blocklists)):
 
-   | What it blocks                                           | URL |
-   |----------------------------------------------------------|-----|
-   | Social media (Facebook, Instagram, TikTok, X, Snapchat)  | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/social.txt` |
-   | NSFW and adult content                                   | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/nsfw.txt` |
-   | DoH/VPN/TOR bypass (prevents tunneling out of filtering) | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/doh-vpn-proxy-bypass.txt` |
+   | What it blocks                                                                                                                                 | URL |
+   |------------------------------------------------------------------------------------------------------------------------------------------------|-----|
+   | Social media (Facebook, Instagram, TikTok, X, Snapchat)                                                                                        | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/social.txt` |
+   | NSFW and adult content                                                                                                                         | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/nsfw.txt` |
+   | DoH/VPN/TOR bypass (prevents tunneling out of filtering)                                                                                       | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/doh-vpn-proxy-bypass.txt` |
+   | Domains registered in the last week and domains that look randomly generated. More info at [hagezi/nrd](https://github.com/hagezi/nrd#readme). | `https://cdn.jsdelivr.net/gh/hagezi/nrd@latest/adblock/dga7.txt` |
 
-   :::note
-   Blocking YouTube via DNS is all-or-nothing - there's no way to allow educational content while blocking everything else.
-   If your goal is "no YouTube at all," add `youtube.com` as a domain to the group's blocklist.
-   If your goal is "safe YouTube," DNS isn't the right tool - use YouTube's built-in parental controls or a browser extension instead.
-   :::
+   <Aside type="note" title="Blocking YouTube via DNS is all-or-nothing" icon="youtube">
+    There's no way to allow educational content while blocking everything else.
+
+    If your goal is "no YouTube at all," add `youtube.com` as a domain to the group's blocklist.
+    If your goal is "safe YouTube," DNS isn't the right tool.
+    Use YouTube's built-in parental controls or a browser extension instead.
+   </Aside>
 
 1. Go to **Clients** and add the device.
 
@@ -497,7 +518,7 @@ This can be useful for a child's device or a school-issued laptop.
 
 </Steps>
 
-The device is now blocked by everything in `Default` as well as the extra lists.
+The device is now blocked from everything in `Default` as well as the extra lists.
 Other devices that are not in the new group are unaffected.
 
 :::note

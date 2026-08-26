@@ -56,6 +56,12 @@ pnpm lint
 
 [`llms.txt`](https://edwardangert.com/llms.txt) and [`llms-full.txt`](https://edwardangert.com/llms-full.txt) give AI tools a map of the site and the full text of the Pi-hole guide.
 
+## Roadmap
+
+Ideas and future work, not commitments:
+
+- **Suppress the copy button on output-only code blocks** (`shellsession`, possibly `text` for error/output dumps). A command's expected output shouldn't invite copy-paste the way the command itself does. Straightforward via a scoped CSS rule (`pre[data-language="shellsession"] ~ .copy { display: none; }`) in a new stylesheet, wired into `customCss` in `astro.config.mjs`.
+
 ## Live site
 
 Visit [edwardangert.com](https://edwardangert.com)

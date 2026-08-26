@@ -1,6 +1,6 @@
 ---
 slug: docs/pi-hole/tailscale
-title: "Use Pi-hole as a VPN to Block Ads On the Go with Tailscale"
+title: "Use Pi-hole as a VPN to Block Ads on the Go with Tailscale"
 description: "How to use Tailscale with Pi-hole for remote ad blocking on any device, secure SSH access without port forwarding, and an optional exit node for a private VPN."
 category: "Personal Reference Documentation"
 prev:
@@ -12,6 +12,9 @@ next:
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import Verified from '../../../components/Verified.astro';
+
+<Verified date="2026-08" method="tested" />
 
 [Tailscale](https://tailscale.com/) lets you securely reach your Pi-hole from anywhere without opening ports on your router.
 
@@ -63,7 +66,7 @@ This works, but exposes those ports to the public internet and increases the ris
 
    You can learn more about key expiry in the [Tailscale docs](https://tailscale.com/docs/features/access-control/key-expiry).
 
-1. Note the Pi's Tailscale IP, you can copy it from the machine list or from the Tailscale app.
+1. Note the Pi's Tailscale IP. You can copy it from the machine list or from the Tailscale app.
 
 1. Allow all Tailscale traffic through UFW:
 
@@ -91,15 +94,22 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 1. Allow Pi-hole to accept DNS queries from devices connected to the tailnet:
 
    ```shell title="From the Pi"
-   sudo pihole-FTL --config dns.listeningMode ALL
+   sudo pihole-FTL --config dns.listeningMode ALL && \
    sudo systemctl restart pihole-FTL
    ```
+
+   `ALL` accepts DNS queries on every interface, not just `tailscale0`.
+   Pi-hole's own documentation is explicit that this requires a properly configured firewall, which is why UFW is a prerequisite for this page.
 
 1. In the [Tailscale admin console](https://login.tailscale.com/admin/dns), go to **DNS**.
 1. Under **Nameservers**, select **Add nameserver** > **Custom**.
 1. Enter the Pi's Tailscale IP (the `100.x.x.x` address from the previous section).
 1. Add a second nameserver: select **Add nameserver** > **Custom** again and enter `1.1.1.1`.
    This keeps DNS working on your tailnet if the Pi goes offline.
+
+   The same trade applies here as in your router's DHCP settings: a second nameserver is a fallback and a leak at the same time, because clients aren't required to prefer the first one.
+   See [Devices Might Bypass Pi-hole in Favor of Secondary DNS](/docs/pi-hole/network-level-blocking/#devices-might-bypass-pi-hole-in-favor-of-secondary-dns).
+   Leave this step out if you'd rather every tailnet query either resolve through Pi-hole or fail outright, with no fallback.
 1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
 1. Select **Save**.
 
@@ -107,7 +117,8 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 
 DNS queries from any device on your tailnet now go to your Pi-hole, regardless of where you are.
 
-Traffic from devices on your tailnet will show the device's Tailscale IP in the query log under **Client**.
+Each device on your tailnet is reachable at its `100.x.x.x` address, or by its MagicDNS name if you've enabled MagicDNS.
+That tailnet address is also what appears in the Pi-hole query log under **Client** while the device is connected, rather than the device's LAN IP.
 
 ## Optional: Use the Pi as an Exit Node for a Private VPN
 
@@ -116,7 +127,7 @@ Your phone or laptop appears to be on your home network when away.
 
 This is useful for accessing local resources or creating another layer of privacy while traveling.
 
-### Enable the exit node on the Pi
+### Enable the Exit Node on the Pi
 
 <Steps>
 
@@ -124,8 +135,8 @@ This is useful for accessing local resources or creating another layer of privac
    This is required for the Pi to route packets on behalf of other devices:
 
    ```shell title="From the Pi"
-   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
-   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf && \
+   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf && \
    sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
    ```
 
@@ -133,8 +144,9 @@ This is useful for accessing local resources or creating another layer of privac
 
    ```shell title="From the Pi"
    sudo tailscale set --advertise-exit-node
-   sudo tailscale up
    ```
+
+   `set` applies immediately and only changes the flag you name, unlike `up`, which requires every preference to be repeated each time and can silently reset ones you don't.
 
 1. In the [Tailscale admin console](https://login.tailscale.com/admin/machines), find the Pi in your machine list.
    Select **Edit route settings** and enable **Use as exit node**.
@@ -143,29 +155,40 @@ This is useful for accessing local resources or creating another layer of privac
 
 </Steps>
 
-### Enable the exit node on your devices
+### Enable the Exit Node on Your Devices
 
 Advertising an exit node doesn't automatically route traffic through it.
 
 Each client enables its own exit node options.
 
 - **macOS / Windows**:
-  - Open the Tailscale menu bar app > **Exit Node** > select your Pi by name.
+  - Open the Tailscale menu bar app, go to **Exit Node**, then select your Pi by name.
 
 - **iOS / Android**:
-  - Open the Tailscale app > select your tailnet name > **Use exit node** > select the Pi.
+  - Open the Tailscale app, select your tailnet name, go to **Use exit node**, then select the Pi.
 
 - **Linux**:
   - Run on the client device (not the Pi), using the `100.x.x.x` Tailscale IP from above:
 
     ```shell title="From the client device"
-    sudo tailscale up --exit-node=100.x.x.x
+    sudo tailscale set --exit-node=100.x.x.x
     ```
 
 To stop using the exit node, select **None** in the app, or run the following from the client (not the Pi):
 
 ```shell title="From the client device"
-sudo tailscale up --exit-node=
+sudo tailscale set --exit-node=
 ```
 
-If you run into issues, see [Tailscale troubleshooting](/docs/pi-hole/troubleshooting/#tailscale).
+## Checkpoint
+
+At this point you can reach your Pi-hole from anywhere, and optionally route all your traffic through it.
+
+Before you continue, confirm the following:
+
+- SSH and the Pi-hole web interface both work from a device on your tailnet, away from your home network.
+- If you configured Pi-hole as your tailnet's DNS server, a tailnet device's queries show up in the Pi-hole query log under its `100.x.x.x` address.
+- If you set up an exit node, a client using it shows your home IP address when it checks.
+- If you run into issues, see [Tailscale troubleshooting](/docs/pi-hole/troubleshooting/#tailscale).
+
+The next page covers updating Pi-hole, backing up your configuration, and other maintenance tasks.

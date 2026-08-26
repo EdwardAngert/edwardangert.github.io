@@ -5,10 +5,11 @@
 
 ---
 
-# Pi-hole v6 Setup Guide
+# Pi-hole v6 Setup Guide for Raspberry Pi
 
 Source: https://edwardangert.com/docs/pi-hole/
 
+[Verified: Tested, August 2026]
 
 Pi-hole is a DNS-based ad blocker for your whole network.
 
@@ -16,8 +17,8 @@ Pi-hole is a DNS-based ad blocker for your whole network.
 
 ## What Pi-hole Does
 
-When a device on your network tries to access something from the Internet, it checks in with the Pi-hole first.
-The Pi-hole checks the address against a list you've configured, and if that resource isn't on the list, it allows the device to connect.
+When a device on your network tries to access something from the internet, it checks in with Pi-hole first.
+Pi-hole checks the address against a list you've configured, and if that resource isn't on the list, it allows the device to connect.
 
 Usually, the website itself still loads while the ads and trackers get blocked.
 
@@ -36,17 +37,17 @@ Pi-hole cannot block Hulu or Disney+ ads on their ad-supported plans without bre
 
 For most other services, you can [add service-specific rules to the allowlists](./block-allow-lists/#fix-streaming-services-and-other-broken-sites) when you get to that page, or skip ahead if that's your main use case.
 
-You can set up a Pi-hole to reduce the advertising noise of the Internet.
+You can set up a Pi-hole to reduce the advertising noise of the internet.
 But if you're looking for a way to remove the essay before a recipe, this isn't it.
 
 ## Why This Guide Exists
 
-Due to some hardware issues in the past, I've had to rebuild this setup several times, collecting steps from around the Internet each time.
+Due to some hardware issues in the past, I've had to rebuild this setup several times, collecting steps from around the internet each time.
 This guide is a collection of my notes, organized into documentation to help other people set up or rebuild their Pi-hole.
 
 The steps in this guide document how I set up Pi-hole v6 with:
 
-- Raspberry Pi running Raspberry Pi OS (Bookworm)
+- Raspberry Pi running Raspberry Pi OS (64-bit)
 - UFW firewall
 - [HaGeZi tiered blocklists](https://github.com/hagezi/dns-blocklists) with supplementary category lists
 - Allowlists for streaming and smart TV platforms
@@ -56,7 +57,7 @@ The steps in this guide document how I set up Pi-hole v6 with:
   - [Unbound](https://docs.pi-hole.net/guides/dns/unbound/) recursive DNS with Cloudflare as fallback
   - [Netdata](https://www.netdata.cloud/) system and Pi-hole monitoring
   - [Tailscale](https://tailscale.com/) for remote admin access and to make the Pi-hole act as a personal VPN
-  - More restrictive [groups for specific devices](./block-allow-lists#block-youtube-and-social-media-for-a-specific-device)
+  - More restrictive [groups for specific devices](./block-allow-lists/#block-youtube-and-social-media-for-a-specific-device)
 
 Visit [the official Pi-hole documentation](https://docs.pi-hole.net/) for more use cases and details.
 
@@ -65,7 +66,7 @@ This guide is written for Pi-hole v6 as an opinionated copy-and-paste solution t
 If you have Pi-hole v5 installed, many of the concepts remain the same in v6.
 You can still access the [older version of this guide on GitHub](https://github.com/EdwardAngert/edwardangert.github.io/blob/551b9d08bb444c42ed2b56dcbc928105984da7bd/src/content/docs/pi-hole/index.mdx).
 
-If you identify any errors or areas for improvement, please [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new) or select **Edit page** at the bottom of any page to suggest a change.
+If you identify any errors or areas for improvement, [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new) or select **Edit page** at the bottom of any page to suggest a change.
 
 ## Prerequisites
 
@@ -76,7 +77,8 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
 
     This is usually your gateway IP.
 - [Raspberry Pi](https://www.raspberrypi.com)
-  - You can use another always-on device on your local network or even a VPS and most of the steps in this guide will still work, but it's outside the scope of this guide and some steps might differ.
+  - You can use another always-on device on your local network, or even a VPS.
+    Most of the steps in this guide will still work, but that's outside this guide's scope and some steps might differ.
 - microSD card, 8 GB or larger, with a way to plug it into your computer.
 - Familiarity with a terminal and the command line, or at least comfort following terminal commands.
   Most commands in this guide can be copied and pasted, and I try to explain the ones that can't be.
@@ -86,32 +88,33 @@ If you identify any errors or areas for improvement, please [submit a GitHub iss
 - [Set Up Raspberry Pi OS](./install-configure/)
   - Flash the SD card, harden the OS with UFW and Fail2Ban, set a static IP.
 - [Install Pi-hole v6](./pihole-install/)
-  - Run the installer, set a password, optional unbound and Netdata, troubleshooting.
+  - Run the installer, set a password, and optionally add unbound and Netdata.
 - [Add Blocklists and Allowlists](./block-allow-lists/)
   - Choose a blocklist tier, add supplementary lists, allowlist streaming services and smart TVs, and use groups to control blocking per device (including how to bypass Pi-hole for a specific device or apply stricter rules for a child's device).
-- [Enable Network-wide DNS Blocking with Pi-hole](./network-level-blocking/)
-  - Configure router DHCP so every device uses Pi-hole for DNS.
-- [Use Pi-hole as a VPN to Block Ads On the Go with Tailscale](./tailscale/)
+- [Enable Network-Wide DNS Blocking with Pi-hole](./network-level-blocking/)
+  - Configure router DHCP so every device uses Pi-hole for DNS, including devices with hardcoded DNS like Chromecast or some smart TVs.
+- [Use Pi-hole as a VPN to Block Ads on the Go with Tailscale](./tailscale/)
   - Block ads on your phone and laptop anywhere, remote admin access, no port forwarding required.
 - [Pi-hole Maintenance and Advanced Configuration](./maintenance/)
   - Update Pi-hole, export/import backups with Teleporter, tune `pihole.toml`, offload logs to a USB drive.
 - [Troubleshooting](./troubleshooting/)
   - Fix common installation issues, DNS failures, broken streaming services, Gravity errors, and Tailscale DNS problems.
-
+- [Give Claude Code Access to Pi-hole Logs and Diagnostics](./claude-code-access/)
+  - Grant read-only access to the query database and logs with POSIX ACLs, optionally under a dedicated unprivileged user.
 
 ---
 
-# Set Up Raspberry Pi OS
+# Set Up Raspberry Pi OS for Pi-hole v6
 
 Source: https://edwardangert.com/docs/pi-hole/install-configure/
 
-
+[Verified: Tested, August 2026]
 
 ## Install Software Locally
 
 The tools below are linked to their official download pages.
 
-macOS users can install tools both using [Homebrew](https://brew.sh/).
+macOS users can install both tools using [Homebrew](https://brew.sh/).
 Windows and Linux users can download installers directly from each link.
 
 - [SD Card Formatter](https://www.sdcard.org/downloads/formatter/)
@@ -129,21 +132,24 @@ brew install sdformatter raspberry-pi-imager
 This process erases everything on the SD card.
 :::
 
+<Steps>
 
 1. Insert a microSD card, then open SD Card Formatter and choose the card from the **Select card** dropdown.
 1. Select **Format** to format the card.
    - The default settings are fine: Quick format and no volume label.
 1. Exit SD Card Formatter and leave the SD card inserted.
 
+</Steps>
 
 ## Create the Pi OS Image on the SD Card
 
 Raspberry Pi Imager makes the SD card a bootable drive.
 After you set up the SD card, you'll install it in the Raspberry Pi as its primary drive.
 
+<Steps>
 
 1. Open Raspberry Pi Imager.
-1. **Select your Raspberry Pi Device**: Raspberry Pi 4.
+1. **Select your Raspberry Pi Device**: Raspberry Pi 4 (select your own board if it's different).
 1. **Choose operating system**: Raspberry Pi OS (64-bit).
 1. **Select your storage device**: Select the SD card.
 1. **Customisation: Choose hostname**: `pi-hole`.
@@ -155,24 +161,81 @@ After you set up the SD card, you'll install it in the Raspberry Pi as its prima
 1. **Customisation: Choose username**: Create a user account.
    - The examples in this guide use the username `pi-admin`.
 1. **Customisation: Choose Wi-Fi** to configure the wireless network connection.
-   - Select **Next** if you will connect using Ethernet.
+   - Select **Next** if you plan to use the Ethernet connection.
 1. **Customisation: SSH authentication**: Enable SSH and select **Use password authentication**.
    - Optionally, [use public key authentication](https://www.raspberrypi.com/documentation/computers/remote-access.html#configure-ssh-without-a-password) for more secure access.
+
+     <details>
+     <summary>Set up a key instead of a password</summary>
+
+     Imager lets you paste a public key directly into this screen, so you don't need a separate setup step on the Pi.
+
+     1. Check whether you already have a key on this device:
+
+        ```shell title="From your device"
+        ls ~/.ssh/id_ed25519.pub
+        ```
+
+     1. If that file doesn't exist, generate one:
+
+        ```shell title="From your device"
+        ssh-keygen -t ed25519 -C "pi-hole"
+        ```
+
+        Accept the default file location, then set a passphrase or leave it blank.
+
+     1. Copy the contents of the `.pub` file to the clipboard:
+
+        <Tabs>
+        <TabItem label="Mac">
+
+        ```shell title="From your device"
+        pbcopy < ~/.ssh/id_ed25519.pub
+        ```
+
+        </TabItem>
+
+        <TabItem label="Windows">
+
+        ```shell title="From your device"
+        clip < ~/.ssh/id_ed25519.pub
+        ```
+
+        </TabItem>
+
+        <TabItem label="Linux">
+        Copy the output of:
+
+        ```shell title="From your device"
+        cat ~/.ssh/id_ed25519.pub
+        ```
+
+        </TabItem>
+        </Tabs>
+
+     1. Back in Imager, select **Allow public-key authentication only**, then **Add SSH key**, and paste the contents of the `.pub` file.
+
+     This closes the gap between first boot and Fail2Ban's installation later in this guide, when password auth would otherwise be your only protection for SSH.
+
+     </details>
+
+1. **Raspberry Pi Connect**: select **Next** to skip it. This guide doesn't use it.
 1. **Write image**: select **Write**.
 1. In the popup, review the warning, then select **I understand, erase and write** to continue.
 1. When the write completes, remove the SD card from your computer and insert it into the Raspberry Pi.
 1. Plug in the Pi and give it a few minutes to boot.
 
+</Steps>
 
 <details>
 <summary>Rebuilds and Upgrades: Confirm Your Linux Version</summary>
 
-Pi-hole v6 requires Debian 11 (Bullseye) or later.
+Pi-hole v6 needs Debian 11 (Bullseye) or later, since FTL requires glibc 2.28.
 
 If you're on an existing Pi, use `cat /etc/os-release | grep PRETTY_NAME` to confirm the release version before you continue:
 
 ```shellsession title="From the Pi"
-pi-admin@pi-hole:~ $ cat /etc/os-release | grep PRETTY_NAME
+$ cat /etc/os-release | grep PRETTY_NAME
 PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 ```
 
@@ -180,6 +243,7 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 ## Configure Raspberry Pi OS
 
+<Steps>
 
 1. Find the Pi's IP Address:
 
@@ -227,20 +291,38 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
 1. If you configured Wi-Fi and also plugged the Pi in via Ethernet, your Pi will have two IP addresses.
 
-   To make it easier to [enable network-wide blocking](./network-level-blocking/#configure-the-omada-controller-to-enable-network-wide-blocking-with-pi-hole) later, identify the Pi's Ethernet IP address.
+   To make it easier to [enable network-wide blocking](./network-level-blocking/#set-up-network-wide-pi-hole-on-a-tp-link-omada-controller) later, identify the Pi's IP address for the connection it will use.
 
-   Confirm the Ethernet IP address from inside the SSH session on the Pi:
+   Confirm the IP address from inside the SSH session on the Pi:
+
+   <Tabs syncKey="net-connection">
+
+   <TabItem label="Ethernet">
 
    ```shell title="From the Pi"
    ip addr show eth0
    ```
 
+   </TabItem>
 
-#### TP-Link Omada-specific steps to find and fix the Pi's IP
+   <TabItem label="Wi-Fi">
+
+   ```shell title="From the Pi"
+   ip addr show wlan0
+   ```
+
+   </TabItem>
+
+   </Tabs>
+
+</Steps>
+
+### TP-Link Omada-Specific Steps to Find and Fix the Pi's IP
 
 <details>
 <summary>Find the Pi and set a fixed IP on a TP-Link Omada controller</summary>
 
+<Steps>
 
 1. Log in and select the site's name.
 1. Select **Clients** then **Wired** to filter the table of connected clients.
@@ -250,44 +332,24 @@ PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
 
    You should still follow the steps in the [Set a Static IP](#set-a-static-ip-address) section when you get there.
 
+</Steps>
 
 ![Set fixed IP in Omada controller](./screenshots/omada-fixed-ip-address.png)
 
 </details>
 
-### Require a Password for sudo Commands
-
-The non-root user that Raspberry Pi Imager created can run `sudo` commands without a password.
-
-Raspberry Pi Imager creates a configuration file to enforce passwordless `sudo`.
-Remove the file so that sudo commands require authentication.
-
-
-1. Remove the configuration file:
-
-   ```shell title="From the Pi"
-   sudo rm /etc/sudoers.d/010_pi-nopasswd
-   ```
-
-1. Log out of the SSH session, then log back in:
-
-   ```shell
-   exit
-   ssh pi-admin@pi-hole.local
-   ```
-
-
-### Set Up a Firewall on Your Pi With UFW
+### Set Up a Firewall on Your Pi with UFW
 
 UFW (Uncomplicated Firewall) restricts which ports are accessible on the Pi.
 Pi-hole requires ports for DNS and the web interface.
 SSH is allowed for remote administration.
 
+<Steps>
 
 1. Install UFW:
 
    ```shell title="From the Pi"
-   sudo apt install ufw
+   sudo apt install -y ufw
    ```
 
 1. Allow SSH immediately to avoid getting locked out later:
@@ -314,7 +376,7 @@ SSH is allowed for remote administration.
    ```
 
    If you don't have a preferred terminal-based text editor, you can use `sudo nano /etc/ufw/applications.d/pihole`.
-   That will create the file and open the nano editor so you can add the rule.
+   That creates the file and opens the nano editor so you can add the rule.
 
    To save and exit nano: <kbd>CTRL+X</kbd>, then <kbd>Y</kbd>, then <kbd>Enter</kbd>.
 
@@ -336,6 +398,10 @@ SSH is allowed for remote administration.
    sudo ufw status
    ```
 
+</Steps>
+
+The `Pi-hole` rule above isn't scoped to an interface, so it applies to whatever can route to the Pi, not just your LAN.
+That's intentional: later, [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](./tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) depends on the same ports being reachable from the Tailscale interface too.
 
 <details>
 <summary>If you plan to use Pi-hole as a DHCP server</summary>
@@ -355,11 +421,12 @@ sudo ufw allow 67/udp comment 'DHCP'
 Fail2Ban automatically bans IPs that fail too many login attempts.
 This helps minimize the risk of brute-force attacks.
 
+<Steps>
 
 1. Install Fail2Ban:
 
    ```shell title="From the Pi"
-   sudo apt install fail2ban
+   sudo apt install -y fail2ban
    ```
 
 1. Create `/etc/fail2ban/jail.local`:
@@ -373,7 +440,11 @@ This helps minimize the risk of brute-force attacks.
    findtime = 10m
    ```
 
-   `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables (an alternative way to manage network access to the Pi) rules directly, keeping all firewall rules in one place.
+   `banaction = ufw` tells Fail2Ban to use UFW to block IPs instead of managing iptables rules directly (iptables is an alternative way to manage network access to the Pi), keeping all firewall rules in one place.
+
+   This ban is flat: an attacker who fails 4 attempts waits out the same 1-hour ban and can try again.
+   That's deliberate here, because an escalating ban risks locking you out if you mistype your own password a few times.
+   If you want repeat offenders banned for longer each time, add `bantime.increment = true` to the `[sshd]` block instead.
 
    Remember to use `sudo` to edit the file (`sudo nano /etc/fail2ban/jail.local` if you're new to this).
 
@@ -391,21 +462,83 @@ This helps minimize the risk of brute-force attacks.
 
    You should see the jail listed as active with 0 currently banned IPs on a fresh install.
 
+</Steps>
+
+### Disable X11 Forwarding
+
+SSH supports X11 forwarding, which lets a remote graphical app display on your local machine over the SSH connection.
+The Pi doesn't need this if you already have a display attached, or if you don't run graphical apps over SSH.
+
+<Steps>
+
+1. Create a new configuration file, `/etc/ssh/sshd_config.d/60-disable-x11-forwarding.conf`, to disable it:
+
+   ```java title="/etc/ssh/sshd_config.d/60-disable-x11-forwarding.conf"
+   X11Forwarding no
+   ```
+
+1. Reload SSH to apply the change:
+
+   ```shell title="From the Pi"
+   sudo systemctl reload sshd
+   ```
+
+</Steps>
+
+### Enable Automatic Security Updates
+
+Install `unattended-upgrades` to apply security patches automatically.
+
+<Steps>
+
+1. Install `unattended-upgrades`:
+
+   ```shell title="From the Pi"
+   sudo apt install -y unattended-upgrades
+   ```
+
+1. Debian's package defaults already enable security-origin updates and leave automatic reboots off.
+   Confirm both:
+
+   ```shell title="From the Pi"
+   grep -A5 "Origins-Pattern" /etc/apt/apt.conf.d/50unattended-upgrades && \
+   grep "Automatic-Reboot \"" /etc/apt/apt.conf.d/50unattended-upgrades
+   ```
+
+   Leave automatic reboot commented out (disabled) unless you specifically want the Pi to reboot itself after a kernel update.
+   For a DNS server, it's usually safer to reboot manually for minimum interruption.
+
+1. Confirm the service is enabled, then do a dry run to see what it would install:
+
+   ```shell title="From the Pi"
+   systemctl is-enabled unattended-upgrades && \
+   sudo unattended-upgrade --dry-run --debug
+   ```
+
+</Steps>
 
 ### Set a Static IP Address
 
 Pi-hole needs a stable IP address.
-If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the Internet.
+If the router reassigns the Pi's IP after a reboot, all your DHCP clients will point at the wrong address and potentially lose access to the internet.
 
 These steps use `nmcli` to lock the IP.
-They set the Ethernet connection name as a temporary shell variable.
+They set the connection name as a temporary shell variable.
 The variable is cleared when you exit the session.
 
+The `ipv4.dns` value below sets the Pi's own OS-level resolver, which it uses to look things up before Pi-hole is installed.
+It's not what Pi-hole serves to the rest of your network.
+That's a separate setting you choose on the [next page](./pihole-install/) when you pick Pi-hole's upstream DNS provider.
+
+<Steps>
 
 1. Set the static IP, gateway, and DNS.
 
    This example is intentionally set to fail if you don't adjust `YOUR-PI-IP` and `YOUR-GATEWAY-IP`.
    This way you're less likely to get locked out if you don't change the example first:
+
+   <Tabs syncKey="net-connection">
+   <TabItem label="Ethernet">
 
    ```shell "YOUR-PI-IP" "YOUR-GATEWAY-IP" title="From the Pi"
    CON=$(nmcli -t -f NAME,DEVICE con show | grep eth0 | cut -d: -f1) && \
@@ -417,11 +550,28 @@ The variable is cleared when you exit the session.
      ipv4.method manual
    ```
 
+   </TabItem>
+
+   <TabItem label="Wi-Fi">
+
+   ```shell "YOUR-PI-IP" "YOUR-GATEWAY-IP" title="From the Pi"
+   CON=$(nmcli -t -f NAME,DEVICE con show | grep wlan0 | cut -d: -f1) && \
+   echo $CON && \
+   sudo nmcli con mod "$CON" \
+     ipv4.addresses YOUR-PI-IP/24 \
+     ipv4.gateway YOUR-GATEWAY-IP \
+     ipv4.dns "1.1.1.1" \
+     ipv4.method manual
+   ```
+
+   </TabItem>
+   </Tabs>
+
    <details>
    <summary>Help with this step</summary>
 
    - This setting uses the shell variable `CON` to make it easier to copy and paste the command consistently.
-     The first line finds the device's name, and sets it as the variable.
+     The first line finds the connection's name, and sets it as the variable.
      `echo $CON` on the second line displays it in the terminal for your information.
    - Replace `YOUR-PI-IP` with the Pi's IP you found in [step 1 of Configure Raspberry Pi OS](#configure-raspberry-pi-os).
    - Replace `YOUR-GATEWAY-IP` with your router's IP (or your gateway if you already know it).
@@ -430,7 +580,7 @@ The variable is cleared when you exit the session.
    [Red Hat networking guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/networking_guide/sec-Configuring_IP_Networking_with_nmcli).
    </details>
 
-   - If you do get locked out, you'll need to access the Pi directly.
+   - If you do get locked out, you'll need to access the Pi directly, with a monitor and keyboard.
      Then run this same command in the terminal with the correct IPs.
 
 1. Apply the changes:
@@ -452,20 +602,35 @@ The variable is cleared when you exit the session.
 
 1. Verify the settings persisted on the Pi:
 
+   <Tabs syncKey="net-connection">
+   <TabItem label="Ethernet">
+
    ```shell title="From the Pi"
    ip addr show eth0
    ```
+
+   </TabItem>
+
+   <TabItem label="Wi-Fi">
+
+   ```shell title="From the Pi"
+   ip addr show wlan0
+   ```
+
+   </TabItem>
+   </Tabs>
 
    Confirm your static IP is listed.
 
 1. Reboot the Pi:
 
    ```shell title="From the Pi"
-   sudo reboot now
+   sudo reboot
    ```
 
    Wait a few minutes before you SSH back in.
 
+</Steps>
 
 ## Checkpoint
 
@@ -476,11 +641,11 @@ Before you continue, confirm the following:
 - SSH access works: `ssh pi-admin@pi-hole.local`.
 - UFW is active with Pi-hole rules: `sudo ufw status`.
 - Fail2Ban is protecting SSH: `sudo fail2ban-client status sshd`.
+- Automatic security updates are enabled: `systemctl is-enabled unattended-upgrades`.
 - The Pi has a static IP that won't change on reboot.
 - If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#troubleshoot-pi-hole-installation-issues).
 
 The next page covers installing Pi-hole, configuring DNS, and optionally adding unbound for recursive resolution and Netdata for monitoring.
-
 
 ---
 
@@ -488,7 +653,7 @@ The next page covers installing Pi-hole, configuring DNS, and optionally adding 
 
 Source: https://edwardangert.com/docs/pi-hole/pihole-install/
 
-
+[Verified: Tested, August 2026]
 
 Install Pi-hole and configure it with a secure DNS resolver.
 
@@ -500,9 +665,13 @@ If you installed Pi-hole on an existing device or skipped to this section, these
 - Installed software like Git, curl, or zsh.
 - `apt` package manager - your OS might use a different one.
 - The Pi's hostname is `pi-hole` throughout this guide.
+- A static IP. The installer prompts "Static IP Needed" and expects one already set. If you haven't set one yet, see [Set a Static IP Address](./install-configure/#set-a-static-ip-address) first.
 
 </details>
 
+## Install Pi-hole
+
+<Steps>
 
 1. SSH to the Pi:
 
@@ -518,7 +687,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
    sudo apt update && sudo apt upgrade -y
    ```
 
-   This can take 10-20 minutes even on a freshly installed OS.
+   This can take 10 to 20 minutes even on a freshly installed OS.
 
 1. Run the Pi-hole installer:
 
@@ -531,7 +700,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
    - **Static IP Needed**: **Continue**
    - **Upstream DNS Provider**: **Cloudflare** - You can switch to unbound later.
    - **Blocklists**: **Yes** to include the default list.
-     We'll change it to a more curated set of lists later.
+     You'll change it to a more curated set of lists later.
    - **Enable Logging**: **Yes** - this helps diagnose issues like when streaming apps won't load.
    - **Select a privacy mode for FTL**: **0** - shows which site was blocked on which device. See the [official privacy level docs](https://docs.pi-hole.net/ftldns/privacylevels/) for other options.
 
@@ -555,6 +724,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
 
    If you don't see the option to proceed, refresh the page.
 
+</Steps>
 
 ## Optional: Configure Unbound as Recursive DNS
 
@@ -565,11 +735,12 @@ This means no single upstream provider sees all your DNS queries.
 Pi-hole works well with Cloudflare.
 Add unbound if you prefer the additional privacy of recursive resolution.
 
+<Steps>
 
 1. Install unbound, then immediately stop it so that you can set your own configuration:
 
    ```shell title="From the Pi"
-   sudo apt install unbound
+   sudo apt install unbound && \
    sudo systemctl stop unbound
    ```
 
@@ -594,7 +765,7 @@ Add unbound if you prefer the additional privacy of recursive resolution.
        # harden-dnssec-stripped enables DNSSEC validation - unbound rejects responses
        # that fail cryptographic signature checks, protecting against DNS spoofing.
        harden-dnssec-stripped: yes
-       # Don't use Capitalization randomization
+       # Disable capitalization randomization
        use-caps-for-id: no
        # Reduce EDNS reassembly buffer size
        edns-buffer-size: 1232
@@ -614,10 +785,15 @@ Add unbound if you prefer the additional privacy of recursive resolution.
        private-address: fe80::/10
    ```
 
-1. Start unbound and verify that it's running on port 5335:
+1. Start unbound:
 
    ```shell title="From the Pi"
    sudo systemctl start unbound
+   ```
+
+1. Verify that it's running on port 5335:
+
+   ```shell title="From the Pi"
    dig google.com @127.0.0.1 -p 5335 | grep NOERROR
    ```
 
@@ -640,6 +816,7 @@ Add unbound if you prefer the additional privacy of recursive resolution.
    You should see a `NOERROR` status.
    The first query may be slow as unbound builds its cache.
 
+</Steps>
 
 :::caution["port 53: Address in use"]
 If you install unbound and don't stop it right away, it will self-assign port 53 and conflict with the Pi-hole.
@@ -653,6 +830,7 @@ To fix: configure unbound on port 5335 as above, then restart both:
 sudo systemctl restart unbound
 sudo systemctl restart pihole-FTL
 ```
+
 :::
 
 ## Optional: Monitor Pi-hole with Netdata
@@ -661,35 +839,45 @@ sudo systemctl restart pihole-FTL
 It shows query rate, cache hits, blocked domains, and FTL status alongside system metrics such as CPU, memory, temperature, and Fail2Ban statistics.
 
 The Pi-hole web interface already shows DNS stats.
-Add Netdata if you want system-level metrics alongside your Pi-hole data.
 
+<details>
+<summary>Add Netdata if you want system-level metrics alongside your Pi-hole data.</summary>
 
-1. Install Netdata:
+<Steps>
+
+1. Install Netdata on the stable release channel:
 
    ```shell title="From the Pi"
-   curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && sh /tmp/netdata-kickstart.sh --disable-telemetry
+   curl https://get.netdata.cloud/kickstart.sh > /tmp/netdata-kickstart.sh && sh /tmp/netdata-kickstart.sh --stable-channel --disable-telemetry
    ```
 
    The installer takes a few minutes.
 
    When it finishes, Netdata starts automatically and auto-discovers Pi-hole.
 
-1. Allow the dashboard port through UFW if you want access from other devices on your network:
+1. Access the dashboard over an SSH tunnel:
+
+   ```shell title="From your device"
+   ssh -L 19999:localhost:19999 pi-admin@pi-hole.local
+   ```
+
+   Netdata's local dashboard has no login of its own.
+   Anyone who can reach the port can see CPU and memory usage right away, and the Fail2Ban jail status too once you enable the collector below.
+   A tunnel keeps the dashboard reachable only from the device you connect from, with no extra port open on the Pi.
+
+   <details>
+   <summary>If you want it reachable from other devices on your network instead</summary>
 
    ```shell title="From the Pi"
    sudo ufw allow 19999/tcp comment 'Netdata dashboard'
    ```
 
-   <details>
-   <summary>If you'll only access Netdata over an SSH tunnel</summary>
-
-   ```shell title="From the Pi"
-   ssh -L 19999:localhost:19999 pi-admin@pi-hole.local
-   ```
+   This opens the dashboard, unauthenticated, to every device that can reach the Pi.
+   Only open it if you accept that tradeoff.
 
    </details>
 
-1. Open the dashboard at `http://pi-hole.local:19999`
+1. Open the dashboard at `http://localhost:19999` (over the tunnel) or `http://pi-hole.local:19999` (if you opened the port instead).
    Scroll down to the **Pi-hole** section to see query rate, cache, and blocking stats alongside system metrics.
 
 1. Enable the Fail2Ban collector to see banned IPs per jail.
@@ -709,6 +897,9 @@ Add Netdata if you want system-level metrics alongside your Pi-hole data.
 
    The **Fail2Ban** section will appear in the dashboard showing currently banned IPs and active failures for each jail.
 
+</Steps>
+
+</details>
 
 ## Checkpoint
 
@@ -722,13 +913,11 @@ Before you continue to blocklists and allowlists to control what gets blocked, c
   You can check **Gravity** in the Pi-hole dashboard to confirm.
 - If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#troubleshoot-pi-hole-installation-issues).
 
-
 ---
 
 # Add Blocklists and Allowlists
 
 Source: https://edwardangert.com/docs/pi-hole/block-allow-lists/
-
 
 Pi-hole v6 manages blocklists and allowlists natively through the web interface or command line.
 
@@ -743,9 +932,11 @@ Many services depend on domains that look like tracking but are required to work
 Most streaming apps run a verification chain on launch: they contact telemetry or analytics domains, and if those fail, the streaming app refuses to play content.
 This can be frustrating and has led to a number of "why isn't the TV working" complaints in my house.
 
-If you're just here to add lists, you can skip to the section:
+If you're just here to add lists, you can skip to these sections:
+
 - [Add Blocklists to Pi-hole](#add-blocklists-to-pi-hole)
 - [Add Allowlists and Domains to Pi-hole](#add-allowlists-and-domains-to-pi-hole)
+- [Fix Streaming Services and Other Broken Sites](#fix-streaming-services-and-other-broken-sites)
 
 ## How to Choose the Best Pi-hole Blocklist
 
@@ -757,12 +948,12 @@ The difference is how much control you want:
 **OISD Big** is a single URL, maintained by one person, optimized for zero breakage.
 If you want to set it and never think about it again, use `https://big.oisd.nl/`.
 
-**HaGeZi** aggregates dozens of upstream sources including OISD, StevenBlack, EasyList, EasyPrivacy, URLHaus, and PhishTank into tiered lists you can dial up or down.
+**HaGeZi** aggregates over 200 upstream sources including OISD, EasyList, EasyPrivacy, URLhaus, and Phishing Army into tiered lists you can dial up or down.
 At the Normal tier it's comparable to OISD Big.
 At Pro and above it blocks significantly more, and OISD is still included as an upstream source.
 HaGeZi also offers supplementary category lists (threat intelligence, spam TLDs, smart TV telemetry) that don't have OISD equivalents.
 
-This guide uses HaGeZi because the tiered approach gives a clear choice between "fewest possible issues" and "maximum blocking," and the supplementary lists add coverage that a single all-in-one list can't match.
+This guide uses HaGeZi because the tiered approach balances between "fewest possible issues" and "maximum blocking," and the supplementary lists add coverage that a single all-in-one list can't match.
 
 Most of the setup in this guide relies on one maintainer.
 
@@ -773,10 +964,10 @@ If the project goes inactive, the supplementary lists (Perflyst Smart-TV, BLP Ph
 :::note[Blocklists/Allowlists and Blacklists/Whitelists]
 As of Pi-hole v6, Pi-hole uses the words `blocklist` and `allowlist` instead of the legacy `whitelist` and `blacklist`.
 
-Some list maintainers still use some of the outdated languages in their descriptions and in the list URLs.
+Some list maintainers still use some of the outdated language in their descriptions and in the list URLs.
 :::
 
-### Choose a HaGeZi tier
+### Choose a HaGeZi Tier
 
 - **HaGeZi Normal**
   - Balanced blocking with minimal false positives.
@@ -795,7 +986,7 @@ Some list maintainers still use some of the outdated languages in their descript
 For quick reference, the full tier progression is: Light > Normal > Pro > Pro++ > Ultimate.
 See [HaGeZi's README](https://github.com/hagezi/dns-blocklists) for descriptions of each.
 
-### Recommended blocklists
+### Recommended Blocklists
 
 If you enabled the default blocklist or previously used [The Firebog](https://firebog.net/), [StevenBlack/hosts](https://github.com/StevenBlack/hosts), or [1Hosts](https://github.com/badmojr/1Hosts), you can disable them in favor of the lists on this page.
 
@@ -836,7 +1027,10 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
 
    - HaGeZi Bad Hoster
 
-     Known bad hosting providers
+     Blocks entire hosting providers that repeatedly host malware in user-uploaded content, not individual bad domains.
+     Legitimate sites sharing that hosting get blocked too, with no built-in path to unblock just the one you need.
+     HaGeZi scopes this list for high-security environments, not casual use.
+     Skip it unless you're prepared to hand-unblock the occasional legitimate site yourself.
 
      ```url
      https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/hoster.txt
@@ -875,6 +1069,12 @@ Pi-hole deduplicates during Gravity updates so it won't break anything, but it's
      ```
 
 
+Not listed above, but worth knowing about:
+
+- HaGeZi [NRD/DGA list](https://github.com/hagezi/nrd)
+  - Blocks newly registered and algorithmically generated domains, a category that malware command-and-control infrastructure relies on.
+    This can improve your security posture, but can lead to more false positives.
+
 ## Add Blocklists to Pi-hole
 
 To add a list:
@@ -894,14 +1094,14 @@ To add a list:
 
 ## Add Allowlists and Domains to Pi-hole
 
-There are two ways to allowlist in Pi-hole v6:
+Pi-hole v6 offers two ways to allowlist:
 
 - **List subscriptions**: Subscribe to a URL and Pi-hole manages it automatically, like a blocklist.
   Best for maintained collections of domains.
 - **Individual domain entries**: Add a single domain directly in **Domains** > **Allowlist** in the web interface.
   Best for one-off fixes when a specific service breaks.
 
-### Subscribe to a referral allowlist
+### Subscribe to a Referral Allowlist
 
 The HaGeZi Referral Allowlist is a maintained collection of domains that blocklists commonly block but that services legitimately need.
 Adding it as a subscription prevents a large category of false positives before they happen.
@@ -911,10 +1111,10 @@ Adding it as a subscription prevents a large category of false positives before 
 1. Paste the allowlist:
 
    ```url
-   https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/whitelist-referral.txt
+   https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/whitelist-referral.txt
    ```
 
-1. Select **Add allowlist**
+1. Select **Add allowlist**.
 1. After you add all the lists, update Gravity in **Tools** > **Update Gravity** to apply them, or use the CLI:
 
    ```shell title="From the Pi"
@@ -928,7 +1128,7 @@ Adding it as a subscription prevents a large category of false positives before 
 
 You can instruct Pi-hole to allow individual domains.
 
-This is different from the lists we added in previous sections.
+This is different from the lists you added in previous sections.
 
 If you encounter an error with a website or service, check the query log at `https://pi-hole.local/admin/queries`.
 Select **Advanced filtering** to filter by client or domain and sort by time.
@@ -940,6 +1140,8 @@ See [Troubleshoot a Broken Service](./troubleshooting/#troubleshoot-a-broken-ser
 
 If a service stops working after you set up Pi-hole, the likely cause is a blocked domain.
 The sections below list known fixes for common services.
+
+If your service isn't listed below, see [Troubleshoot a Broken Service](./troubleshooting/#troubleshoot-a-broken-service) for how to find the blocked domain yourself.
 
 You can use the Pi-hole dashboard to add multiple domains one at a time through the **Domains** section at `https://pi-hole.local/admin/groups/domains`.
 
@@ -977,7 +1179,7 @@ On Hulu's ad-supported plan, ad-serving domains share infrastructure with conten
 This is server-side ad insertion (SSAI): the ads are stitched into the video stream before it reaches your device, so there is no separate ad request for Pi-hole to answer.
 Blocking at the DNS level breaks playback entirely rather than removing the ads.
 
-There is no domain you can allowlist to block the ads on the Hulu app.
+No domain exists that you can allowlist to block the ads on the Hulu app.
 DNS filtering cannot fix this on a smart TV, a Roku, a Fire Stick, or a phone, because the ads and the show arrive as one stream.
 
 **What does work:** on the desktop web player, browser extensions can still strip Hulu's ads, because they operate on the page rather than on DNS.
@@ -1003,10 +1205,11 @@ Fixing playback requires allowlisting Google ad infrastructure domains, which de
 The better fix is to put the Paramount+ device in a bypass group so it skips filtering entirely.
 See [Skip Pi-hole for a Specific Device](#skip-pi-hole-for-a-specific-device) below.
 
-If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback, while `saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
+If you would rather keep filtering on, community lists report that blocking `enduser.adsrvr.org` and `pagead2.googlesyndication.com` removes some Paramount+ ads without breaking playback.
+`saa.paramountplus.com` and `vod-gcs-cedexis.cbsaavideo.com` must stay allowed.
 This is partial at best: the server-stitched ads still get through.
 
-Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed 28 July 2026.)*
+Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [Google's Dynamic Ad Insertion documentation](https://developers.google.com/ad-manager/dynamic-ad-insertion/pod-serving). *(Accessed July 28, 2026.)*
 
 #### YouTube
 
@@ -1018,16 +1221,18 @@ Google serves ads and content from the same domains and there is no DNS-level wa
 Pi-hole can block some banner ads on the YouTube website, but pre-roll and mid-roll video ads are unaffected.
 This is a fundamental limitation of DNS-based blocking, not a configuration problem.
 
-**What does work,** depending on where you watch:
+**What does work:** it depends on where you watch.
 
 - **In a browser:** an extension like [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo).
-- **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed 28 July 2026.)*
-- **ReVanced** patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
+- **On a TV:** [SmartTube](https://smarttube.app/), an open-source replacement YouTube client for Android TV, Google TV, Fire TV, and Nvidia Shield. It removes ads and integrates SponsorBlock to skip in-video sponsor segments. It has to be sideloaded, because it is not in the app stores. *(Accessed July 28, 2026.)*
+- **A patched app:** ReVanced patches the official YouTube app, but it breaks whenever YouTube changes its API and needs manual re-patching, so it is higher maintenance than SmartTube.
 
 None of these are DNS-level fixes.
 They replace or modify the client instead, which is the only layer where YouTube's ads and content can still be told apart.
 
 #### Netflix, Max, Apple TV+
+
+[Verified: Tested, August 2026]
 
 These services generally work without individual domain allowlisting.
 If thumbnails fail to load or playback fails, check the query log for blocked CDN domains and allowlist as needed.
@@ -1056,12 +1261,12 @@ Sources disagree on whether the time-sync domain is `.net` or `.com`, so the com
 Note that this allowlists the specific subdomains, not the bare `samsungcloudsolution.com`.
 Blocking the bare domain without allowing these subdomains is what breaks the platform.
 
-Compiled from [techjunctions' Samsung TV ad blocker guide](https://techjunctions.com/samsung-tv-ad-blocker/) (updated April 2026) and [Perflyst/PiHoleBlocklist issue #10](https://github.com/Perflyst/PiHoleBlocklist/issues/10). *(Accessed 28 July 2026.)*
+Compiled from [techjunctions' Samsung TV ad blocker guide](https://techjunctions.com/samsung-tv-ad-blocker/) (updated April 2026) and [Perflyst/PiHoleBlocklist issue #10](https://github.com/Perflyst/PiHoleBlocklist/issues/10). *(Accessed July 28, 2026.)*
 Not tested on my own hardware.
 
 #### Amazon Fire TV / Fire Stick
 
-[Verified: Community-reported, January 2025]
+[Verified: Community-reported, August 2026]
 
 Fire TV uses a captive-portal check to decide whether it has internet.
 If that check is blocked, the device shows a network error or hangs on the home screen.
@@ -1076,10 +1281,17 @@ sudo pihole allowlist fireoscaptiveportal.com firetvcaptiveportal.com dp-discove
 | `firetvcaptiveportal.com`        | Second connectivity-check domain, polled roughly every two minutes |
 | `dp-discovery-na-ext.amazon.com` | App discovery and store |
 
-Both captive-portal domains are real and separately registered to Amazon, and guidance differs on which one a given device generation uses.
-Allowing both costs nothing.
+Both captive-portal domains are real, separately registered through Amazon's corporate registrar, and still actively maintained: `fireoscaptiveportal.com` was created in 2017 and `firetvcaptiveportal.com` in 2020, and both had registration records updated in 2026.
+Guidance differs on which one a given device generation uses, and allowing both costs nothing.
 
-Compiled from the [hkamran80 smart TV blocklist](https://gist.github.com/hkamran80/779019103fcd306979411d44c8d38459) comment history, where both domains were removed from the blocklist after users reported Fire Sticks failing. *(Accessed 28 July 2026.)*
+`fireoscaptiveportal.com` comes from [hkamran80's smart TV blocklist](https://github.com/hkamran80/blocklists), which removed it after a user reported it breaking their Fire Stick with a network error.
+Neither captive-portal domain appears in [the current `smart-tv.txt`](https://raw.githubusercontent.com/hkamran80/blocklists/main/smart-tv.txt), which is the evidence for allowing them.
+That list was last updated in September 2025, so treat it as stable rather than actively curated.
+
+`firetvcaptiveportal.com` was never on that list to begin with.
+It's included here on the registration evidence above and on wider community reports.
+
+*(Sources and domain registrations re-checked August 23, 2026.)*
 Not tested on my own hardware.
 
 #### Roku
@@ -1089,11 +1301,11 @@ Not tested on my own hardware.
 Roku is the most awkward device on this list, because it fights back in two ways.
 
 **It hardcodes Google's DNS.** Roku ignores the DNS server your router hands out and talks to `8.8.8.8` and `8.8.4.4` directly, so Pi-hole never sees its queries.
-You have to intercept port 53 at the router or the Pi to bring it back under filtering.
-See [Force devices that ignore router DNS to use the Pi-hole](./network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
+Bringing it back under filtering requires a redirect at the router, not the Pi.
+See [Force Devices That Ignore Router DNS to Use the Pi-hole](./network-level-blocking/#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole).
 
 **Some ads aren't DNS-delivered at all.** The home screen banner and screensaver ads can be reduced but not removed, because parts of them ship with the platform rather than being fetched per-view.
-Roku's own Settings > Privacy options cut more of them than any blocklist does.
+Roku's own **Settings** > **Privacy** options cut more of them than any blocklist does.
 
 What you can block and allow:
 
@@ -1107,7 +1319,7 @@ What you can block and allow:
 Blocked telemetry domains are also what cause apps to load with no thumbnails, or video that won't start.
 If that happens, use the query log method above rather than guessing, because the exact domains vary by region and Roku model.
 
-Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [cybernews' Roku ad blocking guide](https://cybernews.com/best-ad-blockers/how-to-block-ads-on-roku-tv/). *(Accessed 28 July 2026.)*
+Compiled from the [ozankiratli streaming whitelist gist](https://gist.github.com/ozankiratli/801ba17705e7f2a904d2e443af5a64f8) and [cybernews' Roku ad blocking guide](https://cybernews.com/best-ad-blockers/how-to-block-ads-on-roku-tv/). *(Accessed July 28, 2026.)*
 Not tested on my own hardware.
 
 #### Monday.com
@@ -1124,7 +1336,7 @@ sudo pihole allowlist ei.monday.com
 
 | Domain             | Why it's needed |
 |--------------------|------------------|
-| `ei.monday.com`    | Event-ingestion endpoint the app also uses for in-app signaling (for example, marking an export job complete). Blocking it can hang features like PDF export rather than erroring cleanly |
+| `ei.monday.com`    | Event-ingestion endpoint also used for in-app signaling |
 
 `track-visit.monday.com` is also blocked by HaGeZi Pro but never appeared in the query log during normal use.
 It's likely marketing/referral tracking rather than something the app itself needs, so it wasn't allowlisted here.
@@ -1137,7 +1349,7 @@ Pi-hole's group system lets you change that per device so that you can assign a 
 
 All blocklists are assigned to the `Default` group, and every device is in that group unless you change it.
 
-A device can be added to multiple groups at the same time and will follow the combined rules of all its groups.
+A device can be added to multiple groups at the same time and follows the combined rules of all its groups.
 
 ### Skip Pi-hole for a Specific Device
 
@@ -1146,12 +1358,10 @@ Useful for a device where blocking breaks functionality and you can't or would r
 
 1. Find the device's IP address in **Tools** > **Network** or based on its traffic in the **Query Log**.
 
-1. Go to **Groups** and add a new group.
-   Name it something like `skip` or `unfiltered`.
-
 1. Go to **Clients** and search for or select the device from the **Known clients** dropdown.
+   Add a comment in the **Client description** to help identify the device later.
 
-1. Under **Group assignment**, uncheck `Default` and select your new group.
+1. Under **Group assignment**, uncheck `Default` to remove it from the group.
 
 1. Select **Add**.
 
@@ -1181,17 +1391,20 @@ This can be useful for a child's device or a school-issued laptop.
 
    Recommended lists for parental filtering (all from [HaGeZi](https://github.com/hagezi/dns-blocklists)):
 
-   | What it blocks                                           | URL |
-   |----------------------------------------------------------|-----|
-   | Social media (Facebook, Instagram, TikTok, X, Snapchat)  | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/social.txt` |
-   | NSFW and adult content                                   | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/nsfw.txt` |
-   | DoH/VPN/TOR bypass (prevents tunneling out of filtering) | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/doh-vpn-proxy-bypass.txt` |
+   | What it blocks                                                                                                                                 | URL |
+   |------------------------------------------------------------------------------------------------------------------------------------------------|-----|
+   | Social media (Facebook, Instagram, TikTok, X, Snapchat)                                                                                        | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/social.txt` |
+   | NSFW and adult content                                                                                                                         | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/nsfw.txt` |
+   | DoH/VPN/TOR bypass (prevents tunneling out of filtering)                                                                                       | `https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/doh-vpn-proxy-bypass.txt` |
+   | Domains registered in the last week and domains that look randomly generated. More info at [hagezi/nrd](https://github.com/hagezi/nrd#readme). | `https://cdn.jsdelivr.net/gh/hagezi/nrd@latest/adblock/dga7.txt` |
 
-   :::note
-   Blocking YouTube via DNS is all-or-nothing - there's no way to allow educational content while blocking everything else.
-   If your goal is "no YouTube at all," add `youtube.com` as a domain to the group's blocklist.
-   If your goal is "safe YouTube," DNS isn't the right tool - use YouTube's built-in parental controls or a browser extension instead.
-   :::
+   <Aside type="note" title="Blocking YouTube via DNS is all-or-nothing" icon="youtube">
+    There's no way to allow educational content while blocking everything else.
+
+    If your goal is "no YouTube at all," add `youtube.com` as a domain to the group's blocklist.
+    If your goal is "safe YouTube," DNS isn't the right tool.
+    Use YouTube's built-in parental controls or a browser extension instead.
+   </Aside>
 
 1. Go to **Clients** and add the device.
 
@@ -1200,7 +1413,7 @@ This can be useful for a child's device or a school-issued laptop.
 1. Select **Add**.
 
 
-The device is now blocked by everything in `Default` as well as the extra lists.
+The device is now blocked from everything in `Default` as well as the extra lists.
 Other devices that are not in the new group are unaffected.
 
 :::note
@@ -1220,18 +1433,17 @@ Pi-hole is now blocking ads across your network with a curated list configuratio
 
 The next page covers configuring your router so every device on the network uses Pi-hole for DNS automatically.
 
-
 ---
 
 # Enable Network-Wide DNS Blocking
 
 Source: https://edwardangert.com/docs/pi-hole/network-level-blocking/
 
-
+[Verified: Tested, August 2026]
 
 Before your device connects to anything, whether it's a page you visit or ads and trackers running in the background of that page, your device asks your DNS server for the address by name first.
 By default, this is handled by your router and ISP.
-When Pi-hole is enabled, it answers those requests and if the name is on a blocklist, Pi-hole blocks the lookup and the connection is never made.
+When Pi-hole is enabled, it answers those requests. If the name is on a blocklist, it blocks the lookup, and the connection is never made.
 
 Network traffic itself does not flow through the Pi-hole.
 
@@ -1248,23 +1460,47 @@ In your router's DHCP settings, set:
 - **Primary DNS** - your Pi-hole's IP address (for example, `192.168.1.25`)
 - **Secondary DNS** - `1.1.1.1` (Cloudflare) as a fallback
 
-This will look different for each router brand.
+This looks different for each router brand.
 Look for **DHCP**, **LAN**, or **DNS** settings.
+
+### Devices Might Bypass Pi-hole in Favor of Secondary DNS
+
+Nothing in DNS requires a client to prefer the first server it was handed.
+
+Most Linux clients do try them in order and fall through only on timeout, which behaves like real failover.
+Windows, macOS, Android, and a lot of smart-device firmware instead query both or learn to prefer whichever answered fastest, and Cloudflare might beat a Raspberry Pi to the response.
+
+The result is that some devices resolve past Pi-hole, even while it's working normally.
+The symptom is ads reappearing on one device and not another, with nothing in the query log to explain it, because the queries never reached the Pi.
+
+This guide keeps `1.1.1.1` anyway, on the trade that if DNS response from the Pi fails, it would be worse to have it seem like "the internet is down" than it would be for some ads to come through.
+
+If you'd rather close the leak, leave **Secondary DNS** empty and set only the Pi-hole.
+Keep [Teleporter backups](./maintenance/#back-up-your-configuration) current, because the Pi becomes a single point of failure for your network's DNS.
+
+If you're chasing intermittent blocking, check this before anything else, and see [Force Devices That Ignore Router DNS to Use the Pi-hole](#optional-force-devices-that-ignore-router-dns-to-use-the-pi-hole) for devices that bypass DHCP entirely.
+
+The resolver behavior described here is drawn from how each operating system's resolver documents its own selection order, not from measurements on my network.
+The rest of this section is tested.
 
 ### Set Up Network-Wide Pi-hole on a TP-Link Omada Controller
 
+These steps are Omada controller-specific, but the language might be similar on other hardware.
+
 ![Omada controller DNS server settings](./screenshots/omada-dns-server-settings.png)
 
+<Steps>
 
 1. Log in to the Omada controller and select the site's name.
 1. In the sidebar, under **Configuration**, select **Network Config** > **LAN**.
 1. Select the edit icon for the network that should use Pi-hole.
-1. Expand **Advanced Settings**
 1. Next to **DHCP Server**, select **☑ Enable** to expand the DHCP options.
+1. Expand **Advanced Settings**.
 1. Next to **DNS Server**, select **Manual** and enter the Pi-hole's IP address in the first box.
 1. In the second box, enter `1.1.1.1` to use Cloudflare as a backup DNS server.
-1. Select **Next** to save and apply the settings.
+1. Select **Save** then **Apply** to save and apply the settings.
 
+</Steps>
 
 After you save the settings, devices need to renew their DHCP lease to pick up the new DNS server.
 This happens automatically when the lease expires (typically within 24 hours, depending on your router), or immediately if you disconnect and reconnect Wi-Fi, or restart the device.
@@ -1275,47 +1511,66 @@ For a smart TV, that means a full power cycle from the menu or the old favorite:
 
 ## Optional: Force Devices That Ignore Router DNS to Use the Pi-hole
 
+[Verified: Tested, August 2026]
+
 Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server your router assigns and use their own hardcoded DNS:
 
 - **Google Chromecast and Google Home** hardcode `8.8.8.8`.
 - **Samsung Smart TVs** may use `8.8.8.8` for some services even when a different DNS is assigned.
 - **Android and iOS** support encrypted DNS (DNS-over-HTTPS or DNS-over-TLS), which can send queries directly to Google or Cloudflare, bypassing Pi-hole completely.
 
+**This can't be fixed from the Pi itself**.
+Network traffic doesn't flow through the Pi-hole (as stated above), so a device's DNS query to `8.8.8.8` never reaches the Pi to intercept in the first place.
+Catching it requires a rule on whatever box actually sits between your devices and the internet: your router.
 
-1. To force traffic from these devices through the Pi-hole, add NAT rules that intercept all outbound DNS on port 53.
+**Blocking the hardcoded address outright doesn't work either**.
+Chromecast in particular refuses to function at all if `8.8.8.8` is unreachable, rather than falling back to the DNS server it was assigned.
+The fix has to be a transparent redirect that still gives the device a real answer, not a block.
 
-   This uses raw iptables because UFW doesn't expose NAT rules.
-   The rules operate at different layers and should not cause conflicts.
+<details>
+<summary>TP-Link Omada Gateway: DNS Override</summary>
 
-   Replace `YOUR-PI-IP` with your Pi-hole's actual IP:
+If your router is a TP-Link Omada Gateway (not just an Omada-managed switch or access point), use the built-in **DNS Override** feature:
 
-   ```shell "YOUR-PI-IP" title="From the Pi"
-   sudo iptables -t nat -A PREROUTING -i eth0 -p udp --dport 53 -j DNAT --to YOUR-PI-IP
-   sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 53 -j DNAT --to YOUR-PI-IP
-   ```
+<Steps>
 
-1. To make the rules persist across reboots:
+1. In the Omada controller, go to **Device Config** > **DNS**.
+1. Select the **DNS Proxy** tab and enable **DNS Proxy**.
+1. Under **Proxy Type**, select **DNS Override**.
+1. Set **Primary DNS Server** to your Pi-hole's IP address, and optionally a **Secondary DNS Server** as a fallback, such as `1.1.1.1`.
+1. Under **Apply Network**, select which networks this applies to.
+1. Select **Save**.
 
-   ```shell title="From the Pi"
-   sudo apt install iptables-persistent
-   sudo netfilter-persistent save
-   ```
+</Steps>
 
-1. Verify the rules were added:
+This transparently redirects DNS requests bound for any other server to Pi-hole instead, for the networks you selected, with no per-device configuration.
+It requires an actual Omada Gateway unit (not all Omada hardware qualifies).
+If you don't see a **DNS Proxy** tab under **Device Config**, your hardware or controller version doesn't support it.
 
-   ```shell title="From the Pi"
-   sudo iptables -t nat -L PREROUTING --line-numbers
-   ```
+Other prosumer-grade routers (OPNsense, pfSense, OpenWrt, and similar) generally offer the same capability under names like "DNS redirect," "transparent DNS proxy," or NAT/policy-routing rules, but the exact steps are specific enough to your router's software that they're out of scope for this guide.
 
-   You should see two rules with `DNAT` and `to:YOUR-PI-IP` — one for `udp dpt:domain` and one for `tcp dpt:domain`.
+</details>
 
+If none of that is available to you, the practical options are the ones already covered elsewhere in this guide: accept the device's own ads (as with Roku and Fire TV's captive-portal domains), or put the device in a bypass group so Pi-hole doesn't try to filter it at all.
 
-To verify a specific device is now routing through Pi-hole, check the query log at `https://pi-hole.local/admin/queries` and filter by that device's IP.
-You should see its DNS requests appearing there.
+See [Skip Pi-hole for a Specific Device](./block-allow-lists/#skip-pi-hole-for-a-specific-device) for how to set one up.
 
-These rules won't catch encrypted DNS (DNS-over-HTTPS) traffic on port 443.
-Blocking DoH requires blocking the IP addresses of known DoH providers, which is more aggressive and can break legitimate HTTPS traffic.
+Encrypted DNS (DNS-over-HTTPS or DNS-over-TLS) on Android and iOS is a separate, additional problem, not covered in this guide.
+Queries are encrypted and aren't hardcoded to a single server.
+It's not plaintext DNS and no redirect at any layer can catch it.
+Blocking DoH requires blocking the IP addresses of known DoH providers instead, which is more aggressive and can break legitimate HTTPS traffic.
 
+## Checkpoint
+
+At this point every device on your network uses Pi-hole for DNS, including ones that previously ignored it.
+
+Before you continue, confirm the following:
+
+- A device that renewed its DHCP lease shows up as a client in the Pi-hole query log.
+- If you set up DNS Override or an equivalent router-level redirect, a hardcoded-DNS device shows up in the query log too.
+- If you run into issues, see [Common Pi-hole Issues](./troubleshooting/#verify-pi-hole-is-working).
+
+The next page covers using Tailscale for remote access and ad blocking away from home.
 
 ---
 
@@ -1323,7 +1578,7 @@ Blocking DoH requires blocking the IP addresses of known DoH providers, which is
 
 Source: https://edwardangert.com/docs/pi-hole/tailscale/
 
-
+[Verified: Tested, August 2026]
 
 [Tailscale](https://tailscale.com/) lets you securely reach your Pi-hole from anywhere without opening ports on your router.
 
@@ -1374,7 +1629,7 @@ This works, but exposes those ports to the public internet and increases the ris
 
    You can learn more about key expiry in the [Tailscale docs](https://tailscale.com/docs/features/access-control/key-expiry).
 
-1. Note the Pi's Tailscale IP, you can copy it from the machine list or from the Tailscale app.
+1. Note the Pi's Tailscale IP. You can copy it from the machine list or from the Tailscale app.
 
 1. Allow all Tailscale traffic through UFW:
 
@@ -1400,22 +1655,30 @@ Configure Pi-hole as the DNS server for your tailnet to enable ad blocking on ev
 1. Allow Pi-hole to accept DNS queries from devices connected to the tailnet:
 
    ```shell title="From the Pi"
-   sudo pihole-FTL --config dns.listeningMode ALL
+   sudo pihole-FTL --config dns.listeningMode ALL && \
    sudo systemctl restart pihole-FTL
    ```
+
+   `ALL` accepts DNS queries on every interface, not just `tailscale0`.
+   Pi-hole's own documentation is explicit that this requires a properly configured firewall, which is why UFW is a prerequisite for this page.
 
 1. In the [Tailscale admin console](https://login.tailscale.com/admin/dns), go to **DNS**.
 1. Under **Nameservers**, select **Add nameserver** > **Custom**.
 1. Enter the Pi's Tailscale IP (the `100.x.x.x` address from the previous section).
 1. Add a second nameserver: select **Add nameserver** > **Custom** again and enter `1.1.1.1`.
    This keeps DNS working on your tailnet if the Pi goes offline.
+
+   The same trade applies here as in your router's DHCP settings: a second nameserver is a fallback and a leak at the same time, because clients aren't required to prefer the first one.
+   See [Devices Might Bypass Pi-hole in Favor of Secondary DNS](./network-level-blocking/#devices-might-bypass-pi-hole-in-favor-of-secondary-dns).
+   Leave this step out if you'd rather every tailnet query either resolve through Pi-hole or fail outright, with no fallback.
 1. Enable **Override local DNS** so that all tailnet devices use these nameservers instead of their own.
 1. Select **Save**.
 
 
 DNS queries from any device on your tailnet now go to your Pi-hole, regardless of where you are.
 
-Traffic from devices on your tailnet will show the device's Tailscale IP in the query log under **Client**.
+Each device on your tailnet is reachable at its `100.x.x.x` address, or by its MagicDNS name if you've enabled MagicDNS.
+That tailnet address is also what appears in the Pi-hole query log under **Client** while the device is connected, rather than the device's LAN IP.
 
 ## Optional: Use the Pi as an Exit Node for a Private VPN
 
@@ -1424,15 +1687,15 @@ Your phone or laptop appears to be on your home network when away.
 
 This is useful for accessing local resources or creating another layer of privacy while traveling.
 
-### Enable the exit node on the Pi
+### Enable the Exit Node on the Pi
 
 
 1. Enable IP forwarding.
    This is required for the Pi to route packets on behalf of other devices:
 
    ```shell title="From the Pi"
-   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
-   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf
+   echo 'net.ipv4.ip_forward = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf && \
+   echo 'net.ipv6.conf.all.forwarding = 1' | sudo tee -a /etc/sysctl.d/99-tailscale.conf && \
    sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
    ```
 
@@ -1440,8 +1703,9 @@ This is useful for accessing local resources or creating another layer of privac
 
    ```shell title="From the Pi"
    sudo tailscale set --advertise-exit-node
-   sudo tailscale up
    ```
+
+   `set` applies immediately and only changes the flag you name, unlike `up`, which requires every preference to be repeated each time and can silently reset ones you don't.
 
 1. In the [Tailscale admin console](https://login.tailscale.com/admin/machines), find the Pi in your machine list.
    Select **Edit route settings** and enable **Use as exit node**.
@@ -1449,45 +1713,106 @@ This is useful for accessing local resources or creating another layer of privac
    Tailscale requires explicit admin console approval.
 
 
-### Enable the exit node on your devices
+### Enable the Exit Node on Your Devices
 
 Advertising an exit node doesn't automatically route traffic through it.
 
 Each client enables its own exit node options.
 
 - **macOS / Windows**:
-  - Open the Tailscale menu bar app > **Exit Node** > select your Pi by name.
+  - Open the Tailscale menu bar app, go to **Exit Node**, then select your Pi by name.
 
 - **iOS / Android**:
-  - Open the Tailscale app > select your tailnet name > **Use exit node** > select the Pi.
+  - Open the Tailscale app, select your tailnet name, go to **Use exit node**, then select the Pi.
 
 - **Linux**:
   - Run on the client device (not the Pi), using the `100.x.x.x` Tailscale IP from above:
 
     ```shell title="From the client device"
-    sudo tailscale up --exit-node=100.x.x.x
+    sudo tailscale set --exit-node=100.x.x.x
     ```
 
 To stop using the exit node, select **None** in the app, or run the following from the client (not the Pi):
 
 ```shell title="From the client device"
-sudo tailscale up --exit-node=
+sudo tailscale set --exit-node=
 ```
 
-If you run into issues, see [Tailscale troubleshooting](./troubleshooting/#tailscale).
+## Checkpoint
 
+At this point you can reach your Pi-hole from anywhere, and optionally route all your traffic through it.
+
+Before you continue, confirm the following:
+
+- SSH and the Pi-hole web interface both work from a device on your tailnet, away from your home network.
+- If you configured Pi-hole as your tailnet's DNS server, a tailnet device's queries show up in the Pi-hole query log under its `100.x.x.x` address.
+- If you set up an exit node, a client using it shows your home IP address when it checks.
+- If you run into issues, see [Tailscale troubleshooting](./troubleshooting/#tailscale).
+
+The next page covers updating Pi-hole, backing up your configuration, and other maintenance tasks.
 
 ---
 
-# Maintenance and Advanced Configuration
+# Pi-hole Maintenance and Advanced Configuration
 
 Source: https://edwardangert.com/docs/pi-hole/maintenance/
 
+[Verified: Tested, August 2026]
 
-
-After the Pi is set up and running, use this page as a reference for [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, or to [use a USB drive to store logs](#offload-logs-to-a-usb-drive).
+After the Pi is set up and running, use this page as a reference for [confirming sudo requires a password](#optional-require-a-password-for-sudo-commands), [running manual updates](#update-pi-hole), configuring [backups](#back-up-your-configuration) of your Pi configuration, [using a USB drive to store logs](#offload-logs-to-a-usb-drive), or setting [how long query history is kept](#optional-set-pi-hole-database-retention).
 
 All of these sections are optional.
+
+Want Claude Code to help diagnose issues using these logs? See [Give Claude Code Access to Pi-hole Logs and Diagnostics](./claude-code-access/).
+
+## Optional: Require a Password for sudo Commands
+
+[Verified: Tested, August 2026]
+
+The non-root user that Raspberry Pi Imager created might be able to run `sudo` commands without a password.
+
+Raspberry Pi OS grants that through a file in `/etc/sudoers.d/` named after the account, such as `010_pi-admin-nopasswd`.
+Remove the file so that sudo commands require authentication.
+
+Raspberry Pi OS 6.2 (April 2026) stopped creating that file on new installs, so if you flashed your SD card with a current copy of Raspberry Pi Imager, you almost certainly don't have it.
+This matters more if you're rebuilding on an older image or setting up an existing device, but the command below handles both cases either way.
+
+<Steps>
+
+1. Remove the configuration file if it exists:
+
+   ```shell title="From the Pi"
+   sudo sh -c 'rm -fv /etc/sudoers.d/*-nopasswd'
+   ```
+
+   The glob runs inside `sh -c` so that root expands it.
+   `/etc/sudoers.d/` is readable only by root, so your own shell can't match the filename before `sudo` starts.
+
+   A removed file is named in the output.
+   No output means there was nothing to remove.
+
+1. Confirm no passwordless rule survives anywhere else in the directory:
+
+   ```shell title="From the Pi"
+   sudo grep -rl NOPASSWD /etc/sudoers.d/
+   ```
+
+   This prints nothing when passwordless `sudo` is off.
+   Any file it names still grants it, and you should read that file before removing it.
+
+1. Log out of the SSH session:
+
+   ```shell
+   exit
+   ```
+
+1. Log back in:
+
+   ```shell
+   ssh pi-admin@pi-hole.local
+   ```
+
+</Steps>
 
 ## Update Pi-hole
 
@@ -1496,7 +1821,7 @@ Update the Pi-hole software and refresh the Gravity database with updated lists.
 Run these whenever Pi-hole releases a new version, or after adding or changing blocklists.
 
 ```shell title="From the Pi"
-sudo pihole -up
+sudo pihole -up && \
 sudo pihole -g
 ```
 
@@ -1504,15 +1829,20 @@ sudo pihole -g
 
 Pi-hole's Teleporter exports your full configuration: blocklists, allowlists, custom domains, regex rules, DNS settings, and DHCP config.
 
+<Steps>
 
 1. In the Pi-hole web interface, go to **Settings** > **Teleporter**.
 1. Select **Export** to download a backup file.
 
+</Steps>
 
 To restore after a rebuild or SD card failure, use the **Import** option on the same page and select the backup file.
 
 Re-export after making significant changes to lists or settings.
 Store the backup file somewhere other than the Pi, such as on your local computer, a NAS, or cloud storage.
+
+Treat the file as sensitive.
+It includes your full configuration, so store it like any config backup that might hold credentials: never in a shared or public folder.
 
 ## Advanced Pi-hole Configuration with pihole.toml
 
@@ -1528,39 +1858,45 @@ sudo systemctl restart pihole-FTL
 It needs to be restarted when you make core configuration changes.
 
 :::note[Back up the file before you make changes]
+
 Editing `pihole.toml` directly can break Pi-hole if you introduce syntax errors.
 
 ```shell title="From the Pi"
 sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
 ```
+
 :::
 
-### Example: change upstream DNS
+### Example: Change Upstream DNS
 
-In the `[dns]` section of `pihole.toml`:
+Change the addresses in the `[dns]` section of `pihole.toml`:
 
-```toml title="pihole.toml"
+```toml "127.0.0.1#5335" title="pihole.toml"
+...
 [dns]
-upstreams = ["127.0.0.1#5335", "1.1.1.1"]  # unbound on localhost, Cloudflare backup
+ upstreams = ["127.0.0.1#5335", "1.1.1.1"]  # unbound on localhost, Cloudflare backup
+...
 ```
 
 Or for Cloudflare directly:
 
-```toml title="pihole.toml"
+```toml "1.1.1.1" title="pihole.toml"
+...
 [dns]
-upstreams = ["1.1.1.1", "1.0.0.1"]
+ upstreams = ["1.1.1.1", "1.0.0.1"]
+...
 ```
 
-### Reference: full pihole.toml
+### Reference: Full pihole.toml
 
 This is the full `pihole.toml` from my setup, with comments stripped and the password hash redacted.
 Values marked `### CHANGED` were modified from the Pi-hole default.
 
 <details>
-<summary>pihole.toml (v6.5, comments stripped)</summary>
+<summary>pihole.toml (v6.7, comments stripped)</summary>
 
 ```toml
-# Pi-hole configuration file (v6.5)
+# Pi-hole configuration file (v6.7)
 # Reference config - comments stripped, default values preserved for reference.
 # Values marked ### CHANGED were modified from the Pi-hole default.
 # To apply: copy to /etc/pihole/pihole.toml, then sudo systemctl restart pihole-FTL
@@ -1572,7 +1908,7 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
   ] ### CHANGED, default = []
   CNAMEdeepInspect = true
   blockESNI = true
-  EDNS0ECS = true
+  EDNS0ECS = false ### CHANGED, default = true
   ignoreLocalhost = false
   showDNSSEC = true
   analyzeOnlyAandAAAA = false
@@ -1586,7 +1922,7 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
   dnssec = false
   interface = "eth0" ### CHANGED, default = ""
   hostRecord = ""
-  listeningMode = "LOCAL"
+  listeningMode = "ALL" ### CHANGED, default = "LOCAL"
   queryLogging = true
   cnameRecords = []
   port = 53
@@ -1653,7 +1989,7 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
     address = ""
 
   [ntp.sync]
-    active = true
+    active = false ### CHANGED, default = true
     server = "pool.ntp.org"
     interval = 3600
     count = 8
@@ -1666,6 +2002,7 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
 [resolver]
   resolveIPv4 = true
   resolveIPv6 = true
+  macNames = true
   networkNames = true
   refreshNames = "IPV4_ONLY"
 
@@ -1687,7 +2024,7 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
   threads = 50
   headers = [
     "X-DNS-Prefetch-Control: off",
-    "Content-Security-Policy: default-src 'none'; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; img-src 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'",
+    "Content-Security-Policy: default-src 'none'; connect-src 'self'; font-src 'self'; frame-ancestors 'none'; img-src 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; form-action 'self'",
     "X-Frame-Options: DENY",
     "X-XSS-Protection: 0",
     "X-Content-Type-Options: nosniff",
@@ -1716,7 +2053,7 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
   [webserver.api]
     max_sessions = 16
     prettyJSON = false
-    pwhash = "" ### CHANGED from default (use `sudo pihole setpassword` to set)
+    pwhash = "<redacted>" ### CHANGED from default (use `sudo pihole setpassword` to set)
     totp_secret = ""
     app_pwhash = ""
     app_sudo = false
@@ -1733,7 +2070,6 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
       unit = "C"
 
 [files]
-  pid = "/run/pihole-FTL.pid"
   database = "/etc/pihole/pihole-FTL.db"
   tmp_db = "/etc/pihole/pihole-tmp.db"
   gravity = "/etc/pihole/gravity.db"
@@ -1795,6 +2131,7 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
   ntp = false
   netlink = false
   timing = false
+  performance = false
   all = false
 ```
 
@@ -1802,16 +2139,19 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
 
 ## Offload Logs to a USB Drive
 
+[Verified: Community-reported, August 2026]
+
 The Pi-hole FTL database (`pihole-FTL.db`) grows continuously and can wear out an SD card over months.
 Move the database and log file to a USB drive to protect the SD card and extend its life.
 
-### What you need
+### What You Need
 
 - A USB flash drive
 - The Pi running with Pi-hole installed
 
-### Mount the USB drive
+### Mount the USB Drive
 
+<Steps>
 
 1. Plug in the USB drive and find its device name:
 
@@ -1821,10 +2161,12 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
    Look for a `/dev/` that wasn't there before, such as `/dev/sda` with a partition at `/dev/sda1`.
 
-1. Get the partition's UUID:
+1. Get the partition's UUID.
 
-   ```shell title="From the Pi"
-   sudo blkid /dev/sda1
+   This example is intentionally set to fail if you don't adjust `YOUR-USB-PARTITION` to the device you found in the previous step:
+
+   ```shell "YOUR-USB-PARTITION" title="From the Pi"
+   sudo blkid /dev/YOUR-USB-PARTITION
    ```
 
    Copy the UUID value from the output.
@@ -1838,7 +2180,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Add an entry to `/etc/fstab` to auto-mount on boot.
    Open the file and add this line at the bottom, replacing `YOUR-UUID` with the UUID you copied:
 
-   ```ini title="/etc/fstab"
+   ```ini "YOUR-UUID" title="/etc/fstab"
    UUID=YOUR-UUID  /mnt/pihole-logs  ext4  defaults,noatime  0  2
    ```
 
@@ -1848,11 +2190,30 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    <details>
    <summary>If you need to format the drive first</summary>
 
-   This will delete everything on the drive:
+   This deletes everything on the drive.
 
-   ```shell title="From the Pi"
-   sudo mkfs.ext4 /dev/sda1
-   ```
+   <Steps>
+
+   1. Confirm which device is the USB drive, not an internal disk:
+
+      ```shell title="From the Pi"
+      lsblk -o NAME,SIZE,LABEL,MOUNTPOINT
+      ```
+
+      Match the size and label to your USB drive.
+      Don't guess: an internal disk can share the same `/dev/sdX` naming scheme, and `mkfs` won't ask for confirmation before it formats.
+
+      It deletes everything on the drive.
+
+   1. Format the partition.
+
+      This example is intentionally set to fail if you don't adjust `YOUR-USB-PARTITION`:
+
+      ```shell "YOUR-USB-PARTITION" title="From the Pi"
+      sudo mkfs.ext4 /dev/YOUR-USB-PARTITION
+      ```
+
+   </Steps>
 
    </details>
 
@@ -1870,9 +2231,11 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    sudo chown pihole:pihole /mnt/pihole-logs
    ```
 
+</Steps>
 
-### Point Pi-hole to the USB drive
+### Point Pi-hole to the USB Drive
 
+<Steps>
 
 1. Back up the current `pihole.toml`:
 
@@ -1883,8 +2246,8 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Move the existing database to the USB drive (so you don't lose query history):
 
    ```shell title="From the Pi"
-   sudo systemctl stop pihole-FTL
-   sudo mv /etc/pihole/pihole-FTL.db /mnt/pihole-logs/
+   sudo systemctl stop pihole-FTL && \
+   sudo mv /etc/pihole/pihole-FTL.db /mnt/pihole-logs/ && \
    sudo mv /var/log/pihole/pihole.log /mnt/pihole-logs/ 2>/dev/null || true
    ```
 
@@ -1892,17 +2255,23 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    Find the `[files]` section and set:
 
    ```toml title="pihole.toml"
+   ...
    [files]
-   database = "/mnt/pihole-logs/pihole-FTL.db"
-   log = "/mnt/pihole-logs/pihole.log"
+     database = "/mnt/pihole-logs/pihole-FTL.db"
+
+     [files.log]
+       dnsmasq = "/mnt/pihole-logs/pihole.log"
+   ...
    ```
 
+   `log` is a subsection (`[files.log]`), not a single value.
+   Only `dnsmasq` needs to change here; `ftl` and `webserver` can stay on the SD card.
    If there is no `[files]` section, add it at the end of the file.
 
 1. Start FTL and verify it comes up cleanly:
 
-   ```shell
-   sudo systemctl start pihole-FTL
+   ```shell title="From the Pi"
+   sudo systemctl start pihole-FTL && \
    sudo systemctl status pihole-FTL
    ```
 
@@ -1915,32 +2284,39 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 1. Reboot the Pi:
 
    ```shell title="From the Pi"
-   sudo reboot now
+   sudo reboot
    ```
 
 1. Verify that the USB drive mounts and Pi-hole starts correctly:
 
    ```shell title="From the Pi"
-   lsblk
+   lsblk && \
    systemctl status pihole-FTL
    ```
 
    The FTL service won't start if it can't find the database file.
    DNS queries from all network devices will fail until the mount is fixed.
+   See [FTL database grows too large and FTL fails to start](./troubleshooting/#ftl-database-grows-too-large-and-ftl-fails-to-start) if FTL won't come back up.
 
+</Steps>
 
-### Optional: Set Pi-hole database retention
+## Optional: Set Pi-hole Database Retention
+
+[Verified: Tested, August 2026]
 
 By default, Pi-hole keeps 91 days of query history.
 
-If you want to change the database size:
+If you want to change how many days of history Pi-hole keeps:
 
+<Steps>
 
-1. Set a the number of days to keep the database in `pihole.toml`:
+1. Set the number of days to keep the database in `pihole.toml`:
 
-   ```toml title="pihole.toml"
+   ```toml "180" title="pihole.toml"
+   ...
    [database]
-   maxDBdays = 180
+    maxDBdays = 180
+   ...
    ```
 
 1. Restart FTL after changing this:
@@ -1949,7 +2325,7 @@ If you want to change the database size:
    sudo systemctl restart pihole-FTL
    ```
 
-
+</Steps>
 
 ---
 
@@ -1957,22 +2333,64 @@ If you want to change the database size:
 
 Source: https://edwardangert.com/docs/pi-hole/troubleshooting/
 
+Want Claude Code to run checks like these for you?
+[Give Claude Code Access to Pi-hole Logs and Diagnostics](./claude-code-access/).
 
 ## Enable/Disable Debug Logging
+
+[Verified: Tested, August 2026]
 
 The Pi-hole debug tool turns on verbose logging flags when run.
 You can leave it on while you troubleshoot and turn it off when you're done:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config debug.all true
+sudo pihole-FTL --config debug.all true && \
 sudo systemctl restart pihole-FTL
 ```
 
 Change `true` to `false` when you're done troubleshooting.
 
-## Pi-hole Installation
+### How to Create and Share a Pi-hole Debug Log for Support
+
+[Verified: Community-reported, August 2026]
+
+This diagnoses Pi-hole configuration and errors that appear in the admin dashboard's **Tools** > **Pi-hole diagnosis** (`https://pi-hole.local/admin/messages`).
+It does not diagnose errors in your operating system or networking configuration.
+
+Your Pi-hole device and installation need to be functional for the command to work.
+
+If your Pi-hole is configured to log specific URLs, this log contains that list of URLs.
+
+<Steps>
+
+1. Collect a debug log for your Pi-hole:
+
+   ```shell title="From the Pi"
+   sudo pihole -d
+   ```
+
+1. After `pihole -d` collects the diagnostics, it asks if you want to upload the log to the official Pi-hole support server at `tricorder.pi-hole.net`:
+
+   ```shellsession title="From the Pi"
+   [?] Would you like to upload the log? [y/N]
+   ```
+
+   Enter <kbd>y</kbd> to upload the log.
+   The server automatically deletes the log file after 48 hours and isn't tied to any account.
+
+1. Log in to your account on the Pi-hole forum or create a new account, then go to the [Help category](https://discourse.pi-hole.net/c/bugs-problems-issues/11) and select **New Topic**.
+
+1. Read and follow the template in the popup, and include a description of the problem you're seeing and the debug token.
+
+</Steps>
+
+For more information about Pi-hole debugging, visit the [official Pi-hole forum](https://discourse.pi-hole.net/t/how-do-i-debug-my-pi-hole-installation/3104).
+
+## Troubleshoot Pi-hole Installation Issues
 
 ### SSH host key mismatch after rebuild
+
+[Verified: Tested, August 2026]
 
 **Symptom**: `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED` when SSHing to the Pi.
 
@@ -1981,13 +2399,16 @@ Change `true` to `false` when you're done troubleshooting.
 **Fix**:
 
 ```shell title="From your device"
-ssh-keygen -R pi-hole.local
+ssh-keygen -R pi-hole.local && \
 ssh pi-admin@pi-hole.local
 ```
 
 ### Port 53 conflict between Pi-hole and unbound
 
-**Symptom**: Pi-hole installs successfully, the web interface works, but DNS resolution fails on your network. The dashboard may show "DNS server failure."
+[Verified: Community-reported, August 2026]
+
+**Symptom**: Pi-hole installs successfully, the web interface works, but DNS resolution fails on your network.
+The dashboard might show `DNS server failure`.
 
 **Cause**: Both Pi-hole (via dnsmasq) and unbound are trying to listen on port 53.
 This happens if unbound was installed with its default configuration before Pi-hole.
@@ -2003,11 +2424,13 @@ Look for: `dnsmasq: failed to create listening socket for port 53: Address in us
 **Fix**: Configure unbound to use port 5335 (see [Optional: Configure Unbound as Recursive DNS](./pihole-install/#optional-configure-unbound-as-recursive-dns)), then restart both services:
 
 ```shell title="From the Pi"
-sudo systemctl restart unbound
+sudo systemctl restart unbound && \
 sudo systemctl restart pihole-FTL
 ```
 
 ### Pi-hole web interface shows 403 Forbidden or won't load
+
+[Verified: Community-reported, August 2026]
 
 **Symptom**: `https://pi-hole.local/admin` returns 403 Forbidden or the page won't connect.
 
@@ -2023,8 +2446,8 @@ sudo systemctl status lighttpd
 **Fix**:
 
 ```shell title="From the Pi"
-sudo systemctl stop lighttpd
-sudo systemctl disable lighttpd
+sudo systemctl stop lighttpd && \
+sudo systemctl disable lighttpd && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -2039,32 +2462,32 @@ If it shows `8080`, try `http://pi-hole.local:8080/admin` as a temporary workaro
 **Secondary cause**: FTL is not running at all.
 
 ```shell title="From the Pi"
-sudo systemctl status pihole-FTL
+sudo systemctl status pihole-FTL && \
 sudo journalctl -u pihole-FTL -n 50
 ```
 
-The most common reason on a fresh install is a port 53 conflict - see above.
+The most common reason on a fresh install is a port 53 conflict - see [Port 53 conflict between Pi-hole and unbound](#port-53-conflict-between-pi-hole-and-unbound).
 
 ### Gravity fails to update
 
-**Symptom**: Running `sudo pihole -g` exits with "DNS resolution is currently unavailable"
-or "list download failed: no cached list available."
+[Verified: Community-reported, August 2026]
+
+**Symptom**: Running `sudo pihole -g` exits with "DNS resolution is currently unavailable" or "list download failed: no cached list available."
 
 **Cause**: `/etc/resolv.conf` points to `127.0.0.1` (Pi-hole itself).
-If FTL isn't fully ready when Gravity runs - for example, immediately after install
-before the first restart - the DNS lookup for list URLs fails.
+If FTL isn't fully ready when Gravity runs - for example, immediately after install before the first restart - the DNS lookup for list URLs fails.
 
 **Fix**: Wait 30 seconds after install completes, confirm FTL is running, then re-run:
 
 ```shell title="From the Pi"
-sudo systemctl status pihole-FTL
-pihole -g
+sudo systemctl status pihole-FTL && \
+sudo pihole -g
 ```
 
 If Gravity still fails, verify outbound connectivity:
 
 ```shell title="From the Pi"
-dig raw.githubusercontent.com @1.1.1.1
+dig raw.githubusercontent.com @1.1.1.1 && \
 curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.txt
 ```
 
@@ -2072,6 +2495,8 @@ curl -v https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/multi.t
 If the dashboard shows an error but `sudo pihole -g` from the terminal succeeds, use the CLI.
 
 ### Maximum number of concurrent DNS queries reached
+
+[Verified: Community-reported, August 2026]
 
 **Symptom**: DNS becomes unresponsive. The FTL log shows:
 `Maximum number of concurrent DNS queries reached (max: 150)`
@@ -2082,6 +2507,7 @@ or the Pi's own LAN IP.
 
 **Check**:
 
+<Steps>
 
 1. Watch live queries.
    Look for a single source IP flooding requests:
@@ -2098,12 +2524,15 @@ or the Pi's own LAN IP.
    dig google.com @1.1.1.1
    ```
 
+</Steps>
 
 **Fix**: In **Settings** > **All Settings** > **DNS**, raise `dns.maxConcurrent` to `300` or `500`.
 Treat this as a symptom fix.
 Find the root cause (DNS loop or misbehaving client) separately.
 
 ### Intermittent DNS failures with unbound
+
+[Verified: Community-reported, August 2026]
 
 **Symptom**: DNS works, then randomly stops for minutes several times a day.
 Restarting FTL or unbound temporarily fixes it.
@@ -2120,14 +2549,7 @@ dig google.com @127.0.0.1 -p 5335
 
 If this returns `SERVFAIL` or times out, the problem is in unbound, not FTL.
 
-**Fix - refresh root hints**:
-
-```shell title="From the Pi"
-sudo unbound-anchor -a /var/lib/unbound/root.key
-sudo systemctl restart unbound
-```
-
-**Fix - check unbound logs**:
+**Check unbound logs**:
 
 ```shell title="From the Pi"
 sudo journalctl -u unbound -n 100
@@ -2135,7 +2557,18 @@ sudo journalctl -u unbound -n 100
 
 Look for `SERVFAIL`, timeout, or `DNSSEC` validation failure messages.
 
+**Fix**: Refresh root hints.
+`unbound-anchor` isn't included when you `apt install unbound` - install it separately first:
+
+```shell title="From the Pi"
+sudo apt install unbound-anchor && \
+sudo unbound-anchor -a /var/lib/unbound/root.key && \
+sudo systemctl restart unbound
+```
+
 ### FTL database grows too large and FTL fails to start
+
+[Verified: Tested, August 2026]
 
 **Symptom (weeks or months after setup)**: After a reboot, Pi-hole never comes back online.
 `systemctl status pihole-FTL` shows failed.
@@ -2150,23 +2583,67 @@ If you have Pi-hole v5 or upgraded from it, check your `maxDBdays` setting.
 **Quick fix (loses query history)**:
 
 ```shell title="From the Pi"
-sudo systemctl stop pihole-FTL
-sudo rm /etc/pihole/pihole-FTL.db
+sudo systemctl stop pihole-FTL && \
+sudo rm /etc/pihole/pihole-FTL.db && \
 sudo systemctl start pihole-FTL
 ```
 
 **Prevention**: Verify your retention setting in `/etc/pihole/pihole.toml`:
 
-```toml title="/etc/pihole/pihole.toml"
+```toml "91" title="/etc/pihole/pihole.toml"
+...
 [database]
-maxDBdays = 91
+ maxDBdays = 91
+...
 ```
 
 Lower this further if disk space is a concern.
 
 Refer to the [example pihole.toml](./maintenance/#reference-full-piholetoml) in the maintenance section for a full `pihole.toml` reference.
 
+### "Disk shortage ahead" - Netdata fills up disk space
+
+[Verified: Tested, August 2026]
+
+**Symptom**: Netdata is installed and disk usage climbs unexpectedly.
+
+**Common cause**: Netdata installed on the nightly release channel instead of stable.
+Nightly ships a new build daily, `apt-daily-upgrade.timer` installs it automatically, and apt never cleans up the superseded packages in `/var/cache/apt/archives` on its own.
+
+**Check**:
+
+```shell title="From the Pi"
+sudo du -sh /var/cache/apt/archives && apt list --installed 2>/dev/null | grep nightly
+```
+
+**Fix**: Clear the cache, stop it from recurring, and move Netdata to the stable channel.
+
+<Steps>
+
+1. Clear the apt cache:
+
+   ```shell title="From the Pi"
+   sudo apt clean
+   ```
+
+1. Configure apt to clean up superseded packages weekly on its own:
+
+   ```ini title="/etc/apt/apt.conf.d/00-autoclean"
+   APT::Periodic::AutocleanInterval "7";
+   ```
+
+1. Switch to the Netdata stable channel:
+
+   ```shell title="From the Pi"
+   wget -O /tmp/netdata-kickstart.sh https://get.netdata.cloud/kickstart.sh && \
+   sh /tmp/netdata-kickstart.sh --reinstall --stable-channel --disable-telemetry
+   ```
+
+</Steps>
+
 ### NTP warnings in the Pi-hole dashboard
+
+[Verified: Tested, August 2026]
 
 **Symptom**: Dashboard shows "No valid NTP replies received" or "Standard deviation of time offset is too large, rejecting synchronization."
 
@@ -2184,7 +2661,7 @@ If `System clock synchronized: yes` and the time is correct, the warning is cosm
 **Optional fix**: Disable Pi-hole's NTP client since the OS handles time sync:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config ntp.sync.active false
+sudo pihole-FTL --config ntp.sync.active false && \
 sudo systemctl restart pihole-FTL
 ```
 
@@ -2192,19 +2669,27 @@ sudo systemctl restart pihole-FTL
 
 ### Troubleshoot a Broken Service
 
+[Verified: Tested, August 2026]
+
+If the broken service is Disney+, Hulu, Paramount+, YouTube, Netflix, Max, Apple TV+, Samsung Smart TVs, Amazon Fire TV, Roku, or Monday.com, check [Fix Streaming Services and Other Broken Sites](./block-allow-lists/#fix-streaming-services-and-other-broken-sites) first - it has tested domain lists for each.
+Use the general method below for anything else.
+
 #### Step 1: Check if Pi-hole is the problem
 
+<Steps>
 
 1. In the Pi-hole web interface, go to **Disable** and choose a duration (5 minutes is usually enough).
 1. Try the broken service again.
 1. If it works with Pi-hole disabled, Pi-hole is blocking something the service needs.
    Continue to find the blocked domain.
 
+</Steps>
 
 If it's still broken with Pi-hole disabled, the problem is elsewhere.
 
 #### Step 2: Find the blocked domain
 
+<Steps>
 
 1. Re-enable Pi-hole.
 1. In the Pi-hole web interface, go to **Query Log**.
@@ -2212,26 +2697,31 @@ If it's still broken with Pi-hole disabled, the problem is elsewhere.
 1. In the query log, filter by the device's IP address or name.
 1. Look for domains with a **Blocked** status that appeared when you tried the service.
 
+</Steps>
 
 #### Step 3: Allowlist the domain
 
+<Steps>
 
 1. In the Query Log, select the blocked domain.
 1. Select **Allow** to add it to your allowlist.
 1. Try the service again.
 
+</Steps>
 
 You may need to repeat this.
 Some services check multiple domains sequentially, so you might need to allowlist several before the service works.
 
 #### Step 4: If you can't find the domain
 
+<Steps>
 
 1. In the query log, search for part of the service name (for example, `disney`).
 1. If nothing appears, look for blocked requests to CDN or analytics domains that coincide with your attempts to use the service.
 1. As a last resort: disable Pi-hole, use the service, then check the log for all domains the service contacted.
    These are candidates for your allowlist.
 
+</Steps>
 
 #### When allowlisting isn't enough
 
@@ -2245,6 +2735,8 @@ Options in those cases:
 
 ### Custom Filtering Rules
 
+[Verified: Community-reported, August 2026]
+
 Pi-hole v6 supports regex rules for both blocking and allowlisting.
 Add them via CLI or in the web interface under **Domains** > **Regex filter**.
 
@@ -2252,6 +2744,8 @@ These rules run against every queried domain in real time, so keep the list reas
 Regex rules can cause false positives that don't show up until something breaks.
 
 ### Fix List Health Issues
+
+[Verified: Community-reported, August 2026]
 
 #### Gravity shows "Invalid protocol" errors for domain names
 
@@ -2279,7 +2773,8 @@ The errored entries are simply ignored.
 
 #### A list shows 0 domains after `sudo pihole -g`
 
-Check the format. Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
+Check the format.
+Pi-hole v6 supports adblock (ABP) format for most lists, but some lists use syntax Pi-hole can't parse.
 Wildcard TLD rules (`||*.tld^`) and AdGuard-specific modifiers (`$denyallow=`) are common culprits.
 
 Look for a Pi-hole-specific variant of the list.
@@ -2299,9 +2794,60 @@ Projects rename tiers and reorganize files.
 For example, 1Hosts renamed `Pro` to `Xtra` in 2025, breaking old URLs.
 If a URL 404s, check the project's README for current links before assuming the project is dead.
 
+#### "List ID was inaccessible during last gravity run" warning won't go away
+
+If you previously added a bare domain name as a list URL (see [Invalid protocol](#gravity-shows-invalid-protocol-errors-for-domain-names) above) and later fixed it by moving the domain to **Domains** > **Allowlist**, FTL can keep showing the old warning for that list ID until it restarts, even though a fresh `sudo pihole -g` runs clean.
+
+**Check**: run `sudo pihole -g` and confirm no errors appear for the current run.
+If it's clean, the warning is stale.
+
+**Fix**: `sudo systemctl restart pihole-FTL` clears it.
+
+#### How to Update Deprecated HaGeZi URL Lists to Adblock Format
+
+[Verified: Tested, August 2026]
+
+**Symptom**: Sites, apps, or your smart TV start showing ads and trackers again after months of clean browsing, with no changes on your end.
+`sudo pihole -g` shows one of your HaGeZi lists 404ing or downloading 0 domains.
+
+**Cause**: HaGeZi [deprecated the legacy `domains` and `hosts` format lists](https://github.com/hagezi/dns-blocklists/discussions/10545) on August 1, 2026.
+Those formats enumerate every subdomain explicitly, which made files huge and unable to block unknown subdomains.
+Only software using an outdated matching engine - Pi-hole with FTL older than v5.22, plus old versions of Blocky, Diversion, pfBlockerNG, and similar - ever needed them.
+If you heard about this change and are looking to update your HaGeZi lists to the new format, that's exactly what the fix below does.
+
+**Fix**: Switch the list to the `adblock` format, which HaGeZi is not deprecating and which Pi-hole v6 (FTL well past v5.22) supports natively.
+
+The lists in [Recommended Blocklists](./block-allow-lists/#recommended-blocklists) already use the `adblock` path, so if you copied your list URLs from there, no change is needed.
+
+If you added a HaGeZi list some other way and it's now broken, replace it with a new one:
+
+<Steps>
+
+1. In the Pi-hole web interface, go to **Lists**.
+1. Use the search box to find the list you want to replace and select the trash icon to remove it.
+1. In the **Add a new subscribed list** section, add the replacement list's URL in the **Address**.
+
+   See [Recommended Blocklists](./block-allow-lists/#recommended-blocklists) for the current HaGeZi URLs.
+
+1. Select **Add blocklist**.
+
+1. After you add all the lists, update the Pi-hole's list settings (what it calls "Gravity") in **Tools** > **Update Gravity** to apply them, or use the CLI:
+
+   ```shell title="From the Pi"
+   sudo pihole -g
+   ```
+
+   Gravity also runs automatically on a weekly schedule.
+
+</Steps>
+
+After 2026-08-01, the old `/domains/` and `/hosts/` URLs only work from HaGeZi's separate [legacy repo](https://github.com/hagezi/dns-blocklists-legacy), which still gets daily updates but isn't the primary distribution.
+
 ## Tailscale
 
 ### DNS queries aren't showing in the Pi-hole query log
+
+[Verified: Tested, August 2026]
 
 If you've configured Tailscale to use your Pi-hole as a nameserver but queries from remote devices aren't appearing in the query log and nothing is getting blocked, Pi-hole is rejecting the queries.
 By default, Pi-hole only accepts DNS queries from the local subnet.
@@ -2309,13 +2855,51 @@ By default, Pi-hole only accepts DNS queries from the local subnet.
 Run the following on the Pi:
 
 ```shell title="From the Pi"
-sudo pihole-FTL --config dns.listeningMode ALL
+sudo pihole-FTL --config dns.listeningMode ALL && \
 sudo systemctl restart pihole-FTL
 ```
 
 See [Use Pi-hole DNS to Block Ads for All Devices on Your Tailnet](./tailscale/#use-pi-hole-dns-to-block-ads-for-all-devices-on-your-tailnet) for the full setup.
 
+### A device's queries appear under an unexpected IP address
+
+[Verified: Tested, August 2026]
+
+**Symptom**: You filter the query log by a device's LAN IP and see nothing, even though the device is online and browsing.
+
+While a device is connected to your tailnet, its DNS queries reach Pi-hole over the Tailscale interface.
+The query log records the device's `100.x.x.x` address instead of its LAN address.
+The same laptop appears under either one depending on how it's connected at the time.
+
+Find the device's Tailscale IP on the Pi:
+
+```shell title="From the Pi"
+tailscale status
+```
+
+Each device is listed with its `100.x.x.x` address.
+Active peers also show the LAN address they connected from, such as `direct 203.0.113.42:41641`, which is how you match a tailnet address back to a device you know by its LAN IP.
+
+Filter the query log by the `100.x.x.x` address instead.
+
+### A device on the tailnet ignores its group assignment
+
+[Verified: Tested, August 2026]
+
+**Symptom**: You put a device in a group with different blocklists, but while it's connected over Tailscale it gets the `Default` group's blocking instead.
+
+Pi-hole identifies clients by MAC address, and MAC lookups depend on ARP, which only works on your local network.
+A Tailscale connection has no ARP, so Pi-hole can't match a tailnet device to a client entry you created by MAC.
+Unmatched clients fall back to the `Default` group.
+
+**Fix**: Add a second client entry for the device's `100.x.x.x` address and put that entry in the same group as the MAC entry.
+Run `tailscale status` on the Pi to find the address.
+
+See [Control Blocking Per Device with Groups](./block-allow-lists/#control-blocking-per-device-with-groups).
+
 ### Pi-hole web interface loads but DNS isn't filtering
+
+[Verified: Tested, August 2026]
 
 Confirm **Override local DNS** is enabled in the Tailscale admin DNS settings.
 If it's off, devices use their own local resolver, not Pi-hole.
@@ -2324,6 +2908,9 @@ Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it sh
 
 ### Exit node connected but traffic isn't routing through the Pi
 
+[Verified: Tested, August 2026]
+
+<Steps>
 
 1. Confirm IP forwarding is active:
 
@@ -2342,8 +2929,11 @@ Also verify the Pi's Tailscale IP is entered correctly as the nameserver - it sh
 1. Confirm the exit node is approved in the Tailscale admin console.
    Unapproved exit nodes don't route traffic even if the client selects them.
 
+</Steps>
 
 ### SSH into the Pi from anywhere on your tailnet
+
+[Verified: Tested, August 2026]
 
 SSH to the Pi using either its Tailscale IP or its machine name.
 Both work as long as the client device is connected to Tailscale, with or without the exit node active:
@@ -2360,6 +2950,9 @@ Without it, all traffic including the SSH connection routes through the exit nod
 
 ### SSH works over Tailscale but the Pi-hole web interface doesn't load
 
+[Verified: Tested, August 2026]
+
+<Steps>
 
 1. Confirm the `tailscale0` UFW rule is in place:
 
@@ -2375,33 +2968,1942 @@ Without it, all traffic including the SSH connection routes through the exit nod
    sudo ufw allow in on tailscale0 comment 'Tailscale'
    ```
 
+</Steps>
 
 ## Verify Pi-hole Is Working
 
+[Verified: Tested, August 2026]
+
 After you complete the Pi-hole setup:
 
+<Steps>
 
-1. Check the dashboard:
-   - Total queries should be increasing as devices make DNS requests.
+1. Check the dashboard.
+   Total queries should be increasing as devices make DNS requests.
    A non-zero "Queries Blocked" percentage confirms blocking is active.
    Blocking percentage varies by household - update this with your own numbers after a week of use.
 
-1. Test blocking:
-   - On a device using Pi-hole as its DNS server, go to:
+1. Test blocking.
+   On a device using Pi-hole as its DNS server, go to:
 
-     ```url
-     http://doubleclick.net
-     ```
+   ```url
+   http://doubleclick.net
+   ```
 
-     You should see a connection error or blank page.
+   You should see a connection error or blank page.
 
-1. Test allowlisting:
-   - Make sure normal browsing works.
+1. Test allowlisting.
+   Make sure normal browsing works.
    Try loading a few common sites and use your smart TV or devices to stream media.
    If anything breaks, check the Query Log for blocked domains and allowlist as needed.
 
-1. Check all devices:
-   - Pi-hole only works for devices using it as their DNS server.
+1. Check all devices.
+   Pi-hole only works for devices using it as their DNS server.
    If you configured it in your router's DHCP settings, devices need to renew their DHCP lease to pick up the new DNS server.
    You can force this by disconnecting and reconnecting Wi-Fi, or restarting the device.
 
+</Steps>
+
+---
+
+# Give Claude Code Access to Pi-hole Logs and Diagnostics
+
+Source: https://edwardangert.com/docs/pi-hole/claude-code-access/
+
+Give Claude Code limited access to Pi-hole logs and the query database so that it can help you diagnose issues with your Pi-hole setup.
+
+The access you give Claude Code with these steps is read-only, and limited in scope to Pi-hole-specific files.
+
+To do this, you configure Access Control List (ACL) grants based on how you access your Pi and Claude Code (outlined in [Choose Your Setup](./claude-code-access/#choose-your-setup)).
+In this case, ACL is basically a finer-grained way to grant or restrict Linux user, group, and file access.
+You can learn more about ACL in the [Red Hat documentation](https://docs.redhat.com/en/documentation/red_hat_gluster_storage/3/html/administration_guide/sect-posix_access_control_lists).
+
+Skip to [Choose Your Setup](./claude-code-access/#choose-your-setup) for the commands and configuration.
+
+## Should Claude Code Have Root or Use sudo?
+
+No.
+
+For the most part, an application or agent running on your device shouldn't have root or non-root `sudo` access, to limit the risk of a vulnerability.
+This helps keep the application or agent from running commands that could compromise your device's security.
+If the account itself is compromised by a malicious actor or code, the limited access also helps mitigate the amount of damage that actor or code could do.
+
+Two things can go wrong: `sudo` can fail outright inside Claude Code, or it can succeed silently because of a cached authentication from earlier in the same terminal.
+
+Claude Code runs as whichever user starts it.
+No separate service account exists to add to a group, and no setting changes which Unix user its commands run as.
+
+If that account already has `sudo`, why not let it use that?
+The answer depends on something you should check first:
+
+```shell title="From the Pi (however you already connect)"
+sudo -n true && echo "passwordless sudo: ENABLED" || echo "sudo asks for a password"
+```
+
+Depending on your operating system version, if you entered your `sudo` password in this terminal within the last 15 minutes, this can report `ENABLED` even on an account that normally prompts.
+
+By default, `sudo` caches that authentication for 15 minutes (5 minutes as of Raspberry Pi OS 6.2), and if you check during that window, it looks the same as passwordless `sudo`.
+
+If you type your `sudo` password in a terminal and then start `claude` in that same terminal, Claude Code's commands inherit the cached ticket.
+For the rest of that time window, every `sudo` command it runs succeeds without a password prompt.
+
+### If sudo Says a Password Is Required inside Claude Code
+
+A command that needs `sudo` fails immediately, with the error below, instead of pausing to ask you for a password.
+
+Claude Code runs shell commands with no terminal attached.
+The shell environment looks like a terminal, but it doesn't behave like one in the way `sudo` needs, and `sudo` needs a terminal to prompt:
+
+```shell title="In Claude Code"
+sudo cat /var/log/pihole/pihole.log
+```
+
+```shellsession title="Output in Claude Code"
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+```
+
+Claude Code can't display or prompt for the password.
+
+Neither of the two fixes that the error message suggests work from Claude Code (`use the -S option to read from standard input or configure an askpass helper`).
+
+An askpass helper still has to produce your real password non-interactively, which means the password would need to live somewhere Claude Code's user account (current user) can read it, like a file, an environment variable, or a secrets store it shells out to.
+
+### If sudo Is Passwordless
+
+Raspberry Pi OS disabled default passwordless `sudo` with the 6.2 release in April 2026.
+
+If you upgraded Raspberry Pi OS from an older version or you're still on an older version, passwordless `sudo` might still be enabled.
+
+That means that all `sudo` commands will run with unrestricted root access on the Pi, without any prompting.
+
+The setting is stored in a file that you can find and remove.
+
+Make sure you know the password before you start.
+After you remove the file, `sudo` asks for that account's password.
+
+<Steps>
+
+1. Raspberry Pi OS names the file after the account, such as `/etc/sudoers.d/010_pi-admin-nopasswd`.
+
+   ```shell title="From the Pi (however you already connect)"
+   sudo grep -rl NOPASSWD /etc/sudoers.d/
+   ```
+
+1. Optional: If the password was set up by the Raspberry Pi Imager and you have never typed it, set one you know first with `passwd`.
+
+   You can skip this step if you know the password:
+
+   ```shell
+   sudo passwd pi-admin
+   ```
+
+1. Remove the file if it exists:
+
+   ```shell title="From the Pi (however you already connect)"
+   sudo sh -c 'rm -fv /etc/sudoers.d/*-nopasswd'
+   ```
+
+   The glob runs inside `sh -c` so that root expands it.
+   `/etc/sudoers.d/` is readable only by root, so your own shell can't match the filename before `sudo` starts.
+
+   A removed file is named in the output.
+   No output means there was nothing to remove.
+
+1. Re-run the check from step 1.
+
+   It prints nothing when passwordless `sudo` is off:
+
+   ```shell title="From the Pi (however you already connect)"
+   sudo grep -rl NOPASSWD /etc/sudoers.d/
+   ```
+
+</Steps>
+
+## What ACL Grants Allow Claude Code to Do
+
+[Verified: Per vendor docs, August 2026]
+
+The grant on this page is read-only, so Claude Code can investigate on its own but cannot change anything.
+
+This allows it to:
+
+- Read the query database and the logs.
+- Work out which client asked for what and when.
+- Find which list blocked a domain.
+- Suggest changes.
+
+It cannot allow or deny a domain, update gravity, restart DNS, edit any configuration, or run any `sudo pihole` commands.
+
+`pihole allow` and `pihole deny` don't need `sudo` to run, but they won't work until you [give Claude Code write access](./claude-code-access/extend/#optional-give-claude-code-write-access).
+
+Keep in mind that this is only effective if passwordless `sudo` is off.
+If the account still has passwordless `sudo`, all `sudo` commands will be allowed.
+
+### Run a Command Yourself with Claude Code's Shell Mode
+
+[Verified: Tested, August 2026]
+
+After Claude Code tells you the command, you can run it from inside Claude Code using **shell mode** or manually in a separate terminal session.
+
+Enter <kbd>!</kbd> at the start of the Claude Code prompt to run the rest of the line as a shell command, with the result added to the conversation:
+
+```shell title="At the Claude Code prompt"
+! pihole allow ads.example.com
+```
+
+Shell mode is not an interactive terminal.
+It runs the command directly, without Claude interpreting or approving it, and adds both the command and its output to the conversation, but it does not give `sudo` anywhere to prompt for a password.
+A command that needs to *prompt* for a password fails through `!` the same way it fails when Claude runs it directly, with the same `a terminal is required to read the password` error.
+
+Shell mode helps here because `pihole allow` and `pihole deny` don't need `sudo` at all, not because it grants one.
+If a command genuinely needs an interactive `sudo` prompt, run it in your own separate terminal instead.
+
+Claude then reads the result and carries on.
+
+The loop is: Claude diagnoses, gives you a command, you run it with `!`, and Claude picks up from the output.
+
+If you would rather Claude Code apply list changes itself, see [Optional: Give Claude Code Write Access](./claude-code-access/extend/#optional-give-claude-code-write-access).
+
+## What Pi-hole Files Does Claude Code Need Access to?
+
+[Verified: Per vendor docs, August 2026]
+
+Every file has attributes that dictate who can access the file and what they can do with the file.
+This group of values is called a mode.
+
+The files need to be set so that owners can both read and write the file, and so that groups (or a single group) can read the file.
+
+Two things need a grant: the query database, and the log files.
+
+| File                        | Mode             | Reason                                                                                                  | Needs access? |
+|-----------------------------|------------------|---------------------------------------------------------------------------------------------------------|---------------|
+| `/etc/pihole/pihole-FTL.db` | `0640`           | Holds the query history Claude Code reads                                                               | Yes           |
+| `/var/log/pihole/`          | `0640`           | Logs rotate daily and weekly, so the grant has to be a default ACL on the directory, not a per-file one | Yes           |
+| `/etc/pihole/gravity.db`    | `0664`           | Already world-readable                                                                                  | No, already readable |
+| `/etc/pihole/pihole.toml`   | `0640` or `0644` | Holds password hashes in plain text                                                                     | No, [deliberately excluded](#why-piholetoml-is-excluded) |
+| `/etc/pihole/cli_pw`        | `0640`           | A readable copy would let `pihole allow`/`deny` open a write session                                    | No, [deliberately excluded](#why-cli_pw-is-excluded) |
+
+### Why pihole.toml Is Excluded
+
+Don't change the mode for `pihole.toml`.
+
+It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` as plain strings, so an agent that reads the file can pull your password hashes into its transcript.
+
+If you need a single value from it, read that value on its own:
+
+```shell title="From the Pi (however you already connect)"
+pihole-FTL --config webserver.api.app_sudo
+```
+
+### Why cli_pw Is Excluded
+
+Don't grant access to `cli_pw`.
+
+Without it, `pihole allow` and `pihole deny` don't fail with an error, they hang.
+In Claude Code, this shows up as a command that doesn't complete within its 120s timeout and gets moved to a background task.
+
+Both commands read `cli_pw` to open an API session, and a session opened this way can still manage lists.
+Granting it would hand back exactly the write access this page's ACLs are built to withhold.
+
+:::note[GHSA-r7g8-3fj7-m5qq: cli_pw bypassed config protections on FTL 6.0-6.5]
+On unpatched installs, `/api/config` correctly rejected configuration changes from a `cli_pw` session, but `/api/teleporter` didn't get the same check until FTL 6.6.
+That means a `cli_pw` session could import a Teleporter archive and overwrite `pihole.toml` outright, including DNS settings, blocking status, DHCP config, and upstream servers.
+
+The 6.6.x line has its own separate advisories, including a session-hijacking bug and two RCEs, plus a session-expiration bypass that reaches back to 6.0.
+All are fixed in **6.7**, so update there, not just to 6.6.
+
+<details>
+<summary>Update to Pi-hole FTL 6.7 or later if you haven't already.</summary>
+
+```shell title="From the Pi (however you already connect)"
+sudo pihole -up
+```
+
+</details>
+:::
+
+Left unreadable, the wait is for a password prompt on a terminal Claude Code doesn't have, the same wall as `sudo` above.
+
+## Choose Your Setup
+
+Two decisions. Pick each once, and the rest of this page follows your choice.
+
+**Where Claude Code runs:**
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+Claude Code runs on the Pi itself and reads the files directly.
+Simplest option, with one hard requirement: Claude Code needs a 64-bit OS and 4 GB of RAM.
+That means a Pi 4 with 4 GB or more, or a Pi 5, running the 64-bit Raspberry Pi OS.
+
+Check before you commit to this:
+
+```shell title="From the Pi"
+uname -m && free -h | awk '/Mem:/ {print $2}'
+```
+
+`aarch64` and about 3.7 GB or more means you're fine.
+Raspberry Pi OS reserves some memory for firmware, so a 4 GB board won't show a full 4.0.
+`armv7l`, or noticeably less memory, means use the workstation option instead.
+
+</TabItem>
+<TabItem label="From a workstation">
+
+Claude Code runs on your laptop and reaches the Pi over SSH.
+Works with any Pi, including a Pi 3, a Zero 2 W, or a 2 GB Pi 4, because the Pi only runs the commands.
+
+This assumes you can already reach the Pi without typing a password.
+If a connection prompts for one, set up key-based authentication before going further.
+An agent can't answer that prompt any better than it can answer `sudo`.
+
+Key-based login is a separate mechanism from `sudo`, though, not a shortcut around it.
+It authenticates you to the *host*, as your own account, and grants no root on its own.
+Setting it up doesn't change whether that account's `sudo` prompts.
+
+Define an administrative alias now, because the rest of this page uses it by name:
+
+```text title="~/.ssh/config"
+Host pi-hole-admin
+    HostName 192.168.0.153
+    User pi-admin
+```
+
+Replace the address and account with your own, then confirm it works:
+
+```shell title="From your workstation"
+ssh pi-hole-admin 'echo connected'
+```
+
+:::note[Reading the commands on this page]
+Every command still executes on the Pi.
+Where the target account matters, this page gives you an explicit workstation version.
+Anywhere you see a bare `From the Pi` block, wrap it yourself:
+
+- Without `sudo`: `ssh pi-hole-admin '<command>'`
+- With `sudo`: `ssh -t pi-hole-admin '<command>'`
+
+The `-t` is not optional. Without it there's no terminal on the far end, and `sudo` fails with the same error above.
+
+:::
+
+</TabItem>
+</Tabs>
+
+**Which account Claude Code runs as:**
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Claude Code runs as you.
+Nothing to create, and the ACL grants go to your own account.
+
+When Claude Code runs as your login user, its blast radius is everything you can read: your SSH keys, your dotfiles, your shell history.
+That may be entirely fine on a Pi you use for one thing.
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+Claude Code's commands run as a separate unprivileged user that owns nothing but its own home directory, with no `sudo` and read-only ACLs that reach the Pi-hole data and nothing else: not your SSH keys, not `pihole.toml`, not `/etc/shadow`.
+It cannot write to the logs it reads or escalate back to your account.
+
+It's also immune to the cached-ticket problem above: with no `sudo` at all, there's no ticket to inherit.
+
+:::note[This has to be enforced, not requested]
+No Claude Code setting runs commands as a different user, and instructing it to use one in `CLAUDE.md` is not a boundary.
+Permission rules and context files shape what Claude *tries*, not what the kernel *allows*.
+
+The account has to be real at the process level, which works differently in each location:
+
+- **On the Pi**, you start Claude Code from inside that account, once.
+- **From a workstation**, you point the SSH alias at that account, and sshd enforces it for every command.
+
+:::
+
+</TabItem>
+</Tabs>
+
+With both choices made, continue to [Set up read-only access](./claude-code-access/set-up/).
+
+---
+
+# Set Up Read-Only Pi-hole Access for Claude Code
+
+Source: https://edwardangert.com/docs/pi-hole/claude-code-access/set-up/
+
+This is step two of the staged guide.
+Start at [Give Claude Code Access to Pi-hole](./claude-code-access/) if you haven't picked your setup yet.
+
+## Create the Agent User
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Nothing to create. Claude Code runs as your existing account.
+
+Skip to [Install Claude Code](#install-claude-code).
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+[Verified: Tested, August 2026]
+
+<Steps>
+
+1. Create the user with a home directory and no `sudo` group membership:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   sudo useradd -m -s /bin/bash claude-agent
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo useradd -m -s /bin/bash claude-agent'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+1. Tighten its home directory so other accounts can't read its session data:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   sudo chmod 750 /home/claude-agent
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo chmod 750 /home/claude-agent'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+1. Give it a working directory, since Claude Code needs somewhere it can write:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent mkdir -p /home/claude-agent/pihole
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo -u claude-agent mkdir -p /home/claude-agent/pihole'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+1. Set up access to the account:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   Allow your own account to become it. This rule lets you *become* `claude-agent`. It grants `claude-agent` nothing:
+
+   ```shell title="From the Pi"
+   echo "$USER ALL=(claude-agent) ALL" | sudo tee /etc/sudoers.d/claude-agent-switch && \
+     sudo chmod 440 /etc/sudoers.d/claude-agent-switch && \
+     sudo visudo -c -f /etc/sudoers.d/claude-agent-switch
+   ```
+
+   The last command should report `parsed OK`.
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   Give the account its own SSH key so your workstation can reach it directly:
+
+   ```shell title="From your workstation"
+   ssh-keygen -t ed25519 -f ~/.ssh/claude-agent -C "claude-agent@pi-hole"
+   ```
+
+   Add a second host alias for it, alongside the `pi-hole-admin` one you defined earlier:
+
+   ```text title="~/.ssh/config"
+   Host pi-hole-agent
+       HostName 192.168.0.153
+       User claude-agent
+       IdentityFile ~/.ssh/claude-agent
+       IdentitiesOnly yes
+   ```
+
+   `ssh-copy-id` won't install the key: `useradd` leaves the account password-locked, so there is no password login to authenticate against.
+   Install it through your administrative session instead:
+
+   ```shell title="From your workstation"
+   PUBKEY="$(cat ~/.ssh/claude-agent.pub)" && \
+     ssh -t pi-hole-admin "
+     sudo -u claude-agent mkdir -p -m 700 /home/claude-agent/.ssh
+     echo '$PUBKEY' | sudo -u claude-agent tee -a /home/claude-agent/.ssh/authorized_keys >/dev/null
+     sudo -u claude-agent chmod 600 /home/claude-agent/.ssh/authorized_keys"
+   ```
+
+   The key goes into a shell variable rather than through a pipe on purpose.
+   Piping into `ssh -t` suppresses the terminal it just asked for, and `sudo` on the far end fails with the same password prompt error this page opened with.
+
+   Leaving the account password-locked is the point.
+   The key is the only way in, and it opens a shell with no `sudo` behind it.
+
+   Confirm the alias lands in the right account:
+
+   ```shell title="From your workstation"
+   ssh pi-hole-agent 'id'
+   ```
+
+   That should report `uid=... (claude-agent)`, which is sshd enforcing the identity rather than Claude Code choosing it.
+
+   Setup commands on the rest of this page use `pi-hole-admin`, because they need `sudo`.
+   Claude Code only ever uses `pi-hole-agent`.
+
+   </TabItem>
+   </Tabs>
+
+</Steps>
+
+</TabItem>
+</Tabs>
+
+## Install Claude Code
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+<Steps>
+
+1. Install Claude Code:
+
+   ```shell title="From the Pi"
+   curl -fsSL https://claude.ai/install.sh | bash
+   ```
+
+1. Start it and log in:
+
+   ```shell title="From the Pi"
+   claude
+   ```
+
+   On a headless Pi the browser can't reach Claude Code's local callback, so the login shows a code instead of redirecting.
+   Open the URL on another machine, sign in, then paste the code back at the `Paste code here if prompted` prompt.
+
+</Steps>
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+The `curl` installer places Claude Code in `~/.local/bin` for the account that runs it, so installing it as yourself leaves `claude-agent` without the command.
+Install from the apt repository instead, which puts it on the system path for every account:
+
+<Steps>
+
+1. Add the signing key and repository:
+
+   ```shell title="From the Pi"
+   sudo install -d -m 0755 /etc/apt/keyrings && \
+     sudo curl -fsSL https://downloads.claude.ai/keys/claude-code.asc \
+       -o /etc/apt/keyrings/claude-code.asc && \
+     echo "deb [signed-by=/etc/apt/keyrings/claude-code.asc] https://downloads.claude.ai/claude-code/apt/stable stable main" \
+       | sudo tee /etc/apt/sources.list.d/claude-code.list
+   ```
+
+1. Install it:
+
+   ```shell title="From the Pi"
+   sudo apt update && \
+   sudo apt install claude-code
+   ```
+
+1. Enter the agent account and log in as that account.
+
+   This is the one time you switch users, and it's interactive, so the password prompt is fine here:
+
+   1. Log in:
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent -i
+   ```
+
+   The login shows a code rather than redirecting, because the browser can't reach a headless Pi.
+
+   1. Change directories and start Claude Code:
+
+   ```shell title="From the Pi"
+   cd ~/pihole && \
+   claude
+   ```
+
+   Open the URL elsewhere when prompted, sign in, and paste the code back.
+
+   This is a second login for the same Claude account, not a second subscription.
+   To skip the browser flow, run `claude setup-token` on a machine you're already signed in on and set `CLAUDE_CODE_OAUTH_TOKEN` in the agent's shell instead.
+
+</Steps>
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="From a workstation">
+
+Install Claude Code on your workstation using the [instructions for your platform](https://code.claude.com/docs/en/setup), then confirm it reaches the Pi:
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+```shell title="From your workstation"
+claude --version && \
+ssh pi-hole-admin 'pihole status'
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From your workstation"
+claude --version
+```
+
+You already confirmed `ssh pi-hole-agent 'id'` lands in the agent account when you created it.
+
+</TabItem>
+</Tabs>
+
+Nothing gets installed on the Pi.
+
+</TabItem>
+</Tabs>
+
+## Grant Read Access
+
+[Verified: Tested, August 2026]
+
+POSIX ACLs grant one account read access to one file.
+Unlike group membership, an ACL can be scoped per file, is revocable without touching the account, and grants no write access anywhere.
+
+Every command in this section runs with `sudo` on the Pi.
+
+<Steps>
+
+1. Install the ACL tools. They aren't present by default:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   sudo apt install acl
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo apt install acl'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+1. Apply the grant. Three `setfacl` calls, chained so the run stops if any one fails:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   ```shell title="From the Pi"
+   sudo setfacl -R -m "u:${USER}:rX" /var/log/pihole && \
+     sudo setfacl -m "d:u:${USER}:r" /var/log/pihole && \
+     sudo setfacl -m "u:${USER}:r" /etc/pihole/pihole-FTL.db
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From the Pi"
+   sudo setfacl -R -m u:claude-agent:rX /var/log/pihole && \
+     sudo setfacl -m d:u:claude-agent:r /var/log/pihole && \
+     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   Replace `pi-admin` with your own account name on the Pi:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo setfacl -R -m u:pi-admin:rX /var/log/pihole && \
+     sudo setfacl -m d:u:pi-admin:r /var/log/pihole && \
+     sudo setfacl -m u:pi-admin:r /etc/pihole/pihole-FTL.db'
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo setfacl -R -m u:claude-agent:rX /var/log/pihole && \
+     sudo setfacl -m d:u:claude-agent:r /var/log/pihole && \
+     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   </Tabs>
+
+</Steps>
+
+Explanations:
+
+- `-R -m u:...:rX` on the log directory
+  - `X` means "execute only on directories," so the directory gets `r-x` and every log file gets `r--`.
+  - A lowercase `r` here instead breaks the whole grant, and fails in a way that looks like the ACL never applied: a named-user entry replaces whatever the account was getting from the directory's "other" class, so `u:agent:r--` on the directory strips the execute bit it needs to enter the directory at all, and every read below it is denied.
+- `d:u:...:r` on the log directory
+  - Sets a default ACL, which is what survives log rotation.
+  - Pi-hole rotates `pihole.log` daily and `FTL.log` weekly with `create 640 pihole pihole`, building a brand new file each time. An ACL set only on today's file is gone tomorrow. A default ACL is inherited by every file created in the directory afterward, including the compressed `.1` and `.2` archives.
+- `u:...:r` on the query database
+  - Needs no directory ACL: `/etc/pihole` is already world-traversable.
+  - This grant also survives Pi-hole restarts. FTL resets the database to mode `0640` every time it starts, and `chmod` rewrites an ACL's mask rather than removing named-user entries, so the read stays effective.
+
+:::note[If you ever delete the FTL database]
+FTL creates a fresh `pihole-FTL.db` when the file is missing, and the new file has no ACL.
+Re-run the third command if you delete or restore that database.
+:::
+
+## Read Query History
+
+[Verified: Per vendor docs, August 2026]
+
+`pihole-FTL` ships an embedded SQLite shell, so no separate `sqlite3` package is needed.
+Always pass `--readonly`, which makes writes impossible at the connection level.
+
+Run this as the account you just granted access to. It doubles as proof the grant works.
+Replace `YOUR-DEVICE-IP` with the IP of a device on your network you want to check:
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+```shell "YOUR-DEVICE-IP" title="From the Pi"
+pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+   FROM queries
+   WHERE client = 'YOUR-DEVICE-IP'
+   ORDER BY timestamp DESC LIMIT 20;"
+```
+
+</TabItem>
+<TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+```shell "YOUR-DEVICE-IP" title="From your workstation"
+ssh pi-hole-admin "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  \"SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+    FROM queries
+    WHERE client = 'YOUR-DEVICE-IP'
+    ORDER BY timestamp DESC LIMIT 20;\""
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell "YOUR-DEVICE-IP" title="From your workstation"
+ssh pi-hole-agent "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  \"SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+    FROM queries
+    WHERE client = 'YOUR-DEVICE-IP'
+    ORDER BY timestamp DESC LIMIT 20;\""
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+</Tabs>
+
+The `queries` view resolves the internal integer IDs back to real domain and client strings, so you don't need to join anything.
+`status` stays numeric.
+
+The values are:
+
+| Status | Meaning |
+|--------|---------|
+| `1`    | Blocked by a blocklist (gravity) |
+| `2`    | Forwarded upstream |
+| `3`    | Answered from cache |
+| `4`    | Blocked by a regex filter |
+| `5`    | Blocked by the denylist |
+
+The database lags live traffic by up to 60 seconds because FTL flushes its in-memory buffer on `database.DBinterval`, which defaults to `60`.
+
+## Verify the Boundaries
+
+[Verified: Tested, August 2026]
+
+Confirm what the account can't do as that account (rather than as yourself).
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Writing to the log should fail, because the ACL grants read only:
+
+```shell title="From the Pi"
+echo test >> /var/log/pihole/pihole.log
+```
+
+That should report `Permission denied`.
+
+Then check `pihole.toml`:
+
+```shell title="From the Pi"
+head -n 1 /etc/pihole/pihole.toml
+```
+
+The result depends on your Pi-hole version, and both outcomes are expected:
+
+- `Permission denied` means the file is mode `0640`, and the exclusion holds.
+- A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+Each of these should report `Permission denied`.
+Run them one at a time, since each is expected to fail and chaining them would stop at the first:
+
+```shell title="From the Pi"
+sudo -u claude-agent bash -c 'echo test >> /var/log/pihole/pihole.log'
+```
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /home/pi-admin/.ssh/id_ed25519
+```
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /etc/shadow
+```
+
+Replace `/home/pi-admin` with your own home directory.
+
+Then check `pihole.toml`:
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /etc/pihole/pihole.toml
+```
+
+The result depends on your Pi-hole version, and both outcomes are expected:
+
+- `Permission denied` means the file is mode `0640`, and the exclusion holds.
+- A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Writing to the log should fail, because the ACL grants read only:
+
+```shell title="From your workstation"
+ssh pi-hole-admin 'echo test >> /var/log/pihole/pihole.log'
+```
+
+That should report `Permission denied`.
+
+Then check `pihole.toml`:
+
+```shell title="From your workstation"
+ssh pi-hole-admin 'head -n 1 /etc/pihole/pihole.toml'
+```
+
+The result depends on your Pi-hole version, and both outcomes are expected:
+
+- `Permission denied` means the file is mode `0640`, and the exclusion holds.
+- A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+Each of these should report `Permission denied`.
+Run them one at a time, since each is expected to fail and chaining them would stop at the first:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin "sudo -u claude-agent bash -c 'echo test >> /var/log/pihole/pihole.log'"
+```
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /home/pi-admin/.ssh/id_ed25519'
+```
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /etc/shadow'
+```
+
+Replace `/home/pi-admin` with your own home directory on the Pi.
+
+Then check `pihole.toml`:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo -u claude-agent head -n 1 /etc/pihole/pihole.toml'
+```
+
+The result depends on your Pi-hole version, and both outcomes are expected:
+
+- `Permission denied` means the file is mode `0640`, and the exclusion holds.
+- A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+</Tabs>
+
+To see the grant itself:
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+```shell title="From the Pi"
+getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db
+```
+
+</TabItem>
+<TabItem label="From a workstation">
+
+```shell title="From your workstation"
+ssh pi-hole-admin 'getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db'
+```
+
+</TabItem>
+</Tabs>
+
+## Configure Claude Code
+
+[Verified: Per vendor docs, August 2026]
+
+Permission rules are enforced by Claude Code, not the kernel.
+
+Claude's own documentation notes that Bash patterns constraining arguments are fragile, so these rules are defense in depth: they stop an honest mistake, and the ACL is what holds when a rule is bypassed.
+
+That ordering matters most for `pihole.toml`, since on a `0644` host the deny rule is the only thing standing between an agent and your password hashes.
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+Add to `~/.claude/settings.json` in the home directory of the account Claude Code runs as:
+
+```json title="~/.claude/settings.json"
+{
+  "permissions": {
+    "deny": [
+      "Read(/etc/pihole/pihole.toml)",
+      "Bash(sudo:*)"
+    ],
+    "allow": [
+      "Bash(pihole-FTL sqlite3 --readonly:*)",
+      "Bash(pihole status)",
+      "Bash(dig:*)",
+      "Bash(tailscale status)"
+    ]
+  }
+}
+```
+
+</TabItem>
+<TabItem label="From a workstation">
+
+Add to `.claude/settings.json` in the project directory you run Claude Code from:
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh pi-hole-admin:*)"
+    ]
+  }
+}
+```
+
+### What ACL for Claude Code Can and Can't Do
+
+`pi-hole-admin` is your own account, so the `allow` rule lets Claude Code run anything on the Pi as you, `sudo` included if your account has passwordless `sudo` (even if temporarily because you entered the password recently).
+
+The ACL and the file modes are the only real limits, which is the tradeoff you accepted by running as your login user.
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "deny": [
+      "Bash(ssh pi-hole-admin:*)",
+      "Bash(ssh -t pi-hole-admin:*)"
+    ],
+    "allow": [
+      "Bash(ssh pi-hole-agent:*)"
+    ]
+  }
+}
+```
+
+The deny rules keep Claude Code off the administrative alias, so it can't reach the account that has `sudo`.
+`claude-agent` account's own permissions on the Pi restrict the agent alias itself, not the contents of this file.
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+</Tabs>
+
+## Give the Agent a Context File
+
+Access alone isn't enough.
+An agent that doesn't know how your network is put together can search for the wrong thing and report a confident non-answer.
+
+The file below is a working `CLAUDE.md` for this setup.
+Copy it to the directory you run Claude Code from and replace the host details with your own.
+
+- The **Privileges** section stops the agent from wasting tokens on `sudo` commands it can't run.
+  - Carries two commented-out blocks.
+    Uncomment the matching one if you add either optional grant below.
+- The **Gotchas** section encodes the failures that look like real findings rather than mistakes.
+
+<details>
+<summary>CLAUDE.md</summary>
+
+```markdown title="CLAUDE.md"
+# Pi-hole environment
+
+Context for Claude Code working on this Pi-hole install.
+Replace the placeholder values with your own before you use this.
+
+## Host
+
+- Pi-hole host: `pi-hole` at `192.168.0.153`, interface `eth0`
+- Router and gateway: `192.168.0.1`
+- Versions: Core v6.4.3, Web v6.6, FTL v6.7
+- My login account: `pi-admin`
+
+## Privileges
+
+You have no `sudo` access, and `sudo` cannot prompt for a password in your shell.
+Don't try privileged commands. They will fail with `a terminal is required to read the password`.
+
+If something genuinely needs root, print the command and ask me to run it.
+Tell me to run it in shell mode by typing `!` followed by the command at the Claude Code
+prompt, for example `! sudo pihole -g`. That runs it in my terminal, where a password
+prompt can actually reach me, and puts the output back into your context so you can
+keep going.
+
+You also can't change lists. `pihole allow` and `pihole deny` don't need root, but they
+authenticate by reading `/etc/pihole/cli_pw`, which you can't read, so instead of failing
+they hang waiting for a password prompt you can't see. Hand those commands to me the same way.
+
+<!-- If you granted read access to /etc/pihole/cli_pw, uncomment this:
+You can run `pihole allow`, `pihole deny`, `pihole enable`, and `pihole disable` directly,
+with no sudo. Ask me first before disabling blocking or removing a list.
+-->
+
+<!-- If you set up the diagnostic wrapper, uncomment this:
+`sudo -n /usr/local/sbin/pihole-agent-diag` runs without a password and prints FTL service
+status plus the last 100 FTL log lines. It takes no arguments.
+-->
+
+
+## What you can read
+
+Granted explicitly by ACL:
+
+- `/var/log/pihole/pihole.log`: raw dnsmasq query log
+- `/var/log/pihole/FTL.log`: FTL engine log, for startup and DNSSEC errors
+- `/etc/pihole/pihole-FTL.db`: long-term query database
+
+World-readable, no grant needed:
+
+- `/etc/pihole/gravity.db`: blocklists, groups, clients, adlists
+
+## What you must not read
+
+`/etc/pihole/pihole.toml` is off limits.
+It stores `webserver.api.pwhash` and `webserver.api.app_pwhash` in plain text, and reading the file pulls my password hashes into this transcript.
+
+To read a single config value, read only that value:
+
+```shell
+pihole-FTL --config webserver.api.app_sudo
+```
+
+## Querying the data
+
+The standalone `sqlite3` binary isn't installed. Use the one built into FTL, always with `--readonly`:
+
+```shell
+pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+   FROM queries
+   WHERE client = '203.0.113.42'
+   ORDER BY timestamp DESC LIMIT 20;"
+```
+
+The `queries` view resolves internal integer IDs to real domain and client strings, so no joins are needed.
+`status` is numeric: `1` blocked by blocklist, `2` forwarded, `3` from cache, `4` blocked by regex, `5` blocked by denylist.
+
+The database lags live traffic by up to 60 seconds (`database.DBinterval`).
+If a query you just made is missing, wait a minute before concluding it didn't happen.
+
+Read `gravity.db` the same way:
+
+```shell
+pihole-FTL sqlite3 --readonly /etc/pihole/gravity.db "SELECT id, address, enabled FROM adlist;"
+```
+
+## Gotchas that have cost time before
+
+### Devices appear under their Tailscale IP
+
+Tailscale is in use here.
+While a device is connected to the tailnet, its DNS queries arrive over `tailscale0` and the query log records its `100.x.x.x` address, not its LAN IP.
+Filtering by the LAN IP returns nothing at all, which looks identical to "this device isn't using Pi-hole."
+
+Run `tailscale status` first and map the device both ways.
+Active peers show the LAN address they connected from, such as `direct 203.0.113.42:41641`.
+
+### Tailnet devices fall back to the Default group
+
+Pi-hole matches clients by MAC address, and MAC lookups depend on ARP, which doesn't exist on `tailscale0`.
+A device connected over Tailscale can't be matched to a client entry created by MAC, so it falls back to the `Default` group no matter what group I assigned it.
+
+Check which group a client actually resolves to before explaining its blocking behavior.
+FTL also matches clients by interface and prefers the interface queries actually arrive on, so a single client entry of `:tailscale0` covers every tailnet device at once.
+
+### Blocklists are split across group bundles
+
+Adlists are grouped into reusable bundles rather than assigned per device.
+Read the current mapping instead of assuming:
+
+```shell
+pihole-FTL sqlite3 --readonly /etc/pihole/gravity.db \
+  "SELECT g.name, group_concat(a.id) FROM 'group' g
+   LEFT JOIN adlist_by_group abg ON abg.group_id = g.id
+   LEFT JOIN adlist a ON a.id = abg.adlist_id
+   GROUP BY g.id;"
+```
+
+Group membership is a union, not an override.
+A client in two groups gets the blocklists of both.
+
+### Blocklist files use Adblock Plus syntax
+
+The HaGeZi lists in `/etc/pihole/listsCache/` and the `gravity` table store entries as `||example.com^`, not bare domains.
+Grepping for `^example\.com$` returns nothing and looks like a real absence.
+Match on `\|\|example\.com\^` instead.
+
+### Allow and deny changes don't need a gravity rebuild
+
+`pihole allow` and `pihole deny` write to the `domainlist` table and FTL picks them up immediately.
+Only adlist changes need `pihole -g`, which takes several minutes and rewrites the whole gravity database.
+
+### Comments reject some punctuation
+
+`pihole allow --comment` accepts only `[a-zA-Z0-9_#:/.,\ -]`.
+A `+` in a comment fails the whole command.
+```
+
+</details>
+
+---
+
+# Extend, Revoke, and Alternatives for Pi-hole Access
+
+Source: https://edwardangert.com/docs/pi-hole/claude-code-access/extend/
+
+Apart from [Revoke Access](#revoke-access), everything on this page is optional.
+
+Start at [Give Claude Code Access to Pi-hole](./claude-code-access/) if you haven't set up access yet.
+
+## Optional: Give Claude Code Write Access
+
+[Verified: Per vendor docs, August 2026]
+
+Follow this section if you want Claude Code to apply fixes itself rather than suggest them to you.
+
+Don't follow this section if you want an agent that only reports.
+
+Granting read access to one file, `/etc/pihole/cli_pw`, lets Claude Code run `pihole allow`, `pihole deny`, `pihole enable`, and `pihole disable` with no `sudo` involved at all.
+`/etc/pihole/cli_pw` holds the password Pi-hole generates for its own `pihole` commands to authenticate against the API.
+
+It also gives it more than those four commands.
+
+Those four commands are the intended use, but the grant hands over a credential, not a command list.
+Anything that credential can do, Claude Code can do by calling the API directly.
+
+In practice that means it can also rebuild gravity, restart DNS, delete DHCP leases and network device records, and flush the query log, which destroys the history you granted read access to in the first place.
+It can remove lists as well as add them, and `pihole disable` turns off blocking for your whole network.
+
+<Steps>
+
+1. Select where you run the commands from:
+
+   <Tabs syncKey="cc-location">
+   And who you run the commands as:
+
+   <TabItem label="On the Pi">
+
+     <Tabs syncKey="cc-identity">
+     <TabItem label="Your login user">
+
+     ```shell title="From the Pi"
+     sudo setfacl -m "u:${USER}:r" /etc/pihole/cli_pw
+     ```
+
+     </TabItem>
+
+     <TabItem label="Dedicated agent user">
+
+     ```shell title="From the Pi"
+     sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw
+     ```
+
+     </TabItem>
+     </Tabs>
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+     <Tabs syncKey="cc-identity">
+     <TabItem label="Your login user">
+
+     Replace `pi-admin` with your own account name on the Pi:
+
+     ```shell title="From your workstation"
+     ssh -t pi-hole-admin 'sudo setfacl -m u:pi-admin:r /etc/pihole/cli_pw'
+     ```
+
+     </TabItem>
+     <TabItem label="Dedicated agent user">
+
+     ```shell title="From your workstation"
+     ssh -t pi-hole-admin 'sudo setfacl -m u:claude-agent:r /etc/pihole/cli_pw'
+     ```
+
+     </TabItem>
+     </Tabs>
+
+   </TabItem>
+   </Tabs>
+
+1. Confirm it works by allowing a domain as that account, with no `sudo`:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+     <Tabs syncKey="cc-identity">
+     <TabItem label="Your login user">
+
+     ```shell title="From the Pi"
+     pihole allow ads.example.com
+     ```
+
+     </TabItem>
+     <TabItem label="Dedicated agent user">
+
+     ```shell title="From the Pi"
+     sudo -u claude-agent pihole allow ads.example.com
+     ```
+
+     </TabItem>
+     </Tabs>
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+     <Tabs syncKey="cc-identity">
+     <TabItem label="Your login user">
+
+     ```shell title="From your workstation"
+     ssh pi-hole-admin 'pihole allow ads.example.com'
+     ```
+
+     </TabItem>
+     <TabItem label="Dedicated agent user">
+
+     ```shell title="From your workstation"
+     ssh pi-hole-agent 'pihole allow ads.example.com'
+     ```
+
+     </TabItem>
+     </Tabs>
+
+   </TabItem>
+   </Tabs>
+
+1. Uncomment the matching block in the **Privileges** section of your `CLAUDE.md`, so the agent knows it can run these commands directly.
+
+</Steps>
+
+### The Limit of FTL for Access
+
+The credential cannot change configuration or import a Teleporter backup.
+FTL enforces both, unconditionally, with no setting to turn them off:
+
+```text
+The current CLI session is not allowed to modify Pi-hole config settings
+```
+
+That is the entire restriction.
+Everything else the API offers stays available, which is why the caution above lists more than the four commands.
+It's still a stronger guarantee than an application password, where that same config restriction disappears the moment `webserver.api.app_sudo` is set to `true`.
+
+Two practical limitations of FTL:
+
+- It assumes the default DNS port.
+  - `pihole allow` locates the API by asking FTL which port DNS runs on, and that lookup reads `pihole.toml`, which the agent account deliberately cannot read.
+    It falls back to the default of `53`, so a stock install works.
+    If you changed `dns.port`, these commands fail for the agent and warn that `pihole.toml` could not be read.
+    Don't solve that by granting access to `pihole.toml`, which holds your password hashes. Run those commands yourself with `!` instead.
+
+- The grant survives restarts.
+  - FTL rewrites `cli_pw` every time it starts, but truncates the existing file rather than replacing it, so the ACL rides through exactly as the query database grant does.
+    If you delete the file outright, re-run the grant above.
+
+To take this back, remove that one entry.
+Everything else on this page keeps working:
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+```shell title="From the Pi"
+sudo setfacl -x "u:$USER" /etc/pihole/cli_pw
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From the Pi"
+sudo setfacl -x u:claude-agent /etc/pihole/cli_pw
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Replace `pi-admin` with your own account name on the Pi:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -x "u:pi-admin" /etc/pihole/cli_pw'
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -x u:claude-agent /etc/pihole/cli_pw'
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+</Tabs>
+
+## Optional: Run Diagnostics That Need Root
+
+[Verified: Tested, August 2026]
+
+A few things have no read-only path: `pihole debug`, `systemctl status pihole-FTL`, `journalctl`.
+
+If you want the agent to run those unattended, grant a password-free rule for a wrapper script that takes no arguments.
+
+Skip this section unless you need it.
+Nothing depends on it in later sections.
+
+<details>
+<summary>Grant a password-free rule for a wrapper script that takes no arguments.</summary>
+
+:::caution[Never use a wildcard sudoers rule]
+A rule like `agent ALL=(root) NOPASSWD: /usr/bin/tail *` looks narrow, but is a compromise.
+The wildcard accepts any path, so the agent can read anything on the system:
+
+```shell
+sudo -n tail -n 2 /etc/shadow
+```
+
+```text
+pihole:!:20676::::::
+agent:!:20676:0:99999:7:::
+```
+
+Pinning the arguments isn't enough either.
+`sudo less <one fixed file>` still escapes to a root shell by typing `!/bin/sh` at the pager, and the same applies to `more`, `man`, `vi`, `awk`, and `find`.
+:::
+
+<Steps>
+
+1. Write a script that takes no input at all.
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   sudo tee /usr/local/sbin/pihole-agent-diag >/dev/null <<"EOF"
+   #!/bin/bash
+   set -euo pipefail
+   echo "=== FTL service ==="
+   systemctl status pihole-FTL --no-pager
+   echo "=== last 100 FTL log lines ==="
+   tail -n 100 /var/log/pihole/FTL.log
+   EOF
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   A heredoc doesn't fit cleanly into a single quoted `ssh` remote command, so log in first:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin
+   ```
+
+   Then, on the Pi:
+
+   ```shell title="On the Pi, over that session"
+   sudo tee /usr/local/sbin/pihole-agent-diag >/dev/null <<"EOF"
+   #!/bin/bash
+   set -euo pipefail
+   echo "=== FTL service ==="
+   systemctl status pihole-FTL --no-pager
+   echo "=== last 100 FTL log lines ==="
+   tail -n 100 /var/log/pihole/FTL.log
+   EOF
+   ```
+
+   </TabItem>
+   </Tabs>
+
+1. Make it root-owned and unwritable by anyone else.
+
+   If the agent can edit this script, a password-free rule on it is a root shell:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   sudo chown root:root /usr/local/sbin/pihole-agent-diag && \
+     sudo chmod 755 /usr/local/sbin/pihole-agent-diag
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo chown root:root /usr/local/sbin/pihole-agent-diag && \
+     sudo chmod 755 /usr/local/sbin/pihole-agent-diag'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+1. Allow exactly that script, with no arguments. The `""` pins it to zero arguments:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   ```shell title="From the Pi"
+   echo "$USER ALL=(root) NOPASSWD: /usr/local/sbin/pihole-agent-diag \"\"" \
+     | sudo tee /etc/sudoers.d/pihole-agent && \
+     sudo chmod 440 /etc/sudoers.d/pihole-agent && \
+     sudo visudo -c -f /etc/sudoers.d/pihole-agent
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From the Pi"
+   echo 'claude-agent ALL=(root) NOPASSWD: /usr/local/sbin/pihole-agent-diag ""' \
+     | sudo tee /etc/sudoers.d/pihole-agent && \
+     sudo chmod 440 /etc/sudoers.d/pihole-agent && \
+     sudo visudo -c -f /etc/sudoers.d/pihole-agent
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   Replace `pi-admin` with your own account name on the Pi:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'echo "pi-admin ALL=(root) NOPASSWD: /usr/local/sbin/pihole-agent-diag \"\"" \
+     | sudo tee /etc/sudoers.d/pihole-agent && \
+     sudo chmod 440 /etc/sudoers.d/pihole-agent && \
+     sudo visudo -c -f /etc/sudoers.d/pihole-agent'
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'echo "claude-agent ALL=(root) NOPASSWD: /usr/local/sbin/pihole-agent-diag \"\"" \
+     | sudo tee /etc/sudoers.d/pihole-agent && \
+     sudo chmod 440 /etc/sudoers.d/pihole-agent && \
+     sudo visudo -c -f /etc/sudoers.d/pihole-agent'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   </Tabs>
+
+1. Confirm the pin holds. Run these separately, since the second is meant to be refused.
+
+   This should print the diagnostics:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   ```shell title="From the Pi"
+   sudo -n /usr/local/sbin/pihole-agent-diag
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   The sudoers rule was granted to `claude-agent`, so the check has to run as that account:
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent sudo -n /usr/local/sbin/pihole-agent-diag
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo -n /usr/local/sbin/pihole-agent-diag'
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-agent 'sudo -n /usr/local/sbin/pihole-agent-diag'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   </Tabs>
+
+   This should be rejected, because the rule allows no arguments:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   ```shell title="From the Pi"
+   sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   <Tabs syncKey="cc-identity">
+   <TabItem label="Your login user">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow'
+   ```
+
+   </TabItem>
+   <TabItem label="Dedicated agent user">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-agent 'sudo -n /usr/local/sbin/pihole-agent-diag /etc/shadow'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   </TabItem>
+   </Tabs>
+
+</Steps>
+
+If you add this, uncomment the matching block in the **Privileges** section of your `CLAUDE.md` so the agent knows the wrapper exists.
+Otherwise it will keep asking you to run diagnostics by hand.
+
+</details>
+
+## Revoke Access
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Remove the ACL entries.
+The `-R` matters, because rotated archives inherited the grant from the directory's default ACL:
+
+```shell title="From the Pi"
+sudo setfacl -R -x "u:$USER" /var/log/pihole && \
+  sudo setfacl -x "d:u:$USER" /var/log/pihole && \
+  sudo setfacl -x "u:$USER" /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -x "u:$USER" /etc/pihole/cli_pw 2>/dev/null || true
+```
+
+The `cli_pw` entry only exists if you granted it. The `|| true` keeps the chain going when you didn't.
+
+Remove the sudoers rule if you added one:
+
+```shell title="From the Pi"
+sudo rm -f /etc/sudoers.d/pihole-agent
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+Deleting the account removes its access everywhere at once:
+
+```shell title="From the Pi"
+sudo rm -f /etc/sudoers.d/pihole-agent /etc/sudoers.d/claude-agent-switch && \
+  sudo userdel -r claude-agent
+```
+
+Then clear the now-orphaned ACL entries, which otherwise linger as a bare numeric UID:
+
+```shell title="From the Pi"
+sudo setfacl -R -b /var/log/pihole && \
+  sudo setfacl -b /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -b /etc/pihole/cli_pw
+```
+
+`setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+Remove the ACL entries. The `-R` matters, because rotated archives inherited the grant from the directory's default ACL.
+Replace `pi-admin` with your own account name on the Pi:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -R -x u:pi-admin /var/log/pihole && \
+  sudo setfacl -x d:u:pi-admin /var/log/pihole && \
+  sudo setfacl -x u:pi-admin /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -x u:pi-admin /etc/pihole/cli_pw 2>/dev/null || true'
+```
+
+The `cli_pw` entry only exists if you granted it. The `|| true` keeps the chain going when you didn't.
+
+Remove the sudoers rule if you added one:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo rm -f /etc/sudoers.d/pihole-agent'
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+Deleting the account removes its access everywhere at once:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo rm -f /etc/sudoers.d/pihole-agent /etc/sudoers.d/claude-agent-switch && \
+  sudo userdel -r claude-agent'
+```
+
+Then clear the now-orphaned ACL entries, which otherwise linger as a bare numeric UID:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -R -b /var/log/pihole && \
+  sudo setfacl -b /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -b /etc/pihole/cli_pw'
+```
+
+`setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+</Tabs>
+
+Confirm nothing is left.
+No `user:` line should name the account you revoked:
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+```shell title="From the Pi"
+getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db /etc/pihole/cli_pw | grep '^user:'
+```
+
+</TabItem>
+<TabItem label="From a workstation">
+
+```shell title="From your workstation"
+ssh pi-hole-admin "getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db /etc/pihole/cli_pw | grep '^user:'"
+```
+
+</TabItem>
+</Tabs>
+
+## Alternative: The Pi-hole v6 API
+
+[Verified: Tested, August 2026]
+
+Pi-hole v6 exposes query data over an HTTP API authenticated with an application password.
+It needs no filesystem changes at all, which makes it the right choice if:
+
+- You administer Pi-hole but don't have shell root on the Pi device itself, so you can't set ACLs.
+- Pi-hole runs in Docker (such as on TrueNAS), where the logs and database live inside the container and the ACL recipe above doesn't apply as written.
+
+:::caution[An application password is not read-only]
+The `webserver.api.app_sudo` setting is `false` by default, but it only blocks two things: changing configuration, and importing a Teleporter backup.
+
+An application password can still disable blocking network-wide, add or remove blocklists and allowlists, delete groups and clients, trigger a gravity rebuild, and flush the query log that you granted access to read.
+It's a lower-privilege credential than your administrator password, not a read-only one.
+
+If you have root on the Pi, the ACL method above grants strictly less.
+:::
+
+<Steps>
+
+1. Confirm which port the API is on.
+
+   Port `80` is the default, but it's marked optional, so FTL falls back silently, often to `8080`, when something else holds it:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   pihole-FTL --config webserver.port
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-admin 'pihole-FTL --config webserver.port'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   Use that port in the commands below. Every one of them targets `127.0.0.1`, meaning Pi-hole's own webserver, which only makes sense to run on the Pi itself - if you're on a workstation, that's exactly why each command below runs over `ssh` rather than directly against the Pi's address.
+
+1. In the web interface, go to **Settings** > **Web interface / API**, switch to **Expert** mode, and generate an application password.
+
+1. Store it in a file only your user can read:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   mkdir -p ~/.config/pihole && \
+     install -m 600 /dev/null ~/.config/pihole/agent-app-password
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh pi-hole-admin 'mkdir -p ~/.config/pihole && \
+     install -m 600 /dev/null ~/.config/pihole/agent-app-password'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   Paste the password in as a single line.
+   Never put it in `CLAUDE.md`, a dotfiles repo, or anything else you commit.
+
+1. Install `jq`, which isn't present by default:
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   ```shell title="From the Pi"
+   sudo apt install jq
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo apt install jq'
+   ```
+
+   </TabItem>
+   </Tabs>
+
+1. Authenticate and query.
+   Piping the password through stdin keeps it out of the process list.
+
+   <Tabs syncKey="cc-location">
+   <TabItem label="On the Pi">
+
+   Replace `YOUR-DEVICE-IP` with the IP of a device on your network you want to check:
+
+   ```shell "YOUR-DEVICE-IP" title="From the Pi"
+   SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
+     | curl -s -X POST http://127.0.0.1/api/auth --data @- \
+     | jq -r .session.sid) && \
+   curl -s -H "X-FTL-SID: $SID" \
+     'http://127.0.0.1/api/queries?client_ip=YOUR-DEVICE-IP&status=GRAVITY&length=50' | jq
+   ```
+
+   </TabItem>
+   <TabItem label="From a workstation">
+
+   This pipeline has too many quotes of its own to also wrap in a quoted `ssh` argument without a mistake, so log in first:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin
+   ```
+
+   Then, on the Pi, replacing `YOUR-DEVICE-IP` the same way:
+
+   ```shell "YOUR-DEVICE-IP" title="On the Pi, over that session"
+   SID=$(jq -n --arg pw "$(cat ~/.config/pihole/agent-app-password)" '{password: $pw}' \
+     | curl -s -X POST http://127.0.0.1/api/auth --data @- \
+     | jq -r .session.sid) && \
+   curl -s -H "X-FTL-SID: $SID" \
+     'http://127.0.0.1/api/queries?client_ip=YOUR-DEVICE-IP&status=GRAVITY&length=50' | jq
+   ```
+
+   </TabItem>
+   </Tabs>
+
+</Steps>
+
+`/api/queries` filters server-side on `client_ip`, `client_name`, `domain`, `status`, `upstream`, `type`, `reply`, `dnssec`, `from`, and `until`.
+
+Unlike the database, the API takes status names such as `GRAVITY` rather than the numeric codes.
+Add `disk=true` to read the long-term database rather than the in-memory buffer.
+
+On FTL 6.7 and later, sessions last 30 minutes.
+Each authenticated request extends the window.
+
+Before the release of FTL 6.7, a logic bug ([GHSA-w8cr-2cwg-92cg](https://github.com/pi-hole/FTL/security/advisories/GHSA-w8cr-2cwg-92cg)) kept the expiry check from running, so a session would periodically never expire.
+Update to 6.7 or later if you haven't already.
+
+Generate a new application password to revoke active sessions, including your web interface login.
+
+## What the Agent Can Still See
+
+[Verified: Per vendor docs, August 2026]
+
+Read-only is not the same as private.
+
+Any of the methods on this page expose every DNS query from every device on your network, including which sites each device reached and when.
+Least privilege limits what an agent can change, not what it can see.
+
+If some of that shouldn't leave the Pi, Pi-hole can filter it out of API results before anything reads them.
+Both settings take arrays of **regular expressions**, not plain strings, so anchor them and escape the dots:
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+```shell title="From the Pi"
+sudo pihole-FTL --config webserver.api.excludeClients '["^192\\.168\\.0\\.50$"]' && \
+  sudo pihole-FTL --config webserver.api.excludeDomains '["^example\\.com$"]'
+```
+
+</TabItem>
+<TabItem label="From a workstation">
+
+The nested quotes here don't survive being wrapped in another quoted `ssh` argument reliably, so log in first:
+
+```shell title="From your workstation"
+ssh -t pi-hole-admin
+```
+
+Then, on the Pi:
+
+```shell title="On the Pi, over that session"
+sudo pihole-FTL --config webserver.api.excludeClients '["^192\\.168\\.0\\.50$"]' && \
+  sudo pihole-FTL --config webserver.api.excludeDomains '["^example\\.com$"]'
+```
+
+</TabItem>
+</Tabs>
+
+Those filters reach only two API responses, `/api/queries` and `/api/stats/top_clients`.
+They do nothing for an agent reading `pihole-FTL.db` through the ACL grant, which sees the unfiltered database.
+If a device's traffic genuinely shouldn't be visible, the query log is the wrong place to fix that.

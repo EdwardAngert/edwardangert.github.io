@@ -43,6 +43,10 @@ const SEGMENT_OVERRIDES: Record<string, string> = {
   'pi-hole': 'Pi-hole',
   portfolio: 'Portfolio',
   blog: 'Blog',
+  // Another section root the sidebar cannot name usefully: inside its own
+  // group it is labelled "Overview and setup choices", which reads correctly
+  // in the sidebar and wrong as a breadcrumb.
+  'claude-code-access': 'Claude Code Access',
 };
 
 type SidebarEntry =

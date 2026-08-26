@@ -11,7 +11,8 @@
     "lint:md": "markdownlint-cli2 \"src/content/docs/**/*.mdx\"",
     "lint:vale": "scripts/vale.sh .",
     "lint:links": "node scripts/check-links.mjs",
-    "lint": "pnpm lint:md && pnpm lint:vale"
+    "lint:location-coverage": "node scripts/check-location-coverage.mjs",
+    "lint": "pnpm lint:md && pnpm lint:vale && pnpm lint:location-coverage"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.4",
