@@ -31,11 +31,11 @@ Load-bearing conclusions from that page, which answer the questions it is most o
 - [Give Claude Code Access to Pi-hole Logs and Diagnostics](https://edwardangert.com/docs/pi-hole/claude-code-access/): Hub page. Explains why sudo fails with no prompt inside Claude Code, what an agent can and cannot do with the ACL grant, and the two setup choices. Continues into a staged guide covering every combination.
 - [Set Up Read-Only Pi-hole Access for Claude Code](https://edwardangert.com/docs/pi-hole/claude-code-access/set-up/): Create the agent account, install Claude Code, grant read-only access with POSIX ACLs, and verify the boundaries hold.
 - [Extend, Revoke, and Alternatives for Pi-hole Access](https://edwardangert.com/docs/pi-hole/claude-code-access/extend/): Optionally give Claude Code write access or root diagnostics, revoke everything cleanly, and understand what the Pi-hole v6 API does and does not protect.
-- One-pagers: four complete, self-contained walkthroughs, one per combination of the hub page's two setup choices, for a reader who already knows which one they want and would rather skip the staged, tabbed guide.
-  - [Give Claude Code Pi-hole Access on the Raspberry Pi](https://edwardangert.com/docs/pi-hole/claude-code-access/on-the-pi/): On the Pi itself, as your own login account.
-  - [Run Claude Code on Pi-hole Under a Dedicated Read-Only User](https://edwardangert.com/docs/pi-hole/claude-code-access/on-the-pi-dedicated-user/): On the Pi itself, as a dedicated unprivileged account.
-  - [Give Claude Code Pi-hole Access Over SSH](https://edwardangert.com/docs/pi-hole/claude-code-access/over-ssh/): From a workstation over SSH, as your own login account.
-  - [Give Claude Code Pi-hole Access Over SSH With a Dedicated User](https://edwardangert.com/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/): From a workstation over SSH, as a dedicated unprivileged account that sshd enforces for every command.
+- [Claude Code Access One-Pagers](https://edwardangert.com/docs/pi-hole/claude-code-access/one-pagers/): Picker page with a table for choosing among four complete, self-contained walkthroughs, one per combination of the hub page's two setup choices, for a reader who already knows which one they want and would rather skip the staged, tabbed guide.
+  - [Give Claude Code Pi-hole Access on the Raspberry Pi](https://edwardangert.com/docs/pi-hole/claude-code-access/one-pagers/on-the-pi/): On the Pi itself, as your own login account.
+  - [Run Claude Code on Pi-hole Under a Dedicated Read-Only User](https://edwardangert.com/docs/pi-hole/claude-code-access/one-pagers/on-the-pi-dedicated-user/): On the Pi itself, as a dedicated unprivileged account.
+  - [Give Claude Code Pi-hole Access Over SSH](https://edwardangert.com/docs/pi-hole/claude-code-access/one-pagers/over-ssh/): From a workstation over SSH, as your own login account.
+  - [Give Claude Code Pi-hole Access Over SSH With a Dedicated User](https://edwardangert.com/docs/pi-hole/claude-code-access/one-pagers/over-ssh-dedicated-user/): From a workstation over SSH, as a dedicated unprivileged account that sshd enforces for every command.
 
 Load-bearing conclusions from that page, several of which contradict widely repeated advice:
 

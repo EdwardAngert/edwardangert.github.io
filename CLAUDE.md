@@ -69,14 +69,16 @@ value as an AI grounding source.
 Read `_README.md` in that directory before editing anything in it.** The short
 version: every word lives in exactly one partial, pages only compose, and
 editing prose directly inside a composed page silently forks it from the
-other published shapes of the same guide (the staged, tabbed guide and four
-one-pagers, one per setup combination).
+other published shapes of the same guide (the staged, tabbed guide and the
+four one-pagers under `claude-code-access/one-pagers/`, one per setup
+combination, plus that subdirectory's own picker page).
 
-The one-pagers are excluded from `public/llms-full.txt` on purpose: their
-content already appears once, via `set-up.mdx`'s tabbed sections, and
-including it again under a one-pager's heading would duplicate the same
-text rather than add anything. They still get their own entries in
-`public/llms.txt`.
+The four one-pagers and their picker page are excluded from
+`public/llms-full.txt` on purpose: the one-pagers' content already appears
+once, via `set-up.mdx`'s tabbed sections, and including it again under a
+one-pager's heading would duplicate the same text rather than add anything;
+the picker page is pure navigation with no unique prose of its own. They
+still get their own entries in `public/llms.txt`.
 
 When you add, remove, rename, or change the title/description/body of any page
 under `src/content/docs/pi-hole/`, treat these as part of the change:

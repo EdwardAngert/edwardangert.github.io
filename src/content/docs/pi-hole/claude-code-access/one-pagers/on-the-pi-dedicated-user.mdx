@@ -1,5 +1,5 @@
 ---
-slug: docs/pi-hole/claude-code-access/on-the-pi-dedicated-user
+slug: docs/pi-hole/claude-code-access/one-pagers/on-the-pi-dedicated-user
 title: "Run Claude Code on Pi-hole Under a Dedicated Read-Only User"
 description: "Run Claude Code on the Pi under a dedicated unprivileged account that can read Pi-hole query data and nothing else. Complete single-page setup."
 category: "Personal Reference Documentation"
@@ -9,22 +9,22 @@ head:
   - tag: link
     attrs:
       rel: canonical
-      href: https://edwardangert.com/docs/pi-hole/claude-code-access/on-the-pi-dedicated-user/
+      href: https://edwardangert.com/docs/pi-hole/claude-code-access/one-pagers/on-the-pi-dedicated-user/
 ---
 
 import { Steps, Code } from '@astrojs/starlight/components';
-import Verified from '../../../../components/Verified.astro';
-import claudeMd from '../CLAUDE.md.example?raw';
+import Verified from '../../../../../components/Verified.astro';
+import claudeMd from '../../CLAUDE.md.example?raw';
 
-import AgentUserDedicatedOnPi from './_create-agent-user-dedicated-onpi.mdx';
-import InstallOnPiDedicated from './_install-claude-code-onpi-dedicated.mdx';
-import GrantToolsOnPi from './_grant-read-access-tools-onpi.mdx';
-import GrantApplyDedicatedOnPi from './_grant-read-access-run-onpi-dedicated.mdx';
-import ReadQueryHistoryOnPi from './_read-query-history-onpi.mdx';
-import VerifyBoundariesDedicatedOnPi from './_verify-boundaries-dedicated-onpi.mdx';
-import VerifyBoundariesGetfaclOnPi from './_verify-boundaries-getfacl-onpi.mdx';
-import VerifyBoundariesDiagnoseDedicatedOnPi from './_verify-boundaries-diagnose-dedicated-onpi.mdx';
-import ConfigureClaudeCodeOnPi from './_configure-claude-code-onpi.mdx';
+import AgentUserDedicatedOnPi from '../_create-agent-user-dedicated-onpi.mdx';
+import InstallOnPiDedicated from '../_install-claude-code-onpi-dedicated.mdx';
+import GrantToolsOnPi from '../_grant-read-access-tools-onpi.mdx';
+import GrantApplyDedicatedOnPi from '../_grant-read-access-run-onpi-dedicated.mdx';
+import ReadQueryHistoryOnPi from '../_read-query-history-onpi.mdx';
+import VerifyBoundariesDedicatedOnPi from '../_verify-boundaries-dedicated-onpi.mdx';
+import VerifyBoundariesGetfaclOnPi from '../_verify-boundaries-getfacl-onpi.mdx';
+import VerifyBoundariesDiagnoseDedicatedOnPi from '../_verify-boundaries-diagnose-dedicated-onpi.mdx';
+import ConfigureClaudeCodeOnPi from '../_configure-claude-code-onpi.mdx';
 
 This page combines the steps from [Give Claude Code Access to Pi-hole](/docs/pi-hole/claude-code-access/) into a single step-by-step tutorial for users who:
 

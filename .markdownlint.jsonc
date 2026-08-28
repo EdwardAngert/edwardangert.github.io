@@ -99,6 +99,7 @@
       "TabItem",
       "Tabs",
       "Verified",
+      "PickerTable",
       "AgentUserLogin",
       "AgentUserDedicatedOnPi",
       "AgentUserDedicatedWorkstation",
