@@ -1,0 +1,165 @@
+---
+slug: docs/pi-hole/claude-code-access/over-ssh-dedicated-user
+title: "Give Claude Code Pi-hole Access Over SSH With a Dedicated User"
+description: "Run Claude Code on your laptop and reach Pi-hole over SSH as a dedicated unprivileged account, enforced by sshd. Works with any Raspberry Pi. Complete single-page setup."
+category: "Personal Reference Documentation"
+applies-to:
+  pihole: "v6"
+head:
+  - tag: link
+    attrs:
+      rel: canonical
+      href: https://edwardangert.com/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/
+---
+
+import { Steps, Code } from '@astrojs/starlight/components';
+import Verified from '../../../../components/Verified.astro';
+import claudeMd from '../CLAUDE.md.example?raw';
+
+import AgentUserDedicatedWorkstation from './_create-agent-user-dedicated-workstation.mdx';
+import InstallWorkstationDedicated from './_install-claude-code-workstation-dedicated.mdx';
+import GrantToolsWorkstation from './_grant-read-access-tools-workstation.mdx';
+import GrantApplyDedicatedWorkstation from './_grant-read-access-run-workstation-dedicated.mdx';
+import ReadQueryHistoryWorkstationDedicated from './_read-query-history-workstation-dedicated.mdx';
+import VerifyBoundariesDedicatedWorkstation from './_verify-boundaries-dedicated-workstation.mdx';
+import VerifyBoundariesGetfaclWorkstation from './_verify-boundaries-getfacl-workstation.mdx';
+import VerifyBoundariesDiagnoseDedicatedWorkstation from './_verify-boundaries-diagnose-dedicated-workstation.mdx';
+import ConfigureClaudeCodeWorkstationDedicated from './_configure-claude-code-workstation-dedicated.mdx';
+
+This page covers running Claude Code **on your workstation**, reaching the Pi over SSH as a **dedicated unprivileged account** that sshd enforces for every command.
+
+It is complete on its own. For the other setups, or to work through this in stages, see
+[Give Claude Code Access to Pi-hole](/docs/pi-hole/claude-code-access/).
+
+## Create the Agent User
+
+<Verified date="2026-08" method="tested" />
+
+<AgentUserDedicatedWorkstation />
+
+## Install Claude Code
+
+Install Claude Code on your workstation using the [instructions for your platform](https://code.claude.com/docs/en/setup), then confirm it reaches the Pi:
+
+<InstallWorkstationDedicated />
+
+Nothing gets installed on the Pi.
+
+## Grant Read Access
+
+<Verified date="2026-08" method="tested" />
+
+POSIX ACLs grant one account read access to one file.
+Unlike group membership, an ACL can be scoped per file, is revocable without touching the account, and grants no write access anywhere.
+
+Every command in this section runs with `sudo` on the Pi, over SSH as `pi-hole-admin`.
+
+<Steps>
+
+1. Install the ACL tools. They aren't present by default:
+
+   <GrantToolsWorkstation />
+
+1. Apply the grant. Three `setfacl` calls, chained so the run stops if any one fails:
+
+   <GrantApplyDedicatedWorkstation />
+
+</Steps>
+
+Explanations:
+
+- `-R -m u:...:rX` on the log directory
+  - `X` means "execute only on directories," so the directory gets `r-x` and every log file gets `r--`.
+  - A lowercase `r` here instead breaks the whole grant, and fails in a way that looks like the ACL never applied: a named-user entry replaces whatever the account was getting from the directory's "other" class, so `u:agent:r--` on the directory strips the execute bit it needs to enter the directory at all, and every read below it is denied.
+- `d:u:...:r` on the log directory
+  - Sets a default ACL, which is what survives log rotation.
+  - Pi-hole rotates `pihole.log` daily and `FTL.log` weekly with `create 640 pihole pihole`, building a brand new file each time. An ACL set only on today's file is gone tomorrow. A default ACL is inherited by every file created in the directory afterward, including the compressed `.1` and `.2` archives.
+- `u:...:r` on the query database
+  - Needs no directory ACL: `/etc/pihole` is already world-traversable.
+  - This grant also survives Pi-hole restarts. FTL resets the database to mode `0640` every time it starts, and `chmod` rewrites an ACL's mask rather than removing named-user entries, so the read stays effective.
+- `u:...:r` on `pihole-FTL.db-wal` and `pihole-FTL.db-shm`
+  - `pihole-FTL.db` runs in SQLite's WAL journal mode, so a reader also needs to open these two sidecar files. Granting the `.db` file alone fails with `Parse error in 3rd command line argument: unable to open database file (14)`, an error that reads like a syntax problem and isn't.
+  - This has to be a per-file grant, not a default ACL on `/etc/pihole` itself. That directory also holds `pihole.toml`, which this guide separately and correctly keeps off limits (it stores API password hashes in plaintext); a directory-wide default ACL would silently expose it to any account with the default grant.
+  - Not yet confirmed whether this grant survives an FTL restart the way the `.db` grant does. FTL may recreate `-shm` on restart the same way it resets the database's mode, which would drop the ACL along with it. If queries that worked start failing with the same error after restarting FTL, re-run this command.
+
+:::note[If you ever delete the FTL database]
+FTL creates a fresh `pihole-FTL.db` when the file is missing, and the new file has no ACL.
+Re-run the third and fourth commands if you delete or restore that database.
+:::
+
+## Read Query History
+
+<Verified date="2026-08" method="vendor-docs" />
+
+`pihole-FTL` ships an embedded SQLite shell, so no separate `sqlite3` package is needed.
+Always pass `--readonly`, which makes writes impossible at the connection level.
+
+Run this as the account you just granted access to. It doubles as proof the grant works.
+Replace `YOUR-DEVICE-IP` with the IP of a device on your network you want to check:
+
+<ReadQueryHistoryWorkstationDedicated />
+
+The `queries` view resolves the internal integer IDs back to real domain and client strings, so you don't need to join anything.
+`status` stays numeric.
+
+The values are:
+
+| Status | Meaning |
+|--------|---------|
+| `1`    | Blocked by a blocklist (gravity) |
+| `2`    | Forwarded upstream |
+| `3`    | Answered from cache |
+| `4`    | Blocked by a regex filter |
+| `5`    | Blocked by the denylist |
+
+The database lags live traffic by up to 60 seconds because FTL flushes its in-memory buffer on `database.DBinterval`, which defaults to `60`.
+
+## Verify the Boundaries
+
+<Verified date="2026-08" method="tested" />
+
+Confirm what the account can't do as that account (rather than as yourself).
+
+<VerifyBoundariesDedicatedWorkstation />
+
+To see the grant itself:
+
+<VerifyBoundariesGetfaclWorkstation />
+
+If a query still fails after that, run this as the granted account to tell "the ACL isn't there" apart from "my query syntax is wrong" in one shot, rather than debugging both possibilities against a real query at once:
+
+<VerifyBoundariesDiagnoseDedicatedWorkstation />
+
+## Configure Claude Code
+
+<Verified date="2026-08" method="vendor-docs" />
+
+Permission rules are enforced by Claude Code, not the kernel.
+
+Claude's own documentation notes that Bash patterns constraining arguments are fragile, so these rules are defense in depth: they stop an honest mistake, and the ACL is what holds when a rule is bypassed.
+
+That ordering matters most for `pihole.toml`, since on a `0644` host the deny rule is the only thing standing between an agent and your password hashes.
+
+Add to `.claude/settings.json` in the project directory you run Claude Code from:
+
+<ConfigureClaudeCodeWorkstationDedicated />
+
+## Give the Agent a Context File
+
+Access alone isn't enough.
+An agent that doesn't know how your network is put together can search for the wrong thing and report a confident non-answer.
+
+The file below is a working `CLAUDE.md` for this setup.
+Copy it to the directory you run Claude Code from and replace the host details with your own.
+
+- The **Privileges** section stops the agent from wasting tokens on `sudo` commands it can't run.
+  - Carries two commented-out blocks.
+    Uncomment the matching one if you add either optional grant below.
+- The **Gotchas** section encodes the failures that look like real findings rather than mistakes.
+
+<details>
+<summary>CLAUDE.md</summary>
+
+<Code code={claudeMd} lang="markdown" title="CLAUDE.md" showLineNumbers="true" />
+
+</details>
