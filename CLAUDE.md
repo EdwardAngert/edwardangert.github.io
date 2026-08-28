@@ -75,10 +75,13 @@ When you add, remove, rename, or change the title/description/body of any page
 under `src/content/docs/pi-hole/`, treat these as part of the change:
 
 1. `public/llms.txt`, the site index for AI tools.
-2. `public/llms-full.txt`, the full text of the Pi-hole guide only. No
-   non-Pi-hole content belongs in it. Regenerate the affected section rather
-   than rebuilding the whole file.
-3. The sidebar in `astro.config.mjs`, and `src/content/docs/pi-hole/index.mdx`.
+2. The sidebar in `astro.config.mjs`, and `src/content/docs/pi-hole/index.mdx`.
+
+**`public/llms-full.txt`, the full text of the Pi-hole guide only, is a
+merge-prep step, not a per-edit one.** Don't hand-edit it alongside a content
+change; it drifts too easily and hand-edits have already broken it twice
+(see `.docs-assist/reports/llms-generation-plan.md`). Regenerate it only when
+asked to get a branch ready to merge.
 
 ## Breadcrumbs
 
