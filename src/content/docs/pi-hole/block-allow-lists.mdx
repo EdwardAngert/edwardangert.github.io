@@ -296,7 +296,7 @@ sudo pihole allowlist geolocation.onetrust.com
 **Update (2026-08): blocking a different, unrelated set of domains now appears to suppress the ads entirely, without touching the video-delivery domain above.**
 Confirmed across several viewing sessions: with this guide's [HaGeZi Pro tier](#choose-a-hagezi-tier) or higher active, Hulu and Disney+ both now play with no ads at all, and playback is unaffected.
 The likely mechanism: both apps check in with an analytics/QoS SDK (Conviva, Braze) before deciding whether to insert a targeted ad, and appear to skip the ad rather than fall back to blocking playback when that check fails - a fail-soft, not a panic-stop.
-That's a theory based on the observed behavior, not something confirmed against either company's source or documentation.
+That's likely to change.
 
 `braze.com` and `conviva.com` are both already on HaGeZi's Pro tier (`pro.txt`), not just Pro++ - if you're on Pro or above, you already have this without doing anything. If you're on a lighter tier (Normal or below) and want to try this deliberately, block the two domains directly (their wildcard form covers every subdomain, so there's no need to chase the exact one your device happens to use):
 
@@ -307,13 +307,12 @@ sudo pihole --wild braze.com conviva.com
 Caveats, in order of how much they matter:
 
 - This is one household's results over several viewing sessions, not verified across other devices, regions, plans, or Hulu/Disney+ app versions.
-- Blocking analytics domains to suppress ads is a side effect of how these apps handle a failed dependency, not a documented or supported ad-blocking method. It could stop working the moment either service tightens that failure mode, with no warning.
+- Blocking analytics domains to suppress ads is a side effect of how these apps handle a failed dependency, and will stop working the moment either service tightens that failure mode.
 - If it stops working for you, the browser-extension option below is unaffected by any of this, since it doesn't depend on the same mechanism.
 
-**Also works, independent of the above:** on the desktop web player, browser extensions can still strip Hulu's ads, because they operate on the page rather than on DNS.
+**You can use the web player**:
+Browser extensions can still strip Hulu's ads, because they operate on the page rather than on DNS.
 [uBlock Origin](https://github.com/gorhill/uBlock?tab=readme-ov-file#ublock-origin-ubo) on Firefox and [AdGuard](https://adguard.com/) both handle it.
-That only helps if you watch in a browser.
-
 #### Paramount+
 
 <Verified date="2026-07" method="vendor-docs" />
