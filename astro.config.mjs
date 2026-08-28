@@ -117,6 +117,7 @@ export default defineConfig({
 										{ label: 'Extend, revoke, alternatives', link: '/docs/pi-hole/claude-code-access/extend/' },
 										{
 											label: 'One-pagers',
+											collapsed: true,
 											items: [
 												{ label: 'Pick a one-pager', link: '/docs/pi-hole/claude-code-access/one-pagers/' },
 												{ label: 'On the Pi', link: '/docs/pi-hole/claude-code-access/one-pagers/on-the-pi/' },
