@@ -2,5 +2,10 @@
   "enabledPlugins": {
     "documentation-agent@documentation-agent-marketplace": true,
     "docs-assist@docs-assist-marketplace": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ssh pi-hole-admin:*)"
+    ]
   }
 }
