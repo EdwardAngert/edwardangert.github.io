@@ -13,7 +13,7 @@ next:
   label: Set Up Read-Only Access
 ---
 
-import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Steps, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import Verified from '../../../../components/Verified.astro';
 
 Give Claude Code limited access to Pi-hole logs and the query database so that it can help you diagnose issues with your Pi-hole setup.
@@ -235,10 +235,6 @@ Left unreadable, the wait is for a password prompt on a terminal Claude Code doe
 
 Two decisions. Pick each once, and the rest of this page follows your choice.
 
-:::tip[Already know you want a dedicated agent user, from a workstation, over SSH?]
-Skip the tabs below and use the [complete single-page walkthrough](/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/) instead.
-:::
-
 **Where Claude Code runs:**
 
 <Tabs syncKey="cc-location">
@@ -334,4 +330,31 @@ The account has to be real at the process level, which works differently in each
 </TabItem>
 </Tabs>
 
-With both choices made, continue to [Set up read-only access](/docs/pi-hole/claude-code-access/set-up/).
+## In This Guide
+
+Each of these is a complete, self-contained guide covering one combination of the two choices above.
+
+<CardGrid>
+  <LinkCard
+    title="On the Raspberry Pi"
+    href="/docs/pi-hole/claude-code-access/on-the-pi/"
+    description="Simplest option. Needs a Pi 4 with 4 GB or more, or a Pi 5, running 64-bit Raspberry Pi OS."
+  />
+  <LinkCard
+    title="On the Pi, dedicated read-only user"
+    href="/docs/pi-hole/claude-code-access/on-the-pi-dedicated-user/"
+    description="Tightest isolation. Claude Code runs as an account that can read Pi-hole data and nothing else."
+  />
+  <LinkCard
+    title="Over SSH from your laptop"
+    href="/docs/pi-hole/claude-code-access/over-ssh/"
+    description="Works with any Pi, including a Pi 3, a Zero 2 W, or a 2 GB Pi 4."
+  />
+  <LinkCard
+    title="Over SSH, dedicated read-only user"
+    href="/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/"
+    description="Tightest isolation on any Pi. sshd enforces the account for every command."
+  />
+</CardGrid>
+
+Would rather work through it in stages? Continue to [Set up read-only access](/docs/pi-hole/claude-code-access/set-up/).

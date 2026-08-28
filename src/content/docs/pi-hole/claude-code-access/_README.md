@@ -83,6 +83,22 @@ directory. A `_partials/` folder does not protect the files inside it: they
 load, fail schema validation for a missing `title`, and break the build. This
 README is `_README.md` for that reason.
 
+## One-pagers
+
+`on-the-pi.mdx`, `on-the-pi-dedicated-user.mdx`, `over-ssh.mdx`, and
+`over-ssh-dedicated-user.mdx` are complete, tab-free walkthroughs, one per
+combination of the two choices in `index.mdx`, composed from the same
+partials as `set-up.mdx`. They exist for a reader who already knows which
+combination they want.
+
+**They are excluded from `public/llms-full.txt`.** Its content is already
+in the bundle via `set-up.mdx`'s tabbed sections; including a one-pager too
+would duplicate that same text under a different heading, which is exactly
+the kind of drift risk `llms-full.txt`'s own generation plan
+(`.docs-assist/reports/llms-generation-plan.md`) exists to prevent. They
+still get individual entries in `public/llms.txt` (the link index), just
+not a section in the concatenated full-text file.
+
 ## Background
 
 `drafts-research/pi-hole-agent-access-study.md`, a sibling of this repo,

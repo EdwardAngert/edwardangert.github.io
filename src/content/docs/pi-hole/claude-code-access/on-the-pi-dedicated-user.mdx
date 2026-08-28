@@ -1,7 +1,7 @@
 ---
-slug: docs/pi-hole/claude-code-access/over-ssh-dedicated-user
-title: "Give Claude Code Pi-hole Access Over SSH With a Dedicated User"
-description: "Run Claude Code on your laptop and reach Pi-hole over SSH as a dedicated unprivileged account, enforced by sshd. Works with any Raspberry Pi. Complete single-page setup."
+slug: docs/pi-hole/claude-code-access/on-the-pi-dedicated-user
+title: "Run Claude Code on Pi-hole Under a Dedicated Read-Only User"
+description: "Run Claude Code on the Pi under a dedicated unprivileged account that can read Pi-hole query data and nothing else. Complete single-page setup."
 category: "Personal Reference Documentation"
 applies-to:
   pihole: "v6"
@@ -9,41 +9,37 @@ head:
   - tag: link
     attrs:
       rel: canonical
-      href: https://edwardangert.com/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/
+      href: https://edwardangert.com/docs/pi-hole/claude-code-access/on-the-pi-dedicated-user/
 ---
 
 import { Steps, Code } from '@astrojs/starlight/components';
 import Verified from '../../../../components/Verified.astro';
 import claudeMd from '../CLAUDE.md.example?raw';
 
-import AgentUserDedicatedWorkstation from './_create-agent-user-dedicated-workstation.mdx';
-import InstallWorkstationDedicated from './_install-claude-code-workstation-dedicated.mdx';
-import GrantToolsWorkstation from './_grant-read-access-tools-workstation.mdx';
-import GrantApplyDedicatedWorkstation from './_grant-read-access-run-workstation-dedicated.mdx';
-import ReadQueryHistoryWorkstationDedicated from './_read-query-history-workstation-dedicated.mdx';
-import VerifyBoundariesDedicatedWorkstation from './_verify-boundaries-dedicated-workstation.mdx';
-import VerifyBoundariesGetfaclWorkstation from './_verify-boundaries-getfacl-workstation.mdx';
-import VerifyBoundariesDiagnoseDedicatedWorkstation from './_verify-boundaries-diagnose-dedicated-workstation.mdx';
-import ConfigureClaudeCodeWorkstationDedicated from './_configure-claude-code-workstation-dedicated.mdx';
+import AgentUserDedicatedOnPi from './_create-agent-user-dedicated-onpi.mdx';
+import InstallOnPiDedicated from './_install-claude-code-onpi-dedicated.mdx';
+import GrantToolsOnPi from './_grant-read-access-tools-onpi.mdx';
+import GrantApplyDedicatedOnPi from './_grant-read-access-run-onpi-dedicated.mdx';
+import ReadQueryHistoryOnPi from './_read-query-history-onpi.mdx';
+import VerifyBoundariesDedicatedOnPi from './_verify-boundaries-dedicated-onpi.mdx';
+import VerifyBoundariesGetfaclOnPi from './_verify-boundaries-getfacl-onpi.mdx';
+import VerifyBoundariesDiagnoseDedicatedOnPi from './_verify-boundaries-diagnose-dedicated-onpi.mdx';
+import ConfigureClaudeCodeOnPi from './_configure-claude-code-onpi.mdx';
 
 This page combines the steps from [Give Claude Code Access to Pi-hole](/docs/pi-hole/claude-code-access/) into a single step-by-step tutorial for users who:
 
-- Run Claude Code on their workstation
-- Connect to the Pi over SSH as a dedicated unprivileged account
+- Run Claude Code on the Pi itself
+- Use a dedicated unprivileged account that can read Pi-hole data and nothing else
 
 ## Create the Agent User
 
 <Verified date="2026-08" method="tested" />
 
-<AgentUserDedicatedWorkstation />
+<AgentUserDedicatedOnPi />
 
 ## Install Claude Code
 
-Install Claude Code on your workstation using the [instructions for your platform](https://code.claude.com/docs/en/setup#install-claude-code), then confirm it reaches the Pi:
-
-<InstallWorkstationDedicated />
-
-Nothing gets installed on the Pi.
+<InstallOnPiDedicated />
 
 ## Grant Read Access
 
@@ -52,19 +48,19 @@ Nothing gets installed on the Pi.
 POSIX ACLs grant one account read access to one file.
 Unlike group membership, an ACL can be scoped per file, is revocable without touching the account, and grants no write access anywhere.
 
-Every command in this section runs with `sudo` on the Pi, over SSH as `pi-hole-admin`.
+Every command in this section runs with `sudo` on the Pi.
 
 <Steps>
 
 1. Install the ACL tools.
    They aren't present by default:
 
-   <GrantToolsWorkstation />
+   <GrantToolsOnPi />
 
 1. Apply the grant.
    Three `setfacl` calls, chained so the run stops if any one fails:
 
-   <GrantApplyDedicatedWorkstation />
+   <GrantApplyDedicatedOnPi />
 
 </Steps>
 
@@ -104,7 +100,7 @@ Always pass `--readonly`, which makes writes impossible at the connection level.
 Run this as the account you just granted access to. It doubles as proof the grant works.
 Replace `YOUR-DEVICE-IP` with the IP of a device on your network you want to check:
 
-<ReadQueryHistoryWorkstationDedicated />
+<ReadQueryHistoryOnPi />
 
 The `queries` view resolves the internal integer IDs back to real domain and client strings, so you don't need to join anything.
 `status` stays numeric.
@@ -127,15 +123,15 @@ The database lags live traffic by up to 60 seconds because FTL flushes its in-me
 
 Confirm what the account can't do as that account (rather than as yourself).
 
-<VerifyBoundariesDedicatedWorkstation />
+<VerifyBoundariesDedicatedOnPi />
 
 To see the grant itself:
 
-<VerifyBoundariesGetfaclWorkstation />
+<VerifyBoundariesGetfaclOnPi />
 
 If a query still fails after that, run this as the granted account to tell "the ACL isn't there" apart from "my query syntax is wrong" in one shot, rather than debugging both possibilities against a real query at once:
 
-<VerifyBoundariesDiagnoseDedicatedWorkstation />
+<VerifyBoundariesDiagnoseDedicatedOnPi />
 
 ## Configure Claude Code
 
@@ -147,9 +143,9 @@ Claude's own documentation notes that Bash patterns constraining arguments are f
 
 That ordering matters most for `pihole.toml`, since on a `0644` host the deny rule is the only thing standing between an agent and your password hashes.
 
-Add to `.claude/settings.json` in the project directory you run Claude Code from:
+Add to `~/.claude/settings.json` in the home directory of the account Claude Code runs as:
 
-<ConfigureClaudeCodeWorkstationDedicated />
+<ConfigureClaudeCodeOnPi />
 
 ## Give the Agent a Context File
 

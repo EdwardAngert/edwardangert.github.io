@@ -118,6 +118,9 @@ export default defineConfig({
 										{
 											label: 'One-pagers',
 											items: [
+												{ label: 'On the Pi', link: '/docs/pi-hole/claude-code-access/on-the-pi/' },
+												{ label: 'On the Pi, dedicated user', link: '/docs/pi-hole/claude-code-access/on-the-pi-dedicated-user/' },
+												{ label: 'Over SSH', link: '/docs/pi-hole/claude-code-access/over-ssh/' },
 												{ label: 'Over SSH, dedicated user', link: '/docs/pi-hole/claude-code-access/over-ssh-dedicated-user/' },
 											],
 										},
