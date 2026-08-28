@@ -34,8 +34,11 @@ Pi-hole works at the DNS level ([DNS Reddit ELI5](https://www.reddit.com/r/expla
 It sees the domain name but not the URL or content, so it can't distinguish between types of content on the same domain.
 `youtube.com` is either blocked entirely or not at all.
 
-Some streaming services serve ads through the same domains as their content.
-Pi-hole cannot block Hulu or Disney+ ads on their ad-supported plans without breaking the service.
+Some streaming services serve ads through the same domains as their content, which can make them impossible to fix without breaking playback.
+That's still true for YouTube.
+
+Hulu and Disney+ used to be in that category too.
+As of 2026-08, blocking a small set of analytics domains (not the ad domains themselves) appears to suppress ads on both, confirmed across several viewing sessions on this network - see [Fix Streaming Services and Other Broken Sites](/docs/pi-hole/block-allow-lists/#fix-streaming-services-and-other-broken-sites) for what to block and the caveats.
 
 For most other services, you can [add service-specific rules to the allowlists](/docs/pi-hole/block-allow-lists/#fix-streaming-services-and-other-broken-sites) when you get to that page, or skip ahead if that's your main use case.
 
