@@ -76,6 +76,10 @@
   // components, and the handful of raw HTML tags used deliberately (kbd for
   // key names, p/em for a styled image caption). All other inline HTML is
   // still flagged.
+  //
+  // The claude-code-access/set-up.mdx partial-import components (see
+  // _README.md) are named here individually rather than pattern-matched:
+  // markdownlint's allowed_elements is an exact-name list, not a glob.
   "MD033": {
     "allowed_elements": [
       "details",
@@ -94,7 +98,36 @@
       "Steps",
       "TabItem",
       "Tabs",
-      "Verified"
+      "Verified",
+      "AgentUserLogin",
+      "AgentUserDedicatedOnPi",
+      "AgentUserDedicatedWorkstation",
+      "InstallOnPiLogin",
+      "InstallOnPiDedicated",
+      "InstallWorkstationLogin",
+      "InstallWorkstationDedicated",
+      "GrantToolsOnPi",
+      "GrantToolsWorkstation",
+      "GrantApplyLoginOnPi",
+      "GrantApplyDedicatedOnPi",
+      "GrantApplyLoginWorkstation",
+      "GrantApplyDedicatedWorkstation",
+      "ReadQueryHistoryOnPi",
+      "ReadQueryHistoryWorkstationLogin",
+      "ReadQueryHistoryWorkstationDedicated",
+      "VerifyBoundariesLoginOnPi",
+      "VerifyBoundariesDedicatedOnPi",
+      "VerifyBoundariesLoginWorkstation",
+      "VerifyBoundariesDedicatedWorkstation",
+      "VerifyBoundariesGetfaclOnPi",
+      "VerifyBoundariesGetfaclWorkstation",
+      "VerifyBoundariesDiagnoseLoginOnPi",
+      "VerifyBoundariesDiagnoseDedicatedOnPi",
+      "VerifyBoundariesDiagnoseLoginWorkstation",
+      "VerifyBoundariesDiagnoseDedicatedWorkstation",
+      "ConfigureClaudeCodeOnPi",
+      "ConfigureClaudeCodeWorkstationLogin",
+      "ConfigureClaudeCodeWorkstationDedicated"
     ]
   },
   // MD034 - No bare URLs; wrap them in angle brackets or link syntax.

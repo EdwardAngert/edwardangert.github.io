@@ -1,0 +1,6 @@
+```shell title="From the Pi"
+sudo setfacl -R -m "u:${USER}:rX" /var/log/pihole && \
+  sudo setfacl -m "d:u:${USER}:r" /var/log/pihole && \
+  sudo setfacl -m "u:${USER}:r" /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -m "u:${USER}:r" /etc/pihole/pihole-FTL.db-wal /etc/pihole/pihole-FTL.db-shm
+```
