@@ -1,0 +1,85 @@
+import { Steps } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. Create the user with a home directory and no `sudo` group membership:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo useradd -m -s /bin/bash claude-agent'
+   ```
+
+1. Tighten its home directory so other accounts can't read its session data:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo chmod 750 /home/claude-agent'
+   ```
+
+1. Give it a working directory, since Claude Code needs somewhere it can write:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin 'sudo -u claude-agent mkdir -p /home/claude-agent/pihole'
+   ```
+
+1. Set up access to the account:
+
+   :::note[Two different SSH problems can look identical]
+   If you haven't set up your own `pi-hole-admin` SSH access yet and hit `Permission denied (publickey,password)`, that's an ordinary "this key was never added to that account" problem, fixed with a plain `ssh-copy-id` against your own login. It has nothing to do with the `claude-agent` account below, even though the error text is the same.
+   :::
+
+   Give the account its own SSH key so your workstation can reach it directly:
+
+   ```shell title="From your workstation"
+   ssh-keygen -t ed25519 -f ~/.ssh/claude-agent -C "claude-agent@pi-hole"
+   ```
+
+   Add a second host alias for it, alongside the `pi-hole-admin` one you defined earlier:
+
+   ```text title="~/.ssh/config"
+   Host pi-hole-agent
+       HostName 192.168.0.153
+       User claude-agent
+       IdentityFile ~/.ssh/claude-agent
+       IdentitiesOnly yes
+   ```
+
+   :::caution[Don't reach for `ssh-copy-id`]
+   It has nothing to authenticate against: `useradd` leaves this account password-locked by design, so there's no password login for `ssh-copy-id` to use.
+   This is the thing most people try first here, and it can't work.
+   :::
+
+   Install the key through your administrative session instead:
+
+   ```shell title="From your workstation"
+   PUBKEY="$(cat ~/.ssh/claude-agent.pub)" && \
+     ssh -t pi-hole-admin "
+     sudo -u claude-agent mkdir -p -m 700 /home/claude-agent/.ssh
+     echo '$PUBKEY' | sudo -u claude-agent tee -a /home/claude-agent/.ssh/authorized_keys >/dev/null
+     sudo -u claude-agent chmod 600 /home/claude-agent/.ssh/authorized_keys"
+   ```
+
+   The key goes into a shell variable rather than through a pipe on purpose.
+   Piping into `ssh -t` suppresses the terminal it just asked for, and `sudo` on the far end fails with the same password prompt error this page opened with.
+
+   Safe to re-run: doing this twice appends a duplicate identical line to `authorized_keys` rather than breaking anything.
+   If you're not sure whether the key's already there, dedupe it:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin "sudo -u claude-agent bash -c 'sort -u -o /home/claude-agent/.ssh/authorized_keys /home/claude-agent/.ssh/authorized_keys'"
+   ```
+
+   Leaving the account password-locked is the point.
+   The key is the only way in, and it opens a shell with no `sudo` behind it.
+
+   Confirm the alias lands in the right account, and do this before touching any Pi-hole data:
+
+   ```shell title="From your workstation"
+   ssh -o ConnectTimeout=8 -o BatchMode=yes pi-hole-agent 'id'
+   ```
+
+   That should report `uid=... (claude-agent)`, which is sshd enforcing the identity rather than Claude Code choosing it.
+   `BatchMode=yes` makes this fail fast and non-interactively instead of hanging on a password prompt, and running it now isolates "is the SSH layer working" from "does this account have the Pi-hole permissions it needs," two separate failures that are easy to conflate if the first query you try is a real one.
+
+   Setup commands on the rest of this page use `pi-hole-admin`, because they need `sudo`.
+   Claude Code only ever uses `pi-hole-agent`.
+
+</Steps>

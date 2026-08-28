@@ -1,0 +1,27 @@
+Each of these should report `Permission denied`.
+Run them one at a time, since each is expected to fail and chaining them would stop at the first:
+
+```shell title="From the Pi"
+sudo -u claude-agent bash -c 'echo test >> /var/log/pihole/pihole.log'
+```
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /home/pi-admin/.ssh/id_ed25519
+```
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /etc/shadow
+```
+
+Replace `/home/pi-admin` with your own home directory.
+
+Then check `pihole.toml`:
+
+```shell title="From the Pi"
+sudo -u claude-agent head -n 1 /etc/pihole/pihole.toml
+```
+
+The result depends on your Pi-hole version, and both outcomes are expected:
+
+- `Permission denied` means the file is mode `0640`, and the exclusion holds.
+- A line of config means the file is mode `0644`, so it is readable by every account on the Pi. Nothing is broken, but the deny rule in the next section is doing real work, and you should treat those password hashes as exposed locally.

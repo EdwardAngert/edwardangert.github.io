@@ -1,0 +1,35 @@
+import { Steps } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. Create the user with a home directory and no `sudo` group membership:
+
+   ```shell title="From the Pi"
+   sudo useradd -m -s /bin/bash claude-agent
+   ```
+
+1. Tighten its home directory so other accounts can't read its session data:
+
+   ```shell title="From the Pi"
+   sudo chmod 750 /home/claude-agent
+   ```
+
+1. Give it a working directory, since Claude Code needs somewhere it can write:
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent mkdir -p /home/claude-agent/pihole
+   ```
+
+1. Set up access to the account:
+
+   Allow your own account to become it. This rule lets you *become* `claude-agent`. It grants `claude-agent` nothing:
+
+   ```shell title="From the Pi"
+   echo "$USER ALL=(claude-agent) ALL" | sudo tee /etc/sudoers.d/claude-agent-switch && \
+     sudo chmod 440 /etc/sudoers.d/claude-agent-switch && \
+     sudo visudo -c -f /etc/sudoers.d/claude-agent-switch
+   ```
+
+   The last command should report `parsed OK`.
+
+</Steps>

@@ -3342,7 +3342,7 @@ Start at [Give Claude Code Access to Pi-hole](./claude-code-access/) if you have
 
 Nothing to create. Claude Code runs as your existing account.
 
-Skip to [Install Claude Code](#install-claude-code).
+Skip ahead to Install Claude Code, the next section below.
 
 </TabItem>
 <TabItem label="Dedicated agent user">
@@ -3426,6 +3426,10 @@ Skip to [Install Claude Code](#install-claude-code).
    </TabItem>
    <TabItem label="From a workstation">
 
+   :::note[Two different SSH problems can look identical]
+   If you haven't set up your own `pi-hole-admin` SSH access yet and hit `Permission denied (publickey,password)`, that's an ordinary "this key was never added to that account" problem, fixed with a plain `ssh-copy-id` against your own login. It has nothing to do with the `claude-agent` account below, even though the error text is the same.
+   :::
+
    Give the account its own SSH key so your workstation can reach it directly:
 
    ```shell title="From your workstation"
@@ -3442,8 +3446,12 @@ Skip to [Install Claude Code](#install-claude-code).
        IdentitiesOnly yes
    ```
 
-   `ssh-copy-id` won't install the key: `useradd` leaves the account password-locked, so there is no password login to authenticate against.
-   Install it through your administrative session instead:
+   :::caution[Don't reach for `ssh-copy-id`]
+   It has nothing to authenticate against: `useradd` leaves this account password-locked by design, so there's no password login for `ssh-copy-id` to use.
+   This is the thing most people try first here, and it can't work.
+   :::
+
+   Install the key through your administrative session instead:
 
    ```shell title="From your workstation"
    PUBKEY="$(cat ~/.ssh/claude-agent.pub)" && \
@@ -3456,16 +3464,24 @@ Skip to [Install Claude Code](#install-claude-code).
    The key goes into a shell variable rather than through a pipe on purpose.
    Piping into `ssh -t` suppresses the terminal it just asked for, and `sudo` on the far end fails with the same password prompt error this page opened with.
 
+   Safe to re-run: doing this twice appends a duplicate identical line to `authorized_keys` rather than breaking anything.
+   If you're not sure whether the key's already there, dedupe it:
+
+   ```shell title="From your workstation"
+   ssh -t pi-hole-admin "sudo -u claude-agent bash -c 'sort -u -o /home/claude-agent/.ssh/authorized_keys /home/claude-agent/.ssh/authorized_keys'"
+   ```
+
    Leaving the account password-locked is the point.
    The key is the only way in, and it opens a shell with no `sudo` behind it.
 
-   Confirm the alias lands in the right account:
+   Confirm the alias lands in the right account, and do this before touching any Pi-hole data:
 
    ```shell title="From your workstation"
-   ssh pi-hole-agent 'id'
+   ssh -o ConnectTimeout=8 -o BatchMode=yes pi-hole-agent 'id'
    ```
 
    That should report `uid=... (claude-agent)`, which is sshd enforcing the identity rather than Claude Code choosing it.
+   `BatchMode=yes` makes this fail fast and non-interactively instead of hanging on a password prompt, and running it now isolates "is the SSH layer working" from "does this account have the Pi-hole permissions it needs," two separate failures that are easy to conflate if the first query you try is a real one.
 
    Setup commands on the rest of this page use `pi-hole-admin`, because they need `sudo`.
    Claude Code only ever uses `pi-hole-agent`.
@@ -3562,7 +3578,7 @@ Install from the apt repository instead, which puts it on the system path for ev
 </TabItem>
 <TabItem label="From a workstation">
 
-Install Claude Code on your workstation using the [instructions for your platform](https://code.claude.com/docs/en/setup), then confirm it reaches the Pi:
+Install Claude Code on your workstation using the [instructions for your platform](https://code.claude.com/docs/en/setup#install-claude-code), then confirm it reaches the Pi:
 
 <Tabs syncKey="cc-identity">
 <TabItem label="Your login user">
@@ -3630,7 +3646,8 @@ Every command in this section runs with `sudo` on the Pi.
    ```shell title="From the Pi"
    sudo setfacl -R -m "u:${USER}:rX" /var/log/pihole && \
      sudo setfacl -m "d:u:${USER}:r" /var/log/pihole && \
-     sudo setfacl -m "u:${USER}:r" /etc/pihole/pihole-FTL.db
+     sudo setfacl -m "u:${USER}:r" /etc/pihole/pihole-FTL.db && \
+     sudo setfacl -m "u:${USER}:r" /etc/pihole/pihole-FTL.db-wal /etc/pihole/pihole-FTL.db-shm
    ```
 
    </TabItem>
@@ -3639,7 +3656,8 @@ Every command in this section runs with `sudo` on the Pi.
    ```shell title="From the Pi"
    sudo setfacl -R -m u:claude-agent:rX /var/log/pihole && \
      sudo setfacl -m d:u:claude-agent:r /var/log/pihole && \
-     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db
+     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db && \
+     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db-wal /etc/pihole/pihole-FTL.db-shm
    ```
 
    </TabItem>
@@ -3656,7 +3674,8 @@ Every command in this section runs with `sudo` on the Pi.
    ```shell title="From your workstation"
    ssh -t pi-hole-admin 'sudo setfacl -R -m u:pi-admin:rX /var/log/pihole && \
      sudo setfacl -m d:u:pi-admin:r /var/log/pihole && \
-     sudo setfacl -m u:pi-admin:r /etc/pihole/pihole-FTL.db'
+     sudo setfacl -m u:pi-admin:r /etc/pihole/pihole-FTL.db && \
+     sudo setfacl -m u:pi-admin:r /etc/pihole/pihole-FTL.db-wal /etc/pihole/pihole-FTL.db-shm'
    ```
 
    </TabItem>
@@ -3665,7 +3684,8 @@ Every command in this section runs with `sudo` on the Pi.
    ```shell title="From your workstation"
    ssh -t pi-hole-admin 'sudo setfacl -R -m u:claude-agent:rX /var/log/pihole && \
      sudo setfacl -m d:u:claude-agent:r /var/log/pihole && \
-     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db'
+     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db && \
+     sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db-wal /etc/pihole/pihole-FTL.db-shm'
    ```
 
    </TabItem>
@@ -3687,10 +3707,14 @@ Explanations:
 - `u:...:r` on the query database
   - Needs no directory ACL: `/etc/pihole` is already world-traversable.
   - This grant also survives Pi-hole restarts. FTL resets the database to mode `0640` every time it starts, and `chmod` rewrites an ACL's mask rather than removing named-user entries, so the read stays effective.
+- `u:...:r` on `pihole-FTL.db-wal` and `pihole-FTL.db-shm`
+  - `pihole-FTL.db` runs in SQLite's WAL journal mode, so a reader also needs to open these two sidecar files. Granting the `.db` file alone fails with `Parse error in 3rd command line argument: unable to open database file (14)`, an error that reads like a syntax problem and isn't.
+  - This has to be a per-file grant, not a default ACL on `/etc/pihole` itself. That directory also holds `pihole.toml`, which this guide separately and correctly keeps off limits (it stores API password hashes in plaintext); a directory-wide default ACL would silently expose it to any account with the default grant.
+  - Not yet confirmed whether this grant survives an FTL restart the way the `.db` grant does. FTL may recreate `-shm` on restart the same way it resets the database's mode, which would drop the ACL along with it. If queries that worked start failing with the same error after restarting FTL, re-run this command.
 
 :::note[If you ever delete the FTL database]
 FTL creates a fresh `pihole-FTL.db` when the file is missing, and the new file has no ACL.
-Re-run the third command if you delete or restore that database.
+Re-run the third and fourth commands if you delete or restore that database.
 :::
 
 ## Read Query History
@@ -3728,6 +3752,19 @@ ssh pi-hole-admin "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
     ORDER BY timestamp DESC LIMIT 20;\""
 ```
 
+Nested double quotes around the SQL string get easy to get subtly wrong once you're wrapping an already-quoted command in `ssh host "..."`.
+A heredoc avoids the extra escaping layer entirely and matches the multi-line SQL formatting above verbatim:
+
+```shell "YOUR-DEVICE-IP" title="From your workstation"
+ssh pi-hole-admin bash -s <<'EOF'
+pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+   FROM queries
+   WHERE client = 'YOUR-DEVICE-IP'
+   ORDER BY timestamp DESC LIMIT 20;"
+EOF
+```
+
 </TabItem>
 <TabItem label="Dedicated agent user">
 
@@ -3737,6 +3774,19 @@ ssh pi-hole-agent "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
     FROM queries
     WHERE client = 'YOUR-DEVICE-IP'
     ORDER BY timestamp DESC LIMIT 20;\""
+```
+
+The nested double quotes here are easy to get subtly wrong.
+A heredoc avoids the extra escaping layer and matches the multi-line SQL formatting above verbatim, so it's the better default when you're calling this from your own machine rather than already logged in:
+
+```shell "YOUR-DEVICE-IP" title="From your workstation"
+ssh pi-hole-agent bash -s <<'EOF'
+pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+   FROM queries
+   WHERE client = 'YOUR-DEVICE-IP'
+   ORDER BY timestamp DESC LIMIT 20;"
+EOF
 ```
 
 </TabItem>
@@ -3893,15 +3943,60 @@ To see the grant itself:
 <TabItem label="On the Pi">
 
 ```shell title="From the Pi"
-getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db
+getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db*
 ```
 
 </TabItem>
 <TabItem label="From a workstation">
 
 ```shell title="From your workstation"
-ssh pi-hole-admin 'getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db'
+ssh pi-hole-admin 'getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db*'
 ```
+
+</TabItem>
+</Tabs>
+
+If a query still fails after that, run this as the granted account to tell "the ACL isn't there" apart from "my query syntax is wrong" in one shot, rather than debugging both possibilities against a real query at once:
+
+<Tabs syncKey="cc-location">
+<TabItem label="On the Pi">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+```shell title="From the Pi"
+getfacl /etc/pihole /etc/pihole/pihole-FTL.db* 2>&1; echo ---; pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db 'SELECT 1;'
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From the Pi"
+sudo -u claude-agent bash -c "getfacl /etc/pihole /etc/pihole/pihole-FTL.db* 2>&1; echo ---; pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db 'SELECT 1;'"
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="From a workstation">
+
+<Tabs syncKey="cc-identity">
+<TabItem label="Your login user">
+
+```shell title="From your workstation"
+ssh pi-hole-admin "getfacl /etc/pihole /etc/pihole/pihole-FTL.db* 2>&1; echo ---; pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db 'SELECT 1;'"
+```
+
+</TabItem>
+<TabItem label="Dedicated agent user">
+
+```shell title="From your workstation"
+ssh pi-hole-agent "getfacl /etc/pihole /etc/pihole/pihole-FTL.db* 2>&1; echo ---; pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db 'SELECT 1;'"
+```
+
+</TabItem>
+</Tabs>
 
 </TabItem>
 </Tabs>

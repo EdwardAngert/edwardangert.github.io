@@ -1,0 +1,49 @@
+import { Steps } from '@astrojs/starlight/components';
+
+The `curl` installer places Claude Code in `~/.local/bin` for the account that runs it, so installing it as yourself leaves `claude-agent` without the command.
+Install from the apt repository instead, which puts it on the system path for every account:
+
+<Steps>
+
+1. Add the signing key and repository:
+
+   ```shell title="From the Pi"
+   sudo install -d -m 0755 /etc/apt/keyrings && \
+     sudo curl -fsSL https://downloads.claude.ai/keys/claude-code.asc \
+       -o /etc/apt/keyrings/claude-code.asc && \
+     echo "deb [signed-by=/etc/apt/keyrings/claude-code.asc] https://downloads.claude.ai/claude-code/apt/stable stable main" \
+       | sudo tee /etc/apt/sources.list.d/claude-code.list
+   ```
+
+1. Install it:
+
+   ```shell title="From the Pi"
+   sudo apt update && \
+   sudo apt install claude-code
+   ```
+
+1. Enter the agent account and log in as that account.
+
+   This is the one time you switch users, and it's interactive, so the password prompt is fine here:
+
+   1. Log in:
+
+   ```shell title="From the Pi"
+   sudo -u claude-agent -i
+   ```
+
+   The login shows a code rather than redirecting, because the browser can't reach a headless Pi.
+
+   1. Change directories and start Claude Code:
+
+   ```shell title="From the Pi"
+   cd ~/pihole && \
+   claude
+   ```
+
+   Open the URL elsewhere when prompted, sign in, and paste the code back.
+
+   This is a second login for the same Claude account, not a second subscription.
+   To skip the browser flow, run `claude setup-token` on a machine you're already signed in on and set `CLAUDE_CODE_OAUTH_TOKEN` in the agent's shell instead.
+
+</Steps>

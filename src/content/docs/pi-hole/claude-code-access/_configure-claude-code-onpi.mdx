@@ -1,0 +1,16 @@
+```json title="~/.claude/settings.json"
+{
+  "permissions": {
+    "deny": [
+      "Read(/etc/pihole/pihole.toml)",
+      "Bash(sudo:*)"
+    ],
+    "allow": [
+      "Bash(pihole-FTL sqlite3 --readonly:*)",
+      "Bash(pihole status)",
+      "Bash(dig:*)",
+      "Bash(tailscale status)"
+    ]
+  }
+}
+```

@@ -1,0 +1,20 @@
+```shell "YOUR-DEVICE-IP" title="From your workstation"
+ssh pi-hole-admin "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  \"SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+    FROM queries
+    WHERE client = 'YOUR-DEVICE-IP'
+    ORDER BY timestamp DESC LIMIT 20;\""
+```
+
+Nested double quotes around the SQL string get easy to get subtly wrong once you're wrapping an already-quoted command in `ssh host "..."`.
+A heredoc avoids the extra escaping layer entirely and matches the multi-line SQL formatting above verbatim:
+
+```shell "YOUR-DEVICE-IP" title="From your workstation"
+ssh pi-hole-admin bash -s <<'EOF'
+pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+   FROM queries
+   WHERE client = 'YOUR-DEVICE-IP'
+   ORDER BY timestamp DESC LIMIT 20;"
+EOF
+```

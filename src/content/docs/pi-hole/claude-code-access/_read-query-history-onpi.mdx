@@ -1,0 +1,7 @@
+```shell "YOUR-DEVICE-IP" title="From the Pi"
+pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
+  "SELECT datetime(timestamp,'unixepoch','localtime'), client, domain, status
+   FROM queries
+   WHERE client = 'YOUR-DEVICE-IP'
+   ORDER BY timestamp DESC LIMIT 20;"
+```

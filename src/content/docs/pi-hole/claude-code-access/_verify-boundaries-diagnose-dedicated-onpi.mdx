@@ -1,0 +1,3 @@
+```shell title="From the Pi"
+sudo -u claude-agent bash -c "getfacl /etc/pihole /etc/pihole/pihole-FTL.db* 2>&1; echo ---; pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db 'SELECT 1;'"
+```
