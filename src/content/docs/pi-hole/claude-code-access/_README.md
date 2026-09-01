@@ -4,11 +4,15 @@ Read this before editing anything in this directory.
 
 ## Current model
 
-Three staged pages, tabbed, indexed, no generated duplicates:
+Three staged pages, tabbed, indexed, plus four one-pagers in their own
+subdirectory:
 
 - `index.mdx` - the hub. Overview, decisions, routing.
 - `set-up.mdx` - create the account (if any), install Claude Code, grant read access.
 - `extend.mdx` - optional write access, root diagnostics, revoke, the API alternative.
+- `one-pagers/` - four complete, tab-free walkthroughs, one per setup
+  combination, plus `one-pagers/index.mdx`, a picker page. See "One-pagers"
+  below.
 
 The two setup choices (`cc-location`: On the Pi / From a workstation, `cc-identity`:
 Your login user / Dedicated agent user) are Starlight `<Tabs syncKey>` pairs. Sync
@@ -50,29 +54,30 @@ really do need the other branch) with a comment on the line immediately above it
 ```
 ```
 
-## History: this page used to also generate four one-pagers
+## History: one-pagers were generated, then dropped, then revived as partials
 
-An earlier version of this section additionally generated four flat,
-self-contained pages (one per combination of the two choices) via
-`scripts/build-onepagers.mjs`, so a reader could land on a single URL for their
-exact setup instead of working through tabs. That generator correctly resolved
-the tab choices, but it also stripped the one explanatory note above about
-wrapping commands over SSH (correctly - that note lived in a "Choose Your Setup"
-section that makes no sense once a one-pager reader has already made the choice),
-which is what exposed the note as insufficient in the first place: it left the
-generated workstation pages with bare, unwrapped `From the Pi` commands, one of
-which was outright wrong (`curl http://127.0.0.1/...`, which reaches the reader's
+An earlier version of this section generated four flat, self-contained pages
+(one per combination of the two choices) via `scripts/build-onepagers.mjs`, so
+a reader could land on a single URL for their exact setup instead of working
+through tabs. That generator correctly resolved the tab choices, but it also
+stripped the one explanatory note above about wrapping commands over SSH
+(correctly - that note lived in a "Choose Your Setup" section that makes no
+sense once a one-pager reader has already made the choice), which is what
+exposed the note as insufficient in the first place: it left the generated
+workstation pages with bare, unwrapped `From the Pi` commands, one of which
+was outright wrong (`curl http://127.0.0.1/...`, which reaches the reader's
 own laptop, not the Pi).
 
 Rather than carry that generation complexity while also fixing every command
 individually, this reverted to the three staged pages as the only published
-shape. The generator script and the one-pagers themselves are gone from the
-working tree, recoverable from git history (`scripts/build-onepagers.mjs` and
-`on-the-pi.mdx`, `on-the-pi-dedicated-user.mdx`, `over-ssh.mdx`,
-`over-ssh-dedicated-user.mdx`, all last present as of this repository's history
-around PR #56) if a future need justifies rebuilding it - this time with the
-per-command wrapping done properly from the start, since that's now required by
-the rule above regardless of whether generation exists.
+shape for a time (recoverable from git history around PR #56 if useful:
+`scripts/build-onepagers.mjs` and the four old one-pager files).
+
+The one-pagers were later rebuilt, this time as hand-composed pages importing
+the same partials `set-up.mdx` uses (see "File naming" and "One-pagers"
+below), so there's no generator to silently drop page-specific context, and
+the per-command wrapping is correct by construction rather than something a
+script has to get right.
 
 ## File naming
 
@@ -82,6 +87,37 @@ Starlight globs `**/[^_]*.{md,mdx,mdoc}`, which tests the *filename*, not the
 directory. A `_partials/` folder does not protect the files inside it: they
 load, fail schema validation for a missing `title`, and break the build. This
 README is `_README.md` for that reason.
+
+## One-pagers
+
+`one-pagers/on-the-pi.mdx`, `one-pagers/on-the-pi-dedicated-user.mdx`,
+`one-pagers/over-ssh.mdx`, and `one-pagers/over-ssh-dedicated-user.mdx` are
+complete, tab-free walkthroughs, one per combination of the two choices in
+`index.mdx`, composed from the same partials as `set-up.mdx`. They exist for
+a reader who already knows which combination they want.
+
+`one-pagers/index.mdx` is the picker page: a short intro plus a comparison
+table, linked from `index.mdx`'s "In This Guide" section (which also tucks
+the same table into a `<details>` there, so a reader doesn't have to leave
+the hub page just to see it). The table itself lives in one place,
+`_one-pager-picker-table.mdx` in this directory (not inside `one-pagers/`,
+since both `index.mdx` and `one-pagers/index.mdx` import it), so it can't
+drift between the two pages that show it.
+
+Because `one-pagers/` is a subdirectory, its pages' relative imports go up
+one extra level than a partial import from this directory would - `../_foo.mdx`
+for a partial here, one more `../` for `Verified.astro` and
+`CLAUDE.md.example`. Easy to get wrong when copying an import line from
+`set-up.mdx` instead of from another file already in `one-pagers/`.
+
+**The four one-pager pages, and the picker page itself, are excluded from
+`public/llms-full.txt`.** Their content is already in the bundle via
+`set-up.mdx`'s tabbed sections; including a one-pager too would duplicate
+that same text under a different heading, which is exactly the kind of
+drift risk `llms-full.txt`'s own generation plan
+(`.docs-assist/reports/llms-generation-plan.md`) exists to prevent. They
+still get individual entries in `public/llms.txt` (the link index), just
+not a section in the concatenated full-text file.
 
 ## Background
 

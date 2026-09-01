@@ -1,0 +1,20 @@
+import { Steps } from '@astrojs/starlight/components';
+
+<Steps>
+
+1. Install Claude Code:
+
+   ```shell title="From the Pi"
+   curl -fsSL https://claude.ai/install.sh | bash
+   ```
+
+1. Start it and log in:
+
+   ```shell title="From the Pi"
+   claude
+   ```
+
+   On a headless Pi the browser can't reach Claude Code's local callback, so the login shows a code instead of redirecting.
+   Open the URL on another machine, sign in, then paste the code back at the `Paste code here if prompted` prompt.
+
+</Steps>

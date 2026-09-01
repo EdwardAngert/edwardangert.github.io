@@ -115,6 +115,17 @@ export default defineConfig({
 										{ label: 'Overview and setup choices', link: '/docs/pi-hole/claude-code-access/' },
 										{ label: 'Set up read-only access', link: '/docs/pi-hole/claude-code-access/set-up/' },
 										{ label: 'Extend, revoke, alternatives', link: '/docs/pi-hole/claude-code-access/extend/' },
+										{
+											label: 'One-pagers',
+											collapsed: true,
+											items: [
+												{ label: 'Pick a one-pager', link: '/docs/pi-hole/claude-code-access/one-pagers/' },
+												{ label: 'On the Pi', link: '/docs/pi-hole/claude-code-access/one-pagers/on-the-pi/' },
+												{ label: 'On the Pi, dedicated user', link: '/docs/pi-hole/claude-code-access/one-pagers/on-the-pi-dedicated-user/' },
+												{ label: 'Over SSH', link: '/docs/pi-hole/claude-code-access/one-pagers/over-ssh/' },
+												{ label: 'Over SSH, dedicated user', link: '/docs/pi-hole/claude-code-access/one-pagers/over-ssh-dedicated-user/' },
+											],
+										},
 									],
 								},
 							],

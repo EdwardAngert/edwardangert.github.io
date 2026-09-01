@@ -1,0 +1,6 @@
+```shell title="From your workstation"
+ssh -t pi-hole-admin 'sudo setfacl -R -m u:claude-agent:rX /var/log/pihole && \
+  sudo setfacl -m d:u:claude-agent:r /var/log/pihole && \
+  sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -m u:claude-agent:r /etc/pihole/pihole-FTL.db-wal /etc/pihole/pihole-FTL.db-shm'
+```

@@ -15,6 +15,7 @@ next:
 
 import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 import Verified from '../../../../components/Verified.astro';
+import PickerTable from './_one-pager-picker-table.mdx';
 
 Give Claude Code limited access to Pi-hole logs and the query database so that it can help you diagnose issues with your Pi-hole setup.
 
@@ -330,4 +331,17 @@ The account has to be real at the process level, which works differently in each
 </TabItem>
 </Tabs>
 
-With both choices made, continue to [Set up read-only access](/docs/pi-hole/claude-code-access/set-up/).
+## In This Guide
+
+Already know which combination you want? Each one has a complete,
+self-contained [one-pager](/docs/pi-hole/claude-code-access/one-pagers/)
+covering every step for that setup, no tabs to click through.
+
+<details>
+<summary>Pick your one-pager</summary>
+
+<PickerTable />
+
+</details>
+
+Would rather work through it in stages? Continue to [Set up read-only access](/docs/pi-hole/claude-code-access/set-up/).

@@ -8,7 +8,7 @@ export default {
 		showLineNumbers: false,
 		overridesByLang: {
 			// Enable line numbers for certain languages
-			'ini,text,toml,yaml': {
+			'ini,json,md,text,toml,yaml': {
 				showLineNumbers: true,
 			},
 			// Wrap long lines for shell and text

@@ -68,17 +68,29 @@ value as an AI grounding source.
 **`src/content/docs/pi-hole/claude-code-access/` is composed from partials.
 Read `_README.md` in that directory before editing anything in it.** The short
 version: every word lives in exactly one partial, pages only compose, and
-editing prose directly inside a composed page silently forks the two published
-shapes of the same guide.
+editing prose directly inside a composed page silently forks it from the
+other published shapes of the same guide (the staged, tabbed guide and the
+four one-pagers under `claude-code-access/one-pagers/`, one per setup
+combination, plus that subdirectory's own picker page).
+
+The four one-pagers and their picker page are excluded from
+`public/llms-full.txt` on purpose: the one-pagers' content already appears
+once, via `set-up.mdx`'s tabbed sections, and including it again under a
+one-pager's heading would duplicate the same text rather than add anything;
+the picker page is pure navigation with no unique prose of its own. They
+still get their own entries in `public/llms.txt`.
 
 When you add, remove, rename, or change the title/description/body of any page
 under `src/content/docs/pi-hole/`, treat these as part of the change:
 
 1. `public/llms.txt`, the site index for AI tools.
-2. `public/llms-full.txt`, the full text of the Pi-hole guide only. No
-   non-Pi-hole content belongs in it. Regenerate the affected section rather
-   than rebuilding the whole file.
-3. The sidebar in `astro.config.mjs`, and `src/content/docs/pi-hole/index.mdx`.
+2. The sidebar in `astro.config.mjs`, and `src/content/docs/pi-hole/index.mdx`.
+
+**`public/llms-full.txt`, the full text of the Pi-hole guide only, is a
+merge-prep step, not a per-edit one.** Don't hand-edit it alongside a content
+change; it drifts too easily and hand-edits have already broken it twice
+(see `.docs-assist/reports/llms-generation-plan.md`). Regenerate it only when
+asked to get a branch ready to merge.
 
 ## Breadcrumbs
 

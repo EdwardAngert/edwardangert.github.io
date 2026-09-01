@@ -1,0 +1,16 @@
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "deny": [
+      "Bash(ssh pi-hole-admin:*)",
+      "Bash(ssh -t pi-hole-admin:*)"
+    ],
+    "allow": [
+      "Bash(ssh pi-hole-agent:*)"
+    ]
+  }
+}
+```
+
+The deny rules keep Claude Code off the administrative alias, so it can't reach the account that has `sudo`.
+`claude-agent` account's own permissions on the Pi restrict the agent alias itself, not the contents of this file.
