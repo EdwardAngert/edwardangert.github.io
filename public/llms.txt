@@ -51,6 +51,16 @@ Load-bearing conclusions from that page, several of which contradict widely repe
 - **Keeping `/etc/pihole/cli_pw` unreadable is not just a safeguard, it changes the failure mode.** `pihole allow`/`deny` read that file to open an API session; without it, the CLI script doesn't fail, it hangs on an interactive password prompt Claude Code can't answer, the same no-terminal problem as `sudo`. On Pi-hole FTL 6.0-6.5, a session opened with `cli_pw` could also bypass `/api/config`'s write protection via `/api/teleporter` and overwrite `pihole.toml` outright, not just manage lists (GHSA-r7g8-3fj7-m5qq, fixed in FTL 6.6; update to 6.7, which also fixes the separate 6.6 session-hijacking, RCE, and session-expiration advisories).
 - **Wildcard sudoers rules are total compromise.** A rule such as `NOPASSWD: /usr/bin/tail *` lets the agent read `/etc/shadow`. Pinning arguments is still not enough for pagers and editors, which escape to a root shell.
 
+## Give Claude Code Scoped File Access
+
+- [Give Claude Code Scoped File Access With ACLs](https://edwardangert.com/docs/limit-claude-code-acl/): The general pattern behind the Pi-hole page above, for any machine: grant a coding agent read and write access to specific files on macOS or Ubuntu with POSIX ACLs, no sudo and no standing credential, with a worked audit-your-own-machine example and the gotchas found by testing each command.
+
+Load-bearing conclusions from that page:
+
+- **Removing a `sudo` prompt and giving an agent's account standing access to more than a task needs are the same failure, whatever the mechanism.** Passwordless `sudo`, an askpass helper, a cached `sudo` ticket, and a secrets manager with no fresh human step all let the account retrieve something that grants more than the task in front of it.
+- **On macOS, `Permission denied` and `Operation not permitted` are different failures with different fixes.** The first means the filesystem itself is refusing, and an ACL (`chmod +a`) fixes it. The second means TCC or System Integrity Protection is refusing above the filesystem, and no ACL or `sudo` helps. `ls -lO` shows whether SIP is the wall, a `restricted` flag, before a grant is even attempted.
+- **A write grant is scoped to a file, not to what reads that file.** Write access to a root LaunchDaemon plist, a systemd unit file, or anything under `/etc/sudoers.d/` is not a narrow grant: a privileged process reads it as instructions and runs as root the next time it loads, the same effective privilege as passwordless `sudo`.
+
 ## Optional
 
 - [Work Samples](https://edwardangert.com/portfolio/): Documentation portfolio across Linode, Pantheon, Coder, and GitLab.
