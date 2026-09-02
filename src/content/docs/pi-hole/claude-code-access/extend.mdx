@@ -590,36 +590,12 @@ ssh pi-hole-admin "getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db* /etc/p
 </TabItem>
 </Tabs>
 
-:::note[Reading `getfacl` output: a listed entry is not always a working one]
-A named entry can be present and still grant nothing.
-`chmod` rewrites the ACL's mask, the mask caps every named entry beneath it, and an entry the mask has zeroed is printed with a `#effective:---` annotation rather than removed:
+:::note[An entry annotated `#effective:---` still needs revoking]
+An entry the ACL mask has zeroed is printed as `user:claude-agent:r--	#effective:---` rather than removed, and it still matches the `grep '^user:'` above.
+For revocation that is the right behavior to want: the entry is genuinely still on the file and genuinely still needs removing, whether or not it was granting anything.
+Treat any named line here as unfinished work, annotation or not.
 
-```text
-user:claude-agent:r--	#effective:---
-mask::---
-```
-
-That line still matches `grep '^user:'`, so it looks like a live grant in the check above and in the one under [Verify the Boundaries](/docs/pi-hole/claude-code-access/set-up/#verify-the-boundaries).
-When you are checking that a grant still works rather than that it is gone, look for the annotation instead of the name:
-
-<Tabs syncKey="cc-location">
-<TabItem label="On the Pi">
-
-```shell title="From the Pi"
-getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db* | grep 'effective:---'
-```
-
-</TabItem>
-<TabItem label="From a workstation">
-
-```shell title="From your workstation"
-ssh pi-hole-admin "getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db* | grep 'effective:---'"
-```
-
-</TabItem>
-</Tabs>
-
-Any output means a grant is listed but disabled, and everything depending on it has been failing since whatever last reset that file's permissions.
+The same annotation means something different when you are checking that a grant still *works*, which is covered under [Verify the Boundaries](/docs/pi-hole/claude-code-access/set-up/#verify-the-boundaries).
 :::
 
 ## Alternative: The Pi-hole v6 API
