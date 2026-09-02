@@ -1,0 +1,32 @@
+Explanations:
+
+- `-R -m u:...:rX` on the log directory
+  - `X` means "execute only on directories," so the directory gets `r-x` and every log file gets `r--`.
+  - A lowercase `r` here instead breaks the whole grant, and fails in a way that looks like the ACL never applied: a named-user entry replaces whatever the account was getting from the directory's "other" class, so `u:agent:r--` on the directory strips the execute bit it needs to enter the directory at all, and every read below it is denied.
+- `d:u:...:r` on the log directory
+  - Sets a default ACL, which is what survives log rotation.
+  - Pi-hole rotates `pihole.log` daily and `FTL.log` weekly with `create 640 pihole pihole`, building a brand new file each time.
+    An ACL set only on today's file is gone tomorrow.
+    A default ACL is inherited by every file created in the directory afterward, including the compressed `.1` and `.2` archives.
+- `u:...:r` on the query database
+  - Needs no directory ACL: `/etc/pihole` is already world-traversable.
+  - This grant survives Pi-hole restarts, for a reason worth knowing rather than assuming.
+    FTL resets the database to mode `0640` every time it starts, and a `chmod` rewrites the ACL's mask rather than removing named-user entries.
+    The mask is a ceiling on every named entry, so what actually saves the grant is that `0640`'s group bits are `r--`, which leaves a read grant at its full value.
+    A service that reset the same file to `0600` would drop the mask to `---` and disable the grant without removing it, and `getfacl` would still list the entry exactly where you left it.
+    That is what the `#effective:` column reports, and it is the thing to check first when a grant that reads back correctly stops working.
+- `u:...:r` on `pihole-FTL.db-wal` and `pihole-FTL.db-shm`
+  - `pihole-FTL.db` runs in SQLite's WAL journal mode, so a reader also needs to open these two sidecar files.
+    Granting the `.db` file alone fails with `Parse error in 3rd command line argument: unable to open database file (14)`, an error that reads like a syntax problem and isn't.
+    While FTL is stopped the sidecars don't exist at all, and the same missing grant surfaces as `attempt to write a readonly database (8)` instead, because a read-only connection has to create `-shm` before it can read a WAL database.
+  - This has to be a per-file grant, not a default ACL on `/etc/pihole` itself.
+    That directory also holds `pihole.toml`, which this guide separately and correctly keeps off limits (it stores API password hashes in plaintext); a directory-wide default ACL would silently expose it to any account with the default grant.
+  - This grant does not survive an FTL restart, and that is a property of SQLite rather than of Pi-hole.
+    SQLite deletes `-wal` and `-shm` when the last connection to the database closes, and creates them again when a writer next opens it.
+    The new files are new inodes, so they arrive carrying no ACL entries at all, the same way a rotated log file does.
+    Re-run the fourth command after anything that restarts FTL, and treat that as the running cost of reading the database this way rather than as a sign something went wrong.
+
+:::note[If you ever delete the FTL database]
+FTL creates a fresh `pihole-FTL.db` when the file is missing, and the new file has no ACL.
+Re-run the third and fourth commands if you delete or restore that database.
+:::

@@ -109,6 +109,7 @@
       "InstallWorkstationDedicated",
       "GrantToolsOnPi",
       "GrantToolsWorkstation",
+      "GrantExplanations",
       "GrantApplyLoginOnPi",
       "GrantApplyDedicatedOnPi",
       "GrantApplyLoginWorkstation",
