@@ -688,7 +688,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
    sudo apt upgrade -y
    ```
 
-   This can take 10 to 20 minutes even on a freshly installed OS.
+   This can take 10 to 20 minutes, even on a freshly installed OS.
 
 1. Run the Pi-hole installer:
 
@@ -1764,7 +1764,8 @@ After the Pi is set up and running, use this page as a reference for [confirming
 
 All of these sections are optional.
 
-Want Claude Code to help diagnose issues using these logs? See [Give Claude Code Access to Pi-hole Logs and Diagnostics](./claude-code-access/).
+You can use Claude Code to help diagnose Pi-hole issues.
+Go to [Give Claude Code Access to Pi-hole Logs and Diagnostics](./claude-code-access/).
 
 ## Optional: Require a Password for sudo Commands
 
@@ -3707,11 +3708,11 @@ Explanations:
   - Pi-hole rotates `pihole.log` daily and `FTL.log` weekly with `create 640 pihole pihole`, building a brand new file each time. An ACL set only on today's file is gone tomorrow. A default ACL is inherited by every file created in the directory afterward, including the compressed `.1` and `.2` archives.
 - `u:...:r` on the query database
   - Needs no directory ACL: `/etc/pihole` is already world-traversable.
-  - This grant also survives Pi-hole restarts. FTL resets the database to mode `0640` every time it starts, and `chmod` rewrites an ACL's mask rather than removing named-user entries, so the read stays effective.
+  - This grant survives Pi-hole restarts, for a reason worth knowing rather than assuming. FTL resets the database to mode `0640` every time it starts, and a `chmod` rewrites the ACL's mask rather than removing named-user entries. The mask is a ceiling on every named entry, so what actually saves the grant is that `0640`'s group bits are `r--`, which leaves a read grant at its full value. A service that reset the same file to `0600` would drop the mask to `---` and disable the grant without removing it, and `getfacl` would still list the entry exactly where you left it. That is what the `#effective:` column reports, and it is the thing to check first when a grant that reads back correctly stops working.
 - `u:...:r` on `pihole-FTL.db-wal` and `pihole-FTL.db-shm`
-  - `pihole-FTL.db` runs in SQLite's WAL journal mode, so a reader also needs to open these two sidecar files. Granting the `.db` file alone fails with `Parse error in 3rd command line argument: unable to open database file (14)`, an error that reads like a syntax problem and isn't.
+  - `pihole-FTL.db` runs in SQLite's WAL journal mode, so a reader also needs to open these two sidecar files. Granting the `.db` file alone fails with `Parse error in 3rd command line argument: unable to open database file (14)`, an error that reads like a syntax problem and isn't. While FTL is stopped the sidecars don't exist at all, and the same missing grant surfaces as `attempt to write a readonly database (8)` instead, because a read-only connection has to create `-shm` before it can read a WAL database.
   - This has to be a per-file grant, not a default ACL on `/etc/pihole` itself. That directory also holds `pihole.toml`, which this guide separately and correctly keeps off limits (it stores API password hashes in plaintext); a directory-wide default ACL would silently expose it to any account with the default grant.
-  - Not yet confirmed whether this grant survives an FTL restart the way the `.db` grant does. FTL may recreate `-shm` on restart the same way it resets the database's mode, which would drop the ACL along with it. If queries that worked start failing with the same error after restarting FTL, re-run this command.
+  - This grant does not survive an FTL restart, and that is a property of SQLite rather than of Pi-hole. SQLite deletes `-wal` and `-shm` when the last connection to the database closes, and creates them again when a writer next opens it. The new files are new inodes, so they arrive carrying no ACL entries at all, the same way a rotated log file does. Re-run the fourth command after anything that restarts FTL, and treat that as the running cost of reading the database this way rather than as a sign something went wrong.
 
 :::note[If you ever delete the FTL database]
 FTL creates a fresh `pihole-FTL.db` when the file is missing, and the new file has no ACL.
@@ -3947,12 +3948,42 @@ To see the grant itself:
 getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db*
 ```
 
+A named entry can be listed and still grant nothing, so read the annotations rather than just looking for the account name. `chmod` rewrites the ACL's mask, the mask caps every named entry beneath it, and an entry the mask has zeroed is printed with `#effective:---` instead of being removed:
+
+```text
+user:claude-agent:r--	#effective:---
+mask::---
+```
+
+That is a dead grant that still looks present. To check for it directly:
+
+```shell title="From the Pi"
+getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db* | grep 'effective:---'
+```
+
+Any output means a grant is listed but disabled, and whatever depends on it has been failing since the last thing that reset that file's permissions. No output is the healthy result.
+
 </TabItem>
 <TabItem label="From a workstation">
 
 ```shell title="From your workstation"
 ssh pi-hole-admin 'getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db*'
 ```
+
+A named entry can be listed and still grant nothing, so read the annotations rather than just looking for the account name. `chmod` rewrites the ACL's mask, the mask caps every named entry beneath it, and an entry the mask has zeroed is printed with `#effective:---` instead of being removed:
+
+```text
+user:claude-agent:r--	#effective:---
+mask::---
+```
+
+That is a dead grant that still looks present. To check for it directly:
+
+```shell title="From your workstation"
+ssh pi-hole-admin "getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db* | grep 'effective:---'"
+```
+
+Any output means a grant is listed but disabled, and whatever depends on it has been failing since the last thing that reset that file's permissions. No output is the healthy result.
 
 </TabItem>
 </Tabs>
@@ -4146,6 +4177,7 @@ Granted explicitly by ACL:
 - `/var/log/pihole/pihole.log`: raw dnsmasq query log
 - `/var/log/pihole/FTL.log`: FTL engine log, for startup and DNSSEC errors
 - `/etc/pihole/pihole-FTL.db`: long-term query database
+- `/etc/pihole/pihole-FTL.db-wal` and `/etc/pihole/pihole-FTL.db-shm`: SQLite WAL sidecars for that database, which a reader has to open as well as the `.db` file itself
 
 World-readable, no grant needed:
 
@@ -4176,6 +4208,14 @@ pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
 
 The `queries` view resolves internal integer IDs to real domain and client strings, so no joins are needed.
 `status` is numeric: `1` blocked by blocklist, `2` forwarded, `3` from cache, `4` blocked by regex, `5` blocked by denylist.
+
+If a query that used to work starts failing with `unable to open database file (14)`, or with `attempt to write a readonly database (8)` while FTL is stopped, the WAL sidecar grants are missing rather than the query being wrong.
+SQLite recreates `pihole-FTL.db-wal` and `pihole-FTL.db-shm` whenever FTL restarts, and the new files carry no ACL.
+Say so and hand back the command below; it needs `sudo`, so don't try to run it or work around it:
+
+```shell
+sudo setfacl -m "u:claude-agent:r" /etc/pihole/pihole-FTL.db-wal /etc/pihole/pihole-FTL.db-shm
+```
 
 The database lags live traffic by up to 60 seconds (`database.DBinterval`).
 If a query you just made is missing, wait a minute before concluding it didn't happen.
@@ -4709,12 +4749,14 @@ Otherwise it will keep asking you to run diagnostics by hand.
 <TabItem label="Your login user">
 
 Remove the ACL entries.
-The `-R` matters, because rotated archives inherited the grant from the directory's default ACL:
+Two details matter here.
+The `-R` matters because rotated archives inherited the grant from the directory's default ACL, and the `*` after `pihole-FTL.db` matters because the grant covered the two WAL sidecar files as well as the database, and those need removing too.
+The glob also handles them being absent, which is normal while FTL is stopped:
 
 ```shell title="From the Pi"
 sudo setfacl -R -x "u:$USER" /var/log/pihole && \
   sudo setfacl -x "d:u:$USER" /var/log/pihole && \
-  sudo setfacl -x "u:$USER" /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -x "u:$USER" /etc/pihole/pihole-FTL.db* && \
   sudo setfacl -x "u:$USER" /etc/pihole/cli_pw 2>/dev/null || true
 ```
 
@@ -4740,11 +4782,12 @@ Then clear the now-orphaned ACL entries, which otherwise linger as a bare numeri
 
 ```shell title="From the Pi"
 sudo setfacl -R -b /var/log/pihole && \
-  sudo setfacl -b /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -b /etc/pihole/pihole-FTL.db* && \
   sudo setfacl -b /etc/pihole/cli_pw
 ```
 
 `setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
+The `*` after `pihole-FTL.db` covers the two WAL sidecar files, which carried grants of their own, and expands to just the database when FTL is stopped and the sidecars don't exist.
 
 </TabItem>
 </Tabs>
@@ -4761,7 +4804,7 @@ Replace `pi-admin` with your own account name on the Pi:
 ```shell title="From your workstation"
 ssh -t pi-hole-admin 'sudo setfacl -R -x u:pi-admin /var/log/pihole && \
   sudo setfacl -x d:u:pi-admin /var/log/pihole && \
-  sudo setfacl -x u:pi-admin /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -x u:pi-admin /etc/pihole/pihole-FTL.db* && \
   sudo setfacl -x u:pi-admin /etc/pihole/cli_pw 2>/dev/null || true'
 ```
 
@@ -4787,11 +4830,12 @@ Then clear the now-orphaned ACL entries, which otherwise linger as a bare numeri
 
 ```shell title="From your workstation"
 ssh -t pi-hole-admin 'sudo setfacl -R -b /var/log/pihole && \
-  sudo setfacl -b /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -b /etc/pihole/pihole-FTL.db* && \
   sudo setfacl -b /etc/pihole/cli_pw'
 ```
 
 `setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
+The `*` after `pihole-FTL.db` covers the two WAL sidecar files, which carried grants of their own, and expands to just the database when FTL is stopped and the sidecars don't exist.
 
 </TabItem>
 </Tabs>
@@ -4806,18 +4850,26 @@ No `user:` line should name the account you revoked:
 <TabItem label="On the Pi">
 
 ```shell title="From the Pi"
-getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db /etc/pihole/cli_pw | grep '^user:'
+getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db* /etc/pihole/cli_pw | grep '^user:'
 ```
 
 </TabItem>
 <TabItem label="From a workstation">
 
 ```shell title="From your workstation"
-ssh pi-hole-admin "getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db /etc/pihole/cli_pw | grep '^user:'"
+ssh pi-hole-admin "getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db* /etc/pihole/cli_pw | grep '^user:'"
 ```
 
 </TabItem>
 </Tabs>
+
+:::note[An entry annotated `#effective:---` still needs revoking]
+An entry the ACL mask has zeroed is printed as `user:claude-agent:r--	#effective:---` rather than removed, and it still matches the `grep '^user:'` above.
+For revocation that is the right behavior to want: the entry is genuinely still on the file and genuinely still needs removing, whether or not it was granting anything.
+Treat any named line here as unfinished work, annotation or not.
+
+The same annotation means something different when you are checking that a grant still *works*, which is covered under [Verify the Boundaries](./set-up/#verify-the-boundaries).
+:::
 
 ## Alternative: The Pi-hole v6 API
 
