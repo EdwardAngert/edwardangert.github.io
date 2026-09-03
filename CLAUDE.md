@@ -15,6 +15,10 @@ pnpm lint:vale      # Vale only, via scripts/vale.sh
   deliberately in first-person site prose.
 - **No knowing flourish clauses**, the "for reasons nobody understood" wink.
   They read as machine-written. If one is cut, don't argue it back.
+- **Avoid idioms** ("smoking gun," "load-bearing") **and the word "actually"**
+  in doc prose. If Claude uses one anyway, it owes the user a short
+  explanation of why it was necessary there, in the conversation, not
+  inline in the doc. No explanation offered means cut it.
 - Headings are **title case**. `Google.Headings` is disabled in `.vale.ini`
   for exactly this reason.
   - **Exception: symptom headings in troubleshooting pages stay sentence case**
@@ -42,8 +46,9 @@ block at once.
 it applies to, never inside it. Methods are `tested`, `vendor-docs`,
 `community`, `inherited`, and they mean different things:
 
-- `tested` means run on real hardware, not reasoned about and not run in a
-  container standing in for it.
+- `tested` means run, not reasoned about. Real hardware and a container both
+  qualify: plenty of readers' own deployments are containers, so a container
+  run is not a step removed from their setup, it matches it.
 - `vendor-docs` covers claims traced to vendor documentation or vendor source.
 
 `src/plugins/remark-verified.mjs` collects these and fails the build on future

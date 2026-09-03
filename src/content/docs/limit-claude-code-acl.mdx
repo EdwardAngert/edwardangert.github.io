@@ -8,8 +8,9 @@ category: "Personal Reference Documentation"
 import Verified from '../../components/Verified.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-This guide covers giving Claude Code, or any coding agent, read and write access to specific files on your own machine, without sudo and without a standing credential for it to leak, cache, or hand off.
-Use it for diagnosing a compromised system and hardening it afterward, on macOS or Ubuntu, which are the running examples for everything below.
+This page covers giving Claude Code, or any coding agent, read and write access to specific files on your own machine, without sudo and without a standing credential for it to leak, cache, or hand off.
+
+Use the example below to give your coding agent limited access to diagnose and then harden a compromised system on macOS or Ubuntu.
 
 You can use the same steps to:
 
@@ -18,23 +19,38 @@ You can use the same steps to:
 - Poke at your `/etc/hosts` file.
 - Maintain your Jellyfin server or library.
 
-Diagnosing these requires read access to logs and configs.
+## What Limited Access Claude Code Needs to Troubleshoot a System
 
-Fixing what you find requires write access to specific files.
+To troubleshoot a compromised system or help manage settings, your coding agent requires read access to logs and configs.
 
-This guide covers both, along with some conceptual grounding you can apply to your own setup.
+It needs write access to specific files to fix what you find.
+
+This doc covers both, along with some conceptual grounding you can apply to your own setup.
 
 Through these steps, you scope what Claude Code can touch on your machine, so it never gets more than it needs.
 That constrains overeager agents and mitigates prompt injection: a prompt-injected session can only reach the files you explicitly granted.
 
-## Fix "sudo: a terminal is required to read the password"
+## "sudo: a terminal is required to read the password"
 
-If you run a command in Claude Code that requires sudo, the session isn't a real terminal, so the response is:
+The prompt in Claude Code isn't a real terminal, so if you run a command in Claude Code that requires sudo, the response is:
 
 ```text
 sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
 sudo: a password is required
 ```
+
+The steps on this page fix that error, but not by answering it.
+
+Everything the message suggests, the `-S` option, an askpass helper, giving Claude Code something that behaves like a terminal, hands the agent a way to submit a password.
+That would clear the error, but it would also give the agent standing privilege escalation, which is the opposite of what you want from something you're still diagnosing.
+
+The fix here is to make `sudo` unnecessary for the files the agent needs, not easier for it to call.
+An access control list grants your agent's own account direct read or write on a specific file, so reaching that file never requires elevated privilege at all.
+You grant the ACL once, yourself, typing the one `sudo` command it takes.
+From then on, Claude Code reads and writes that file as itself.
+The error above never appears for it again, because nothing about that file needs `sudo` anymore.
+
+That's the shape of every fix on this page: not a way past `sudo`, a way around needing it.
 
 ## Who Should Use ACL to Limit Claude Code's Access to Files?
 
@@ -53,8 +69,8 @@ The worked example below is what this sequence turns into once the lists come ba
 1. **Identify the system, and propose two candidate lists.**
 
    Bump the reasoning effort up before sending this one (`/effort high` in Claude Code).
-   This is the stage most likely to pattern-match a plausible-sounding list instead of actually testing each candidate.
-   A bigger budget buys room to run the check instead of skip it.
+   This is the stage most likely to pattern-match a plausible-sounding list instead of testing each candidate.
+   A bigger budget allows it to run the check.
 
    This first prompt gives Claude Code (or Cowork) a chance to identify what it needs within a limited scope.
    The process of giving it slices of the whole task is called progressive disclosure:
@@ -83,7 +99,7 @@ The worked example below is what this sequence turns into once the lists come ba
    1. Files and directories you'd need read access to, to diagnose this. Use
       what you know about this kind of system to generate candidates, the
       way any audit would, but before listing one, test it: `cat`, `head
-      -c1`, or `ls` against it, and only list what that test actually
+      -c1`, or `ls` against it, and only list what that test
       fails on. Say why it failed. On macOS, "permission denied" means an
       ACL will fix it; "operation not permitted" means TCC or SIP is
       refusing above the filesystem, no ACL and no sudo will help, flag it
@@ -101,7 +117,7 @@ The worked example below is what this sequence turns into once the lists come ba
       machine before including it, a search result citing an old path
       isn't the same as a path that's actually there. Label the whole list
       speculative. Don't propose it as something to grant yet, we'll
-      rebuild it for real after the diagnosis, from what you actually
+      rebuild it for real after the diagnosis, from what you
       found instead of what you're guessing now.
 
    Display both lists here, and also write them to
@@ -137,24 +153,24 @@ The worked example below is what this sequence turns into once the lists come ba
    ```md
    Read access is granted. Run the diagnosis for real.
    When you're checking for stale or risky configuration, check what's
-   installed against what's actually running or loaded, not just one or the
+   installed against what's running or loaded, not just one or the
    other, they answer different questions.
    ```
 
-   Read what actually comes back before moving on to the last stage.
+   Read the result before you move on to the last stage.
 
-1. **Build the real, non-speculative write list from what was actually found.**
+1. **Build the real, non-speculative write list from the findings.**
 
    Effort can drop back to medium here.
    The hard part already happened in the diagnosis, this is mapping a confirmed finding to the specific file it needs, one line each, not open-ended judgment.
 
    ```md
-   Based on what you actually found, give me a second, non-speculative write
+   Based on what you found, give me a second, non-speculative write
    list, one line per file, scoped to exactly what needs fixing.
    ```
 
    What comes back is usually a short, specific list, "read the auth log to check for failed login attempts," "write `/etc/hosts` to add the entries we agreed on," and that list is the actual spec for the grants you're about to make.
-   Each line becomes one ACL command, and nothing gets granted that wasn't on a list you actually reviewed.
+   Each line becomes one ACL command, and nothing gets granted that wasn't on a list you reviewed.
    Medium effort is also enough for applying the fixes and verifying each grant afterward, mostly mechanical work, but keep it at medium rather than dropping to low: the verification step from the first prompt, checking `getfacl` or `ls -le` instead of trusting an exit code, is exactly the kind of check that gets rubber-stamped under a smaller budget.
 
 </Steps>
@@ -187,7 +203,7 @@ If yes, the account has passwordless `sudo` in practice, whatever the mechanism 
 That test doesn't change when the task grows from "read one log" to "diagnose and fix a system."
 It just gets applied to more files.
 
-## What an ACL Grant Actually Is
+## What an ACL Grant Is
 
 An access control list attaches a permission, read, write, or both, to one specific account on one specific file, outside the normal owner, group, and everyone-else model.
 Ubuntu and macOS both have this, but they don't share a command, so this guide shows both side by side, and it's worth knowing that up front rather than discovering it mid-command.
@@ -220,7 +236,7 @@ sudo chmod +a "${USER} allow read,write" /etc/hosts
 
 Either way, on either platform, that's the whole grant.
 Not a Teleporter password, not `NOPASSWD` on a wildcard, not a shell.
-Read or write, on the one file Claude Code actually needs for the task in front of it.
+Read or write, on the one file Claude Code needs for the task in front of it.
 
 No `sudo` is required to use the grant once it's in place, because the operation now succeeds as an ordinary, unprivileged file access.
 No credential exists for the agent's account to leak, cache, or hand off to something else, because there was never a password in the picture to begin with.
@@ -253,8 +269,9 @@ Neither is a translation of the other, and working through both won't tell you t
 
 ### Ubuntu
 
-The output blocks here were captured in an `ubuntu:24.04` container (24.04.4 LTS, `acl` 2.3.2) under Podman on 2026-09-02, and every one of them is what the command actually returned.
-This section carries no `tested` badge because that word is reserved here for output captured on real hardware, and container testing has already missed a real hardware bug once in a sibling guide.
+<Verified date="2026-09" method="tested" />
+
+The output blocks here were captured in an `ubuntu:24.04` container (24.04.4 LTS, `acl` 2.3.2) under Podman on 2026-09-02, and every one of them is what the command returned.
 
 Most of what the container demonstrated was afterward confirmed on a real machine, a Debian 13 Raspberry Pi on `arm64`, on the same date: the `/etc/sudoers` and `/etc/sudoers.d/` modes, the denial, the `grep` exit-code behavior in steps 1 and 3, the ACL mask, `rX` versus `r` on a directory, default-ACL inheritance on genuinely rotated log files, and the difference between `setfacl -x` and `-k`.
 What stayed container-only is the grant itself, which needs an interactive `sudo`, and the persistence and cross-check demonstrations in steps 5 and 6.
@@ -266,7 +283,8 @@ On your own machine, finding nothing is the good outcome.
 
 The account being granted access here is a dedicated unprivileged user named `auditor`, which is also what the captured output shows.
 Substitute your own username.
-If the agent runs as your login user, that's `${USER}`, and the braces are not optional in zsh, see [The Gotchas](#the-gotchas).
+If the agent runs as your login user, that's `${USER}`
+Braces are required in zsh, check the [Gotchas](#the-gotchas) section for more.
 
 <Steps>
 
@@ -544,7 +562,7 @@ If the agent runs as your login user, that's `${USER}`, and the braces are not o
    `sysupdate.timer` is planted, and this is the point of running both checks: `crontab -l` still says `no crontab for root`, and it will keep saying that no matter how many timers are installed.
    A persistence check that only reads crontabs reports a clean machine here.
 
-   Ask what a timer actually runs, since the timer and the thing it triggers are two different units:
+   Ask what a timer runs, since the timer and the thing it triggers are two different units:
 
    ```shell
    systemctl cat sysupdate.service | grep ^ExecStart
@@ -647,7 +665,7 @@ A broad diagnostic read list, run against a Mac, mostly doesn't need any grants,
 
 <Steps>
 
-1. **Run the read list first, and count how much of it actually needs a grant.**
+1. **Run the read list first, and count how much of it needs a grant.**
 
    Re-probing the twenty-one candidate diagnostic paths from an earlier audit of this machine came back: fifteen already readable by an ordinary admin account, three blocked by something no ACL can reach, and three absent from this macOS version entirely.
    Zero of them needed an ACL.
@@ -855,14 +873,14 @@ Two files can look equally narrow, one ACL command each, and have wildly differe
   The fix is the operating system's own tool, not a bigger grant: `tccutil reset <service>`, or the System Settings UI, the only path Apple designed for changing it.
   Linux has its own version of this same wall: an immutable file (`chattr +i`) or a file under mandatory access control (SELinux, AppArmor) will refuse a write from root too, until you go through that system's own tool instead of the filesystem.
 
-A setting or a grant that's *named* or *shaped* like something narrow isn't always narrow in what it actually lets you do.
+A setting or a grant that's *named* or *shaped* like something narrow isn't always narrow in what it lets you do.
 Before granting write on any file, ask what reads it and whether that reader treats it as data or as instructions, and ask whether the file is even reachable by a write at all.
 If the answer is "a root process runs whatever's in this file, no human step in between," that file belongs on your never-grant list regardless of how small the edit looks.
 If the answer is "nothing, not even root, can write here without going through the OS's own tool first," stop reaching for `setfacl` and go find that tool instead.
 
 For anything above "low blast radius," a write grant on the live file isn't the only option, and it isn't always the best one.
 Ask Claude Code to write the proposed change to a scratch file instead, a diff or the full replacement content, either works, and apply it yourself once you've read it.
-That needs no write ACL on the real target at all, keeps a version of every change you actually made in whatever you used to review it, and the failure mode of a bad edit is "you didn't apply it," not "the agent already saved it and you're finding out from a broken service."
+That needs no write ACL on the real target at all, keeps a version of every change you made in whatever you used to review it, and the failure mode of a bad edit is "you didn't apply it," not "the agent already saved it and you're finding out from a broken service."
 The narrowest possible write grant is no write grant, and it's worth reaching for before a scoped one, not just after a mistake.
 
 ## The Gotchas
@@ -913,7 +931,7 @@ user:claude:r--	#effective:---
 mask::---
 ```
 
-`getfacl` still shows the entry, so a check that only greps for the username reports success on a grant that's actually dead.
+`getfacl` still shows the entry, so a check that only greps for the username reports success on a grant that's dead.
 Check the `#effective:` column instead:
 
 ```shell
@@ -950,7 +968,7 @@ Same trap as the Ubuntu `logrotate` gotcha covered earlier: recursive is a snaps
 
 **On macOS, a granted read can still come back denied, and that's not a bug in the grant.**
 The diagnostic prompt in "Ask Claude Code What It Needs First" flags one file ahead of time on macOS: `~/Library/Application Support/com.apple.TCC/TCC.db`, the per-app privacy grants database, normally needs Full Disk Access to read at all, regardless of what the file's own permissions or ACL say.
-Full Disk Access is macOS's own gate, on top of the filesystem, that decides whether a specific *app* (Terminal, iTerm, whatever's actually running your shell) can reach a short list of protected locations.
+Full Disk Access is macOS's own gate, on top of the filesystem, that decides whether a specific *app* (Terminal, iTerm, whatever's running your shell) can reach a short list of protected locations.
 An ACL grant on the file doesn't touch it.
 If a read you granted still comes back denied, check System Settings → Privacy & Security → Full Disk Access before assuming the `chmod +a` command failed.
 
@@ -967,7 +985,7 @@ Confirm any grant, read or write, before you trust it.
 
 <Steps>
 
-1. **Verify the grant actually took, on the file itself, not on the command's exit code.**
+1. **Verify the grant took, on the file itself, not on the command's exit code.**
 
    On Ubuntu, with `getfacl`:
 
@@ -1079,7 +1097,7 @@ It's also the point where a dedicated account for the agent starts paying for it
 
 Running Claude Code as your own login user means its blast radius is everything you can read: your SSH keys, your dotfiles, your shell history, on top of whatever you've explicitly granted.
 A dedicated, unprivileged account owns none of that.
-It has its own home directory, no `sudo`, and ACLs that reach only the data it's actually been granted, not your SSH keys, not `/etc/shadow`, nothing outside what you gave it on purpose.
+It has its own home directory, no `sudo`, and ACLs that reach only the data it's been granted, not your SSH keys, not `/etc/shadow`, nothing outside what you gave it on purpose.
 It's also immune to the cached-`sudo`-ticket problem by construction: with no `sudo` in the account's own picture at all, there's no ticket for it to inherit from a terminal you happened to authenticate in earlier.
 
 Revocation is the clearest difference.
