@@ -476,12 +476,14 @@ Otherwise it will keep asking you to run diagnostics by hand.
 <TabItem label="Your login user">
 
 Remove the ACL entries.
-The `-R` matters, because rotated archives inherited the grant from the directory's default ACL:
+Two details matter here.
+The `-R` matters because rotated archives inherited the grant from the directory's default ACL, and the `*` after `pihole-FTL.db` matters because the grant covered the two WAL sidecar files as well as the database, and those need removing too.
+The glob also handles them being absent, which is normal while FTL is stopped:
 
 ```shell title="From the Pi"
 sudo setfacl -R -x "u:$USER" /var/log/pihole && \
   sudo setfacl -x "d:u:$USER" /var/log/pihole && \
-  sudo setfacl -x "u:$USER" /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -x "u:$USER" /etc/pihole/pihole-FTL.db* && \
   sudo setfacl -x "u:$USER" /etc/pihole/cli_pw 2>/dev/null || true
 ```
 
@@ -507,11 +509,12 @@ Then clear the now-orphaned ACL entries, which otherwise linger as a bare numeri
 
 ```shell title="From the Pi"
 sudo setfacl -R -b /var/log/pihole && \
-  sudo setfacl -b /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -b /etc/pihole/pihole-FTL.db* && \
   sudo setfacl -b /etc/pihole/cli_pw
 ```
 
 `setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
+The `*` after `pihole-FTL.db` covers the two WAL sidecar files, which carried grants of their own, and expands to just the database when FTL is stopped and the sidecars don't exist.
 
 </TabItem>
 </Tabs>
@@ -528,7 +531,7 @@ Replace `pi-admin` with your own account name on the Pi:
 ```shell title="From your workstation"
 ssh -t pi-hole-admin 'sudo setfacl -R -x u:pi-admin /var/log/pihole && \
   sudo setfacl -x d:u:pi-admin /var/log/pihole && \
-  sudo setfacl -x u:pi-admin /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -x u:pi-admin /etc/pihole/pihole-FTL.db* && \
   sudo setfacl -x u:pi-admin /etc/pihole/cli_pw 2>/dev/null || true'
 ```
 
@@ -554,11 +557,12 @@ Then clear the now-orphaned ACL entries, which otherwise linger as a bare numeri
 
 ```shell title="From your workstation"
 ssh -t pi-hole-admin 'sudo setfacl -R -b /var/log/pihole && \
-  sudo setfacl -b /etc/pihole/pihole-FTL.db && \
+  sudo setfacl -b /etc/pihole/pihole-FTL.db* && \
   sudo setfacl -b /etc/pihole/cli_pw'
 ```
 
 `setfacl -b` clears every ACL entry on a file rather than removing one by name, so this succeeds whether or not you ever granted the `cli_pw` entry.
+The `*` after `pihole-FTL.db` covers the two WAL sidecar files, which carried grants of their own, and expands to just the database when FTL is stopped and the sidecars don't exist.
 
 </TabItem>
 </Tabs>
@@ -573,18 +577,26 @@ No `user:` line should name the account you revoked:
 <TabItem label="On the Pi">
 
 ```shell title="From the Pi"
-getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db /etc/pihole/cli_pw | grep '^user:'
+getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db* /etc/pihole/cli_pw | grep '^user:'
 ```
 
 </TabItem>
 <TabItem label="From a workstation">
 
 ```shell title="From your workstation"
-ssh pi-hole-admin "getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db /etc/pihole/cli_pw | grep '^user:'"
+ssh pi-hole-admin "getfacl -pR /var/log/pihole /etc/pihole/pihole-FTL.db* /etc/pihole/cli_pw | grep '^user:'"
 ```
 
 </TabItem>
 </Tabs>
+
+:::note[An entry annotated `#effective:---` still needs revoking]
+An entry the ACL mask has zeroed is printed as `user:claude-agent:r--	#effective:---` rather than removed, and it still matches the `grep '^user:'` above.
+For revocation that is the right behavior to want: the entry is genuinely still on the file and genuinely still needs removing, whether or not it was granting anything.
+Treat any named line here as unfinished work, annotation or not.
+
+The same annotation means something different when you are checking that a grant still *works*, which is covered under [Verify the Boundaries](/docs/pi-hole/claude-code-access/set-up/#verify-the-boundaries).
+:::
 
 ## Alternative: The Pi-hole v6 API
 

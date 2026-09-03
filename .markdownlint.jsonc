@@ -72,15 +72,24 @@
   "MD031": true,
   // MD032 - Lists surrounded by blank lines.
   "MD032": true,
-  // MD033 - Allow the HTML disclosure elements, this site's Starlight/MDX
-  // components, and the handful of raw HTML tags used deliberately (kbd for
-  // key names, p/em for a styled image caption). All other inline HTML is
-  // still flagged.
+  // MD033 - Replaced by the custom rule MD033-allow-quoted (see
+  // scripts/markdownlint-rules/md033-allow-quoted.cjs and
+  // .markdownlint-cli2.jsonc), which behaves the same way but also allows
+  // tag-shaped text that's entirely inside quotes or an inline code span
+  // (e.g. `export const highlights = ["<redacted>", ...]` or a prose mention
+  // like `<Aside>`) - that's a literal string or a code reference, not
+  // markup the renderer will act on. Turned off here so the two rules don't
+  // both fire on the same line.
+  "MD033": false,
+  // Config for MD033-allow-quoted: the HTML disclosure elements, this site's
+  // Starlight/MDX components, and the handful of raw HTML tags used
+  // deliberately (kbd for key names, p/em for a styled image caption). All
+  // other inline HTML is still flagged.
   //
   // The claude-code-access/set-up.mdx partial-import components (see
   // _README.md) are named here individually rather than pattern-matched:
-  // markdownlint's allowed_elements is an exact-name list, not a glob.
-  "MD033": {
+  // allowed_elements is an exact-name list, not a glob.
+  "MD033-allow-quoted": {
     "allowed_elements": [
       "details",
       "summary",
@@ -90,6 +99,8 @@
       "dl",
       "dt",
       "dd",
+      "Aside",
+      "Badge",
       "CardGrid",
       "Code",
       "ColumnList",
@@ -109,6 +120,7 @@
       "InstallWorkstationDedicated",
       "GrantToolsOnPi",
       "GrantToolsWorkstation",
+      "GrantExplanations",
       "GrantApplyLoginOnPi",
       "GrantApplyDedicatedOnPi",
       "GrantApplyLoginWorkstation",

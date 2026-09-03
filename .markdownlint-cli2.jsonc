@@ -1,0 +1,7 @@
+{
+  // Loads the custom MD033 replacement (scripts/markdownlint-rules/md033-allow-quoted.cjs).
+  // Rule config itself still lives in .markdownlint.jsonc.
+  "customRules": [
+    "./scripts/markdownlint-rules/md033-allow-quoted.cjs"
+  ]
+}

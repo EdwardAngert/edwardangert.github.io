@@ -1,3 +1,21 @@
 ```shell title="From the Pi"
 getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db*
 ```
+
+A named entry can be listed and still grant nothing, so read the annotations rather than just looking for the account name.
+`chmod` rewrites the ACL's mask, the mask caps every named entry beneath it, and an entry the mask has zeroed is printed with `#effective:---` instead of being removed:
+
+```text
+user:claude-agent:r--	#effective:---
+mask::---
+```
+
+That is a dead grant that still looks present.
+To check for it directly:
+
+```shell title="From the Pi"
+getfacl -p /var/log/pihole /etc/pihole/pihole-FTL.db* | grep 'effective:---'
+```
+
+Any output means a grant is listed but disabled, and whatever depends on it has been failing since the last thing that reset that file's permissions.
+No output is the healthy result.
