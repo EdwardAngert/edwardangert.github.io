@@ -10,9 +10,10 @@ Explanations:
     A default ACL is inherited by every file created in the directory afterward, including the compressed `.1` and `.2` archives.
 - `u:...:r` on the query database
   - Needs no directory ACL: `/etc/pihole` is already world-traversable.
-  - This grant survives Pi-hole restarts, for a reason worth knowing rather than assuming.
+  - This grant survives Pi-hole restarts.
     FTL resets the database to mode `0640` every time it starts, and a `chmod` rewrites the ACL's mask rather than removing named-user entries.
-    The mask is a ceiling on every named entry, so what actually saves the grant is that `0640`'s group bits are `r--`, which leaves a read grant at its full value.
+    The mask is a ceiling on every named entry.
+    `0640`'s group bits are `r--`, which leaves a read grant at its full value.
     A service that reset the same file to `0600` would drop the mask to `---` and disable the grant without removing it, and `getfacl` would still list the entry exactly where you left it.
     That is what the `#effective:` column reports, and it is the thing to check first when a grant that reads back correctly stops working.
 - `u:...:r` on `pihole-FTL.db-wal` and `pihole-FTL.db-shm`

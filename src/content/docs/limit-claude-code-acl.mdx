@@ -206,7 +206,7 @@ It just gets applied to more files.
 ## What an ACL Grant Is
 
 An access control list attaches a permission, read, write, or both, to one specific account on one specific file, outside the normal owner, group, and everyone-else model.
-Ubuntu and macOS both have this, but they don't share a command, so this guide shows both side by side, and it's worth knowing that up front rather than discovering it mid-command.
+Ubuntu and macOS both have this, but they don't share a command, so this guide shows both side by side.
 
 **Ubuntu** (and Linux generally) uses `setfacl`, from the POSIX.1e draft ACL implementation.
 A read grant looks like this:
@@ -261,11 +261,9 @@ Everything so far is the pattern stated in the abstract: grant read broadly, dia
 The fastest way to see it work is to run it against the machine in front of you.
 No service to install first, no second machine, just the error at the top of this page and whatever you're reading this on.
 
-The two tracks below are deliberately different shapes, because the two platforms are.
-On Ubuntu the pattern is load-bearing from end to end: the file you want is unreadable, one grant fixes it, and almost everything you check afterward is a file.
+On Ubuntu the file you want is unreadable, one grant fixes it, and almost everything you check afterward is a file.
+
 On macOS most of the same diagnosis needs no grant at all, and finding that out is the useful result rather than a disappointing one.
-Read the track you're on.
-Neither is a translation of the other, and working through both won't tell you twice as much.
 
 ### Ubuntu
 
@@ -379,9 +377,9 @@ Braces are required in zsh, check the [Gotchas](#the-gotchas) section for more.
    ```
 
    The grant covered `/etc/sudoers`, one file.
+
    Everything inside `/etc/sudoers.d/` is a separate `0440` file that was never granted, so the check silently covered half of what you asked it to cover.
 
-   This is the part worth internalizing, because it generalizes past this one command.
    A check that found nothing and a check that couldn't read its inputs look almost identical, and `grep` distinguishes them in the exit code rather than the output:
 
    ```shell
@@ -621,7 +619,7 @@ Braces are required in zsh, check the [Gotchas](#the-gotchas) section for more.
    apt list --upgradable
    ```
 
-   Listening ports are worth saving to a dated file so the next run has something to diff against, and a machine that has quietly stopped updating itself is a larger risk than most single findings an audit turns up.
+   Listening ports are worth saving to a dated file so the next run has something to diff against, and a machine that has stopped updating itself is a larger risk than most single findings an audit turns up.
 
 1. **Revoke, and remember the default ACL that `-x` leaves behind.**
 
@@ -851,7 +849,9 @@ Two files can look equally narrow, one ACL command each, and have wildly differe
   On macOS, a `/Library/LaunchDaemons/*.plist` with `RunAtLoad` set, which is exactly what a system LaunchDaemon is for: launchd runs its `ProgramArguments` as root the next time it loads, no further gate in between.
   Write access to any of these is not a scoped grant anymore.
   It's a way to get root the next time that file is read, and it fails the same test as passwordless `sudo` for the same reason: the account can retrieve something, in this case a write, that lets it become more than the one thing it needed.
-  The distinction that matters on macOS is LaunchAgent versus LaunchDaemon, not just the filename: a LaunchAgent runs in the logged-in user's context, whatever that user can already do; a LaunchDaemon runs as root, unconditionally, on every boot, with no login and no user session involved at all.
+
+  macOS has both LaunchAgent and LaunchDaemon plists.
+  A LaunchAgent runs in the logged-in user's context, whatever that user can already do; a LaunchDaemon runs as root, unconditionally, on every boot, with no login and no user session involved at all.
   Writing a LaunchAgent plist is bounded by your own account's privileges.
   Writing a LaunchDaemon plist is not bounded by anything: it grants root on every boot, the same as passwordless `sudo`, just reached through a plist instead of a sudoers rule.
 - **Not a file, no matter what you grant.** Some macOS posture was never a plist to begin with, or stopped being one.
@@ -881,7 +881,8 @@ If the answer is "nothing, not even root, can write here without going through t
 For anything above "low blast radius," a write grant on the live file isn't the only option, and it isn't always the best one.
 Ask Claude Code to write the proposed change to a scratch file instead, a diff or the full replacement content, either works, and apply it yourself once you've read it.
 That needs no write ACL on the real target at all, keeps a version of every change you made in whatever you used to review it, and the failure mode of a bad edit is "you didn't apply it," not "the agent already saved it and you're finding out from a broken service."
-The narrowest possible write grant is no write grant, and it's worth reaching for before a scoped one, not just after a mistake.
+
+The narrowest possible write grant is no write grant.
 
 ## The Gotchas
 
@@ -910,7 +911,7 @@ sudo setfacl -m "d:u:${USER}:r" /var/log
 **Use `${USER}`, not `$USER`, if a colon-suffix like `:r`, `:w`, or `:rX` follows it, and you're in zsh, on Ubuntu.**
 This one is easy to lose an afternoon to.
 zsh treats an unbraced `$USER` immediately followed by `:r` as a parameter-expansion modifier, borrowed from history substitution, and silently eats the suffix, even inside double quotes.
-`u:$USER:r` quietly becomes `u:myuser`, not `u:myuser:r`.
+`u:$USER:r` becomes `u:myuser`, not `u:myuser:r`.
 The modifier is real and it is doing its documented job, which is why nothing warns you: `:r` means "remove the extension," so a `$USER` of `host.example.com` followed by `:r` expands to `host.example` rather than being truncated at random.
 `setfacl` rejects that outright, `Option -m incomplete`, exit code 2, it doesn't grant something broken or grant nothing silently.
 The danger is where the error lands: buried in the middle of a longer block of commands, scrolled past, while the actual symptom, a file that should be readable and isn't, shows up later, somewhere else, with no obvious link back to a quoting bug two commands earlier.
@@ -1078,7 +1079,7 @@ A false negative, something real that got corrected before you saw it, costs you
 Every check in a recurring pass should compare against what this looked like last time, not attempt to decide on its own whether something new is malicious.
 That's also what makes standing read sufficient on its own: comparison needs no judgment call and no privilege beyond read.
 
-A standing grant that quietly stops working is worse than no grant at all, because you keep believing the check is still running.
+A standing grant that stops working is worse than no grant at all, because you keep believing the check is still running.
 This is the ACL mask gotcha covered earlier, one level up: a service's own `chmod` on its config file zeroes the mask without touching the entry `getfacl` still lists.
 Make the recurring check's first action a check of its own grants, before it checks anything else:
 
@@ -1114,9 +1115,9 @@ A local dedicated user needs the account created, its home directory locked down
 Running it over SSH from a separate workstation adds a dedicated keypair and a second host alias on top of that, and installing the pubkey non-interactively, since the account is deliberately password-locked and `ssh-copy-id` can't work against it; that's the intended shape, not a gap to work around.
 None of it is exotic, and Anthropic isn't building OS-level process isolation for you: a [feature request for exactly this](https://github.com/anthropics/claude-code/issues/41505) was closed as not planned, which makes a dedicated account the best available approach today, not a stopgap waiting on a fix that's coming.
 
-Weigh it against what it's for.
 A single diagnostic session on your own machine doesn't need any of this, the setup cost outweighs a benefit that only matters once a grant outlives one sitting.
-A recurring check that's going to run every week for the life of the machine is exactly the case this setup was built for.
+
+A recurring check that's going to run every week for the life of the machine is the type of case this setup was built for.
 
 ## The General Principle
 

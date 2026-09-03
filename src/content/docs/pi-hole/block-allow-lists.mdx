@@ -227,9 +227,7 @@ Adding it as a subscription prevents a large category of false positives before 
 
 ### Add an Individual Domain to the Allowlist
 
-You can instruct Pi-hole to allow individual domains.
-
-This is different from the lists you added in previous sections.
+Instruct Pi-hole to allow individual domains.
 
 If you encounter an error with a website or service, check the query log at `https://pi-hole.local/admin/queries`.
 Select **Advanced filtering** to filter by client or domain and sort by time.
@@ -251,7 +249,8 @@ For each service in the sections below, you can copy the domains from the table 
 
 Run the command for the services you use, then run `sudo pihole -g` to apply the changes.
 
-Note that domains can change.
+Domains can change.
+
 Streaming services update their CDN and analytics infrastructure regularly.
 If a service breaks again after you've already allowlisted it, check the query log for newly blocked domains.
 
@@ -282,8 +281,8 @@ Required for ad-supported plans.
 On Hulu's ad-supported plan, ad-serving domains share infrastructure with content delivery.
 This is server-side ad insertion (SSAI): the ads are stitched into the video stream before it reaches your device, so there is no separate ad request for Pi-hole to answer.
 
-That part hasn't changed: if you block the shared video-delivery domain itself, you break playback entirely rather than removing the ads, because the ad and the show are the same stream.
-Allowlisting can't get you out of that either - there's no ad-only piece of that stream to leave blocked while allowing the rest.
+If you block the shared video-delivery domain itself, you break playback entirely rather than removing the ads, because the ad and the show are the same stream.
+There's no ad-only piece of that stream to leave blocked while allowing the rest.
 
 ```shell title="From the Pi"
 sudo pihole allowlist geolocation.onetrust.com
@@ -295,7 +294,7 @@ sudo pihole allowlist geolocation.onetrust.com
 
 **Update (2026-08): blocking a different, unrelated set of domains now appears to suppress the ads entirely, without touching the video-delivery domain above.**
 Confirmed across several viewing sessions: with this guide's [HaGeZi Pro tier](#choose-a-hagezi-tier) or higher active, Hulu and Disney+ both now play with no ads at all, and playback is unaffected.
-The likely mechanism: both apps check in with an analytics/QoS SDK (Conviva, Braze) before deciding whether to insert a targeted ad, and appear to skip the ad rather than fall back to blocking playback when that check fails - a fail-soft, not a panic-stop.
+The likely mechanism: both apps check in with an analytics/QoS SDK (Conviva, Braze) before deciding whether to insert a targeted ad, and appear to skip the ad rather than fall back to blocking playback if that check fails.
 That's likely to change.
 
 `braze.com` and `conviva.com` are both already on HaGeZi's Pro tier (`pro.txt`), not just Pro++ - if you're on Pro or above, you already have this without doing anything. If you're on a lighter tier (Normal or below) and want to try this deliberately, block the two domains directly (their wildcard form covers every subdomain, so there's no need to chase the exact one your device happens to use):
