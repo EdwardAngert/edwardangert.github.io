@@ -8,15 +8,15 @@ category: "Personal Reference Documentation"
 import Verified from '../../components/Verified.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-This page covers giving Claude Code, or any coding agent, read and write access to specific files on your own machine, without sudo and without a standing credential for it to leak, cache, or hand off.
+This page gives Claude Code, or any coding agent, read and write access to specific files on your machine, without sudo and without a standing credential to leak, cache, or hand off.
 
-Use the example below to give your coding agent limited access to diagnose and then harden a compromised system on macOS or Ubuntu.
+Use the example below to give your coding agent limited access to diagnose and harden a compromised system on macOS or Ubuntu.
 
 You can use the same steps to:
 
 - Edit your `.zshrc` for shell settings.
 - Manage your dotfiles.
-- Poke at your `/etc/hosts` file.
+- Check your `/etc/hosts` file.
 - Maintain your Jellyfin server or library.
 
 ## What Limited Access Claude Code Needs to Troubleshoot a System
@@ -25,9 +25,7 @@ To troubleshoot a compromised system or help manage settings, your coding agent 
 
 It needs write access to specific files to fix what you find.
 
-This doc covers both, along with some conceptual grounding you can apply to your own setup.
-
-Through these steps, you scope what Claude Code can touch on your machine, so it never gets more than it needs.
+These steps scope what Claude Code can touch on your machine, so it never gets more than it needs.
 That constrains overeager agents and mitigates prompt injection: a prompt-injected session can only reach the files you explicitly granted.
 
 ## "sudo: a terminal is required to read the password"
@@ -42,27 +40,27 @@ sudo: a password is required
 The steps on this page fix that error, but not by answering it.
 
 Everything the message suggests, the `-S` option, an askpass helper, giving Claude Code something that behaves like a terminal, hands the agent a way to submit a password.
-That would clear the error, but it would also give the agent standing privilege escalation, which is the opposite of what you want from something you're still diagnosing.
+That clears the error, but it also grants the agent standing privilege escalation, exactly what you don't want while you're still diagnosing.
 
 The fix here is to make `sudo` unnecessary for the files the agent needs, not easier for it to call.
 An access control list grants your agent's own account direct read or write on a specific file, so reaching that file never requires elevated privilege at all.
 You grant the ACL once, yourself, typing the one `sudo` command it takes.
 From then on, Claude Code reads and writes that file as itself.
-The error above never appears for it again, because nothing about that file needs `sudo` anymore.
+That message never appears again, because nothing about that file needs `sudo` anymore.
 
-That's the shape of every fix on this page: not a way past `sudo`, a way around needing it.
+Every fix on this page works the same way: it removes the need for `sudo`, instead of finding a way around the prompt.
 
 ## Who Should Use ACL to Limit Claude Code's Access to Files?
 
 This guide is for a personal machine: a laptop, a Raspberry Pi, a home server.
-Enterprise least-privilege tooling for AI agents already covers the team and compliance case.
+Enterprise least-privilege tooling for AI agents covers the team and compliance case.
 This is the smaller version: access control lists, already built into macOS and Ubuntu, no vendor and nothing extra to install.
 
 ## Ask Claude Code What It Needs First
 
 Ask Claude Code what it needs before granting anything ([more on why](/blog/what-a-claude-wants-needs/)).
-Send it in stages rather than one long prompt covering the whole session, so you're in the loop at each decision point instead of reviewing everything at the end.
-The worked example below is what this sequence turns into once the lists come back, run command by command with the output each one returned.
+Send it in stages, not one long prompt covering the whole session, so you review each decision as it comes instead of everything at the end.
+The worked example below runs this exact sequence, command by command, with the output each one returned.
 
 <Steps>
 
@@ -73,7 +71,7 @@ The worked example below is what this sequence turns into once the lists come ba
    This is the stage most likely to pattern-match a plausible-sounding list instead of testing each candidate.
    A bigger budget allows it to run the check.
 
-   This first prompt gives Claude Code (or Cowork) a chance to identify what it needs within a limited scope.
+   This first prompt lets Claude Code (or Cowork) identify what it needs within a limited scope.
    The process of giving it slices of the whole task is called progressive disclosure:
 
    ```md
@@ -140,7 +138,7 @@ The worked example below is what this sequence turns into once the lists come ba
    ```
 
    Review what comes back, and run what you're comfortable with yourself.
-   Generating the command and running it are two different things, don't hand the second one to Claude Code either.
+   Generating a command and running it are different steps; don't hand Claude Code the second one either.
    Leave the write list alone.
    It's speculative, and nothing on it gets granted yet.
 
@@ -174,10 +172,8 @@ The worked example below is what this sequence turns into once the lists come ba
 
 </Steps>
 
-Splitting this into four prompts instead of one keeps each stage of the agent's context limited to what's relevant to it.
-It also gives you four distinct points to review real output.
-
-It also surfaces the read/write split explained below before you've committed to anything, which is the whole point of asking first instead of granting broadly and narrowing later.
+Splitting this into four prompts instead of one keeps each stage of the agent's context limited to what's relevant to it, and gives you four points to review real output before you commit to the next step.
+It also surfaces the read/write split explained below, before you've granted anything.
 
 ## Four Workarounds and Why They Don't Solve the sudo Issue
 
@@ -235,30 +231,30 @@ And a write grant spells the permission out instead of abbreviating it, but it's
 sudo chmod +a "${USER} allow read,write" /etc/hosts
 ```
 
-Either way, on either platform, that's the whole grant.
-Not a Teleporter password, not `NOPASSWD` on a wildcard, not a shell.
-Read or write, on the one file Claude Code needs for the task in front of it.
+Either way, on either platform, that's the whole grant: read or write, on the one file Claude Code needs for the task in front of it.
+It doesn't hand over a shared password, a wildcard `sudo` rule, or a shell.
 
 No `sudo` is required to use the grant once it's in place, because the operation now succeeds as an ordinary, unprivileged file access.
 No credential exists for the agent's account to leak, cache, or hand off to something else, because there was never a password in the picture to begin with.
 
 ## A Read Grant Doesn't Make the Content Trustworthy
 
-Everything so far is about privilege: a read grant can't create a write capability, so it can't make anything *worse* in the ACL sense.
-It isn't risk-free in every sense, though, because whatever the file contains lands directly in the agent's context, and a log file's content isn't authored by you.
+A read grant can't create a write capability, so it can't make anything worse in the ACL sense.
+But it isn't risk-free: whatever the file contains lands directly in the agent's context, and a log file's content isn't authored by you.
 
 A line in `/var/log/auth.log` is built from whatever tried to log in, an SSH username, before your machine ever wrote it down.
 The same is true of a Pi-hole query log, built from whatever hostname any device on your network asked to resolve.
 Anyone (or anything) that can reach the service on the other end can shape that content on purpose.
 If part of it reads like an instruction rather than data, and the model treats it as one, that's indirect prompt injection, and no ACL catches it: the read succeeded exactly as scoped, the problem is what the agent did with what it read, not what it was allowed to read.
-Not every log qualifies. A file that's purely local, your own shell history, an app's own local-only debug log, doesn't carry this risk the same way, because nothing outside your control wrote to it.
+Not every log qualifies.
+A file that's purely local, your own shell history, an app's own local-only debug log, doesn't carry this risk, because nothing outside your control wrote to it.
 
 This doesn't change the case for granting read broadly during diagnosis.
-It changes what you do with what comes back: read a suspicious log line yourself before letting the agent turn it into a write action, the same "verify before you trust it" discipline this guide already applies to grants themselves, applied here to content instead of permissions.
+It changes what you do with what comes back: read a suspicious log line yourself before letting the agent turn it into a write action, the same "verify before you trust it" rule this guide applies to grants, applied here to content instead of permissions.
 
 ## The Worked Example: Audit the Machine You're On
 
-Everything so far is the pattern stated in the abstract: grant read broadly, diagnose, grant write narrowly, fix, revoke.
+The pattern so far, in the abstract: grant read broadly, diagnose, grant write narrowly, fix, revoke.
 The fastest way to see it work is to run it against the machine in front of you.
 No service to install first, no second machine, just the error at the top of this page and whatever you're reading this on.
 
@@ -280,10 +276,10 @@ Two things this run planted on purpose, so the checks have something to find: a 
 Both are called out where they appear.
 On your own machine, finding nothing is the good outcome.
 
-The account being granted access here is a dedicated unprivileged user named `auditor`, which is also what the captured output shows.
+The account being granted access here is a dedicated unprivileged user named `auditor`.
 Substitute your own username.
-If the agent runs as your login user, that's `${USER}`
-Braces are required in zsh, check the [Gotchas](#the-gotchas) section for more.
+If the agent runs as your login user, that's `${USER}`.
+Braces are required in zsh, check [Where ACL Grants Go Wrong](#where-acl-grants-go-wrong) for more.
 
 <Steps>
 
@@ -363,7 +359,7 @@ Braces are required in zsh, check the [Gotchas](#the-gotchas) section for more.
    ```
 
    That `+` is reliable on Linux.
-   It is not reliable on macOS, for a reason covered in [The Gotchas](#the-gotchas).
+   It is not reliable on macOS, for a reason covered in [Where ACL Grants Go Wrong](#where-acl-grants-go-wrong).
 
 1. Run the check you came for, and read its exit code before believing it.
 
@@ -558,7 +554,7 @@ Braces are required in zsh, check the [Gotchas](#the-gotchas) section for more.
    ```
 
    Seven of those are stock Ubuntu.
-   `sysupdate.timer` is planted, and this is the point of running both checks: `crontab -l` still says `no crontab for root`, and it will keep saying that no matter how many timers are installed.
+   `sysupdate.timer` is planted, and this is the point of running both checks: `crontab -l` still says `no crontab for root`, and it keeps saying that no matter how many timers are installed.
    A persistence check that only reads crontabs reports a clean machine here.
 
    Ask what a timer runs, since the timer and the thing it triggers are two different units:
@@ -659,8 +655,7 @@ Braces are required in zsh, check the [Gotchas](#the-gotchas) section for more.
 
 Re-verified on real hardware on 2026-09-02, macOS 26.6.2 (build 25G83), arm64, on a standard admin account.
 
-This track is shorter than the Ubuntu one, and the reason it's shorter is the finding.
-A broad diagnostic read list, run against a Mac, mostly doesn't need any grants, so most of the ACL machinery this page teaches has nothing to attach to.
+This track is shorter than the Ubuntu one because a broad diagnostic read list on a Mac mostly doesn't need any grants, so most of the ACL machinery this page teaches has nothing to attach to.
 
 <Steps>
 
@@ -824,7 +819,7 @@ A broad diagnostic read list, run against a Mac, mostly doesn't need any grants,
 
    Not every candidate that looks the same turns out the same way.
    Three TeamViewer LaunchDaemons sit in that same directory, identical in shape, and `TeamViewer.app` is still installed, so they're three files that needed the same check and came back clean.
-   That contrast is the whole argument for testing a candidate before listing it: two sets of files, indistinguishable from the filesystem, one real and one not.
+   This is why the Stage 1 prompt insists on testing a candidate before listing it: two sets of files, indistinguishable from the filesystem, one real and one not.
 
 </Steps>
 
@@ -842,7 +837,7 @@ Two files can look equally narrow, one ACL command each, and have wildly differe
   Nothing treats it as code.
 - Higher blast radius, still bounded: on Ubuntu, `/etc/ssh/sshd_config`, `/etc/sysctl.d/*.conf`, a specific `ufw` rules file.
   Writable, and a privileged process (`sshd`, the kernel at boot, `ufw`) reads the new value and acts on it, but only after a restart or reload you control, and only within that service's own behavior.
-  `sshd_config` is bounded in mechanism, not in consequence: get one line wrong and the next `sshd` reload can lock you out of the machine entirely, or open remote access you didn't intend.
+  The mechanism is bounded, but a mistake here still isn't cheap: get one line wrong and the next `sshd` reload can lock you out of the machine entirely, or open remote access you didn't intend.
   Test a config change with `sshd -t` before reloading, and keep a second, already-open session to the machine until you've confirmed the new config works.
   Where the service supports a drop-in directory, grant write there instead of on the monolithic file: `sshd_config` includes `/etc/ssh/sshd_config.d/*.conf` by default on current Ubuntu, so a new file there takes effect the same way an edit to `sshd_config` itself would, and revoking the change is deleting one file instead of reverting a diff inside a file you share with everything else `sshd` already relies on.
   `/etc/sysctl.d/*.conf` and `/etc/sudoers.d/` already are this pattern, which is why they're on this list instead of `/etc/sysctl.conf` or `/etc/sudoers` itself.
@@ -855,7 +850,8 @@ Two files can look equally narrow, one ACL command each, and have wildly differe
   A LaunchAgent runs in the logged-in user's context, whatever that user can already do; a LaunchDaemon runs as root, unconditionally, on every boot, with no login and no user session involved at all.
   Writing a LaunchAgent plist is bounded by your own account's privileges.
   Writing a LaunchDaemon plist is not bounded by anything: it grants root on every boot, the same as passwordless `sudo`, just reached through a plist instead of a sudoers rule.
-- Not a file, no matter what you grant. Some macOS posture was never a plist to begin with, or stopped being one.
+- Not a file, no matter what you grant.
+  Some macOS posture was never a plist to begin with, or stopped being one.
   The Application Firewall's state lived at `/Library/Preferences/com.apple.alf.plist` through roughly macOS 12, that path is what a decade of search results and tutorials still point to, and it no longer exists.
   Current macOS administers the firewall through a helper binary instead:
 
@@ -867,25 +863,26 @@ Two files can look equally narrow, one ACL command each, and have wildly differe
   If a path a tutorial swears by turns out not to exist on your machine, the tutorial is out of date, not the grant broken.
   The same shape applies to launchd's own disabled-services state, covered earlier in the worked example: `launchctl print-disabled system` reports on it, but there's no file underneath a grant would reach.
   Changing it takes one `sudo launchctl` command, not a write ACL.
-- Not a scoping problem at all, no matter what you grant. Some files are locked below the point where `setfacl`, or even `sudo`, has any say.
+- Not a scoping problem at all, no matter what you grant.
+  Some files are locked below the point where `setfacl`, or even `sudo`, has any say.
   On a Mac, `/Library/Application Support/com.apple.TCC/TCC.db`, the database that tracks which apps you've granted camera, microphone, or screen-recording access to, is one of these.
   macOS protects it with System Integrity Protection (SIP), a kernel-level lock that root itself can't write past without booting into Recovery Mode and turning SIP off first, which is not something you want an agent doing on your behalf.
   No ACL grant gets you there, and no amount of `sudo` does either.
   The fix is the operating system's own tool, not a bigger grant: `tccutil reset <service>`, or the System Settings UI, the only path Apple designed for changing it.
-  Linux has its own version of this same wall: an immutable file (`chattr +i`) or a file under mandatory access control (SELinux, AppArmor) will refuse a write from root too, until you go through that system's own tool instead of the filesystem.
+  Linux has its own version of this same wall: an immutable file (`chattr +i`) or a file under mandatory access control (SELinux, AppArmor) refuses a write from root too, until you go through that system's own tool instead of the filesystem.
 
-A setting or a grant that's *named* or *shaped* like something narrow isn't always narrow in what it lets you do.
+A setting or a grant that's named or shaped like something narrow isn't always narrow in what it lets you do.
 Before granting write on any file, ask what reads it and whether that reader treats it as data or as instructions, and ask whether the file is even reachable by a write at all.
 If the answer is "a root process runs whatever's in this file, no human step in between," that file belongs on your never-grant list regardless of how small the edit looks.
 If the answer is "nothing, not even root, can write here without going through the OS's own tool first," stop reaching for `setfacl` and go find that tool instead.
 
-For anything above "low blast radius," a write grant on the live file isn't the only option, and it isn't always the best one.
+For anything above "low blast radius," a write grant on the live file isn't always the best option.
 Ask Claude Code to write the proposed change to a scratch file instead, a diff or the full replacement content, either works, and apply it yourself once you've read it.
 That needs no write ACL on the real target at all, keeps a version of every change you made in whatever you used to review it, and the failure mode of a bad edit is "you didn't apply it," not "the agent already saved it and you're finding out from a broken service."
 
 The narrowest possible write grant is no write grant.
 
-## The Gotchas
+## Where ACL Grants Go Wrong
 
 <Verified date="2026-09" method="tested" />
 
@@ -913,12 +910,12 @@ sudo setfacl -m "d:u:${USER}:r" /var/log
 
 ### Use `${USER}`, not `$USER`, if a colon-suffix like `:r`, `:w`, or `:rX` follows it, and you're in zsh, on Ubuntu
 
-This one is easy to lose an afternoon to.
 zsh treats an unbraced `$USER` immediately followed by `:r` as a parameter-expansion modifier, borrowed from history substitution, and silently eats the suffix, even inside double quotes.
 `u:$USER:r` becomes `u:myuser`, not `u:myuser:r`.
 The modifier is real and it is doing its documented job, which is why nothing warns you: `:r` means "remove the extension," so a `$USER` of `host.example.com` followed by `:r` expands to `host.example` rather than being truncated at random.
 `setfacl` rejects that outright, `Option -m incomplete`, exit code 2, it doesn't grant something broken or grant nothing silently.
 The danger is where the error lands: buried in the middle of a longer block of commands, scrolled past, while the actual symptom, a file that should be readable and isn't, shows up later, somewhere else, with no obvious link back to a quoting bug two commands earlier.
+
 On a real Raspberry Pi running this exact command through oh-my-zsh, the symptom wasn't even a clean error: the mangled command silently blew past Claude Code's own 120-second tool timeout and got demoted to a background task, which looked like an unrelated permissions problem until it was traced back to the quoting bug one layer down.
 bash doesn't have this problem.
 Braces around the variable are a no-op in bash, so `${USER}` is the safe form in both shells, and it costs nothing to always write it that way.
@@ -960,7 +957,6 @@ Grant `list,search,read` together instead, `list,search` cover the directory, `r
 chmod -R +a "${USER} allow list,search,read" ~/Library/LaunchAgents
 ```
 
-That's a real gap for exactly the check this grant is usually for.
 LaunchAgents and LaunchDaemons are macOS's version of cron and systemd units, the standard place something persists itself to run again after a reboot, and the whole point of reading that directory is to notice something new landing in it.
 The forward-looking half is a pair of inherit flags on the directory itself:
 
@@ -973,10 +969,10 @@ Files that existed before the flags were set get nothing, inheritance isn't retr
 A real persistence check on macOS needs both: `-R` for what's already there, the inherit flags for what arrives next.
 Same trap as the Ubuntu `logrotate` gotcha covered earlier: recursive is a snapshot, inheritance is a rule.
 
-### On macOS, a granted read can still come back denied, and that's not a bug in the grant
+### On macOS, Full Disk Access can deny a read even when the ACL grant is correct
 
 The diagnostic prompt in "Ask Claude Code What It Needs First" flags one file ahead of time on macOS: `~/Library/Application Support/com.apple.TCC/TCC.db`, the per-app privacy grants database, normally needs Full Disk Access to read at all, regardless of what the file's own permissions or ACL say.
-Full Disk Access is macOS's own gate, on top of the filesystem, that decides whether a specific *app* (Terminal, iTerm, whatever's running your shell) can reach a short list of protected locations.
+Full Disk Access is macOS's own gate, on top of the filesystem, that decides whether a specific app (Terminal, iTerm, whatever's running your shell) can reach a short list of protected locations.
 An ACL grant on the file doesn't touch it.
 If a read you granted still comes back denied, check System Settings → Privacy & Security → Full Disk Access before assuming the `chmod +a` command failed.
 
@@ -1011,7 +1007,7 @@ Confirm any grant, read or write, before you trust it.
    `ls -l` marks an ACL with a trailing `+` and an extended attribute with `@`, and shows only one of them.
    Nearly every file on a modern Mac carries at least one extended attribute (`com.apple.provenance`, on anything written by an app), so the `@` is almost always there and the `+` never surfaces.
    A file with an ACL and a file without one can look identical in `ls -l`.
-   Deny entries are the same problem in a different shape: `ls -le` shows a `deny` ACE explicitly, but nothing shorter than the full listing surfaces it, another reason to check with `ls -le` and never infer anything from `ls -l` alone.
+   Deny entries are the same problem in a different shape: `ls -le` shows a `deny` ACE explicitly, but nothing shorter than the full listing surfaces it.
 
 1. Revoke the grant when the session's done, then confirm.
 
@@ -1061,11 +1057,11 @@ Confirm any grant, read or write, before you trust it.
 That asymmetry is most of the actual payoff, and it matters more for write grants than read ones.
 Setting one up correctly, on the right file, can take real testing against the preceding gotchas.
 Taking it away takes one line and a follow-up check, touches nothing else about the account or the service, and leaves you back exactly where you started before you asked Claude Code to look at anything.
-That's the property that makes it reasonable to grant write access for a hardening session at all: you're never more than one command away from having granted nothing, as long as you check that it worked.
+This is why granting write access for a hardening session is reasonable at all: you're never more than one command away from having granted nothing, as long as you check that it worked.
 
 ## A Recurring Check: Standing Read, Session Write
 
-Everything covered so far is a session: grant read, diagnose, grant write narrowly, fix, revoke everything.
+The pattern so far runs one session at a time: grant read, diagnose, grant write narrowly, fix, revoke everything.
 For a machine you keep using, the natural next step is a recurring check instead of a one-time pass, and that changes the shape of the grant, not just how often you run it.
 
 ### Read Grants Become Standing
@@ -1126,7 +1122,8 @@ A local dedicated user needs the account created, its home directory locked down
 Running it over SSH from a separate workstation adds a dedicated keypair and a second host alias on top of that, and installing the pubkey non-interactively, since the account is deliberately password-locked and `ssh-copy-id` can't work against it; that's the intended shape, not a gap to work around.
 None of it is exotic, and Anthropic isn't building OS-level process isolation for you: a [feature request for exactly this](https://github.com/anthropics/claude-code/issues/41505) was closed as not planned, which makes a dedicated account the best available approach today, not a stopgap waiting on a fix that's coming.
 
-A single diagnostic session on your own machine doesn't need any of this, the setup cost outweighs a benefit that only matters once a grant outlives one sitting.
+A single diagnostic session on your own machine doesn't need any of this.
+The setup cost outweighs a benefit that only matters once a grant outlives one sitting.
 
 A recurring check that's going to run every week for the life of the machine is the type of case this setup was built for.
 
@@ -1138,7 +1135,7 @@ Write narrowly for the fix, one file at a time, and check what reads that file b
 Revoke when the session's done.
 
 Every one of the easy fixes covered earlier fails that test at the privilege stage.
-The file that fails it at the *file* stage, `/etc/sudoers.d/`, a systemd unit, a root LaunchDaemon, is the one worth remembering: the account can retrieve more than the task needs, the same failure as passwordless `sudo`, just found in a single file instead of a blanket grant.
+The file that fails it at the file stage, `/etc/sudoers.d/`, a systemd unit, a root LaunchDaemon, fails it the same way: the account can retrieve more than the task needs, the same failure as passwordless `sudo`, just found in a single file instead of a blanket grant.
 A standing check changes the schedule, not the rule: read stays broad because it can't make anything worse, write stays narrow and reviewed no matter how routine the check becomes, and a grant that's easy to set up is only worth keeping if it's just as easy to take away.
 
 The Pi-hole [Claude Code access guide](/docs/pi-hole/claude-code-access/) is the same pattern, worked in full against a specific, always-on service.
