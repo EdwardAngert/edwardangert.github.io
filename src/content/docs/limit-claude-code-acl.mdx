@@ -943,7 +943,7 @@ getfacl -p /etc/some-service.conf | grep 'effective:---'
 
 Any output means the grant has been masked off, possibly since the last time that service touched its own permissions.
 
-### On macOS, `-R` only grants what already exists, not what shows up later, and a directory needs a different permission word than a file, in the same command
+### On macOS, `-R` only grants what already exists, and a directory needs a different permission word than a file, in the same command
 
 `chmod -R +a` walks a directory once and writes an entry onto every file it finds at that moment.
 A file created a second after doesn't get one.
