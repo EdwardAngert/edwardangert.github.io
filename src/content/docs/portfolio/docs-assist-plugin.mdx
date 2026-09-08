@@ -25,7 +25,7 @@ The design principle underneath: use the model only where judgment is required, 
 An optional CI check, for example, never calls a model; it's a dependency-free script that flags which pull requests likely broke the docs and names the exact range to review, so the expensive model call only runs when a human decides it's warranted.
 
 I've exercised it across four codebases, both ones I already knew well (Coder's networking internals, Pantheon's Terminus CLI) and ones I didn't, to test that it scales a technical writer's judgment as much as it coaches an SME's.
-One of those runs was a 453-claim audit that caught 6 real doc/code drifts, cases where the documentation and the code had quietly disagreed. Those were practice runs on other teams' repos, not linked here, but they're what the summary above is built on.
+One of those runs was a 453-claim audit that caught 6 real doc/code drifts, cases where the documentation and the code had disagreed. Those were practice runs on other teams' repos, not linked here, but they're what the summary above is built on.
 
 ## Background
 

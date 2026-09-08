@@ -132,7 +132,7 @@ sudo systemctl disable lighttpd && \
 sudo systemctl restart pihole-FTL
 ```
 
-**Check what port FTL is actually using**:
+**Check what port FTL is using**:
 
 ```shell title="From the Pi"
 pihole-FTL --config webserver.port
@@ -495,7 +495,6 @@ If it's clean, the warning is stale.
 **Cause**: HaGeZi [deprecated the legacy `domains` and `hosts` format lists](https://github.com/hagezi/dns-blocklists/discussions/10545) on August 1, 2026.
 Those formats enumerate every subdomain explicitly, which made files huge and unable to block unknown subdomains.
 Only software using an outdated matching engine - Pi-hole with FTL older than v5.22, plus old versions of Blocky, Diversion, pfBlockerNG, and similar - ever needed them.
-If you heard about this change and are looking to update your HaGeZi lists to the new format, that's exactly what the fix below does.
 
 **Fix**: Switch the list to the `adblock` format, which HaGeZi is not deprecating and which Pi-hole v6 (FTL well past v5.22) supports natively.
 

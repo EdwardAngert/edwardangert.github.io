@@ -22,7 +22,8 @@ After the Pi is set up and running, use this page as a reference for [confirming
 
 All of these sections are optional.
 
-Want Claude Code to help diagnose issues using these logs? See [Give Claude Code Access to Pi-hole Logs and Diagnostics](/docs/pi-hole/claude-code-access/).
+You can use Claude Code to help diagnose Pi-hole issues.
+Go to [Give Claude Code Access to Pi-hole Logs and Diagnostics](/docs/pi-hole/claude-code-access/).
 
 ## Optional: Require a Password for sudo Commands
 
@@ -113,9 +114,6 @@ After editing, restart the FTL service to apply changes:
 sudo systemctl restart pihole-FTL
 ```
 
-`pihole-FTL` is the core Pi-hole system service.
-It needs to be restarted when you make core configuration changes.
-
 :::note[Back up the file before you make changes]
 
 Editing `pihole.toml` directly can break Pi-hole if you introduce syntax errors.
@@ -205,7 +203,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
    UUID=YOUR-UUID  /mnt/pihole-logs  ext4  defaults,noatime  0  2
    ```
 
-   Note that this example uses `ext4`.
+   This example uses `ext4`.
    If your USB drive is formatted as exFAT or NTFS instead of ext4, change the filesystem type accordingly.
 
    <details>
