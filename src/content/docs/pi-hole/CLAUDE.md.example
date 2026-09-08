@@ -43,6 +43,7 @@ Granted explicitly by ACL:
 - `/var/log/pihole/pihole.log`: raw dnsmasq query log
 - `/var/log/pihole/FTL.log`: FTL engine log, for startup and DNSSEC errors
 - `/etc/pihole/pihole-FTL.db`: long-term query database
+- `/etc/pihole/pihole-FTL.db-wal` and `/etc/pihole/pihole-FTL.db-shm`: SQLite WAL sidecars for that database, which a reader has to open as well as the `.db` file itself
 
 World-readable, no grant needed:
 
@@ -73,6 +74,14 @@ pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
 
 The `queries` view resolves internal integer IDs to real domain and client strings, so no joins are needed.
 `status` is numeric: `1` blocked by blocklist, `2` forwarded, `3` from cache, `4` blocked by regex, `5` blocked by denylist.
+
+If a query that used to work starts failing with `unable to open database file (14)`, or with `attempt to write a readonly database (8)` while FTL is stopped, the WAL sidecar grants are missing rather than the query being wrong.
+SQLite recreates `pihole-FTL.db-wal` and `pihole-FTL.db-shm` whenever FTL restarts, and the new files carry no ACL.
+Say so and hand back the command below; it needs `sudo`, so don't try to run it or work around it:
+
+```shell
+sudo setfacl -m "u:claude-agent:r" /etc/pihole/pihole-FTL.db-wal /etc/pihole/pihole-FTL.db-shm
+```
 
 The database lags live traffic by up to 60 seconds (`database.DBinterval`).
 If a query you just made is missing, wait a minute before concluding it didn't happen.

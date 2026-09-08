@@ -110,6 +110,22 @@ for a partial here, one more `../` for `Verified.astro` and
 `CLAUDE.md.example`. Easy to get wrong when copying an import line from
 `set-up.mdx` instead of from another file already in `one-pagers/`.
 
+## The widest-shared partial
+
+`_grant-read-access-explanations.mdx` is imported by **all five** pages that
+show the grant command: `set-up.mdx` and each of the four one-pagers. It holds
+the "Explanations:" list under `Grant Read Access` plus the `:::note` about
+deleting the FTL database.
+
+It is worth knowing why it exists. That block sat as literal duplicated prose
+in all five files until 2026-09-02, forking exactly the way this README warns
+about: a correction to the ACL mask explanation had to land in five places, and
+a wrong claim about `chmod` and the mask had already survived in all five
+because nothing tied them together. The block does not fork by identity or
+location - it uses generic `u:...:r` placeholders - so one partial covers every
+page. If a future edit needs it to differ per combination, split it the way
+`_grant-read-access-run-*` is split rather than re-inlining it.
+
 **The four one-pager pages, and the picker page itself, are excluded from
 `public/llms-full.txt`.** Their content is already in the bundle via
 `set-up.mdx`'s tabbed sections; including a one-pager too would duplicate
