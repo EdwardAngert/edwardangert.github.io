@@ -99,18 +99,22 @@ In my [last post](../ai-docs-assist/), I was optimistic about it.
 
 Here's what actually happened:
 
-- **Railway deployment wouldn't bind to the right IP.** Crash loops. But that was almost beside the point.
-- **Claude Desktop only supports local stdio connections.** I built an HTTP/SSE server for a client that can't use HTTP. The Railway deployment was solving the wrong problem from the start.
-- **The dataset tools had circular dependencies.** They required the main reformatters package to be installed, which defeated the purpose of a separate knowledge repo.
-- **Search tools returned nothing even when the content was right there.** Tool registration worked. Retrieval didn't.
+- Railway deployment wouldn't bind to the right IP.
+  I encountered crash loops, but they just surfaced another issue:
+- Claude Desktop only supports local stdio connections.
+  - I built an HTTP/SSE server for a client that can't use HTTP.
+    The Railway deployment was solving the wrong problem from the start.
+- The dataset tools had circular dependencies.
+  They required the main reformatters package to be installed, which defeated the purpose of a separate knowledge repo.
+- Search tools returned nothing even when the content was right there.
+  Although tool registration worked, retrieval didn't.
 
-The MCP server runs.
-The tools are registered.
+The MCP server runs and the tools are registered.
 Claude thinks the knowledge base has [good content](https://github.com/EdwardAngert/reformatters-knowledge-base/tree/main/knowledge).
-But the architecture was mismatched from the start: I built a remote-first HTTP server for clients that only work locally over stdio.
+But the architecture was mismatched: I built a remote-first HTTP server for clients that only work locally over stdio.
 
 I had Claude Code verify the branch and document its findings.
-Its conclusion: MCP remote access isn't mature enough for team-wide use.
+It concluded that MCP remote access isn't mature enough for team-wide use.
 MCP requires infrastructure I don't have the capacity (or desire) to maintain.
 
 Claude Code eventually reached the [Write the Docs](https://www.writethedocs.org/)-ready conclusion I've been arguing for, "we don't need another repository, we just need better documentation."

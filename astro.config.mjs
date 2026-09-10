@@ -95,6 +95,12 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Other Docs',
+					items: [
+						{ label: 'Give Claude Code Scoped File Access', link: '/docs/limit-claude-code-acl/' },
+					],
+				},
+				{
 					label: 'Documentation',
 					items: [
 						{
