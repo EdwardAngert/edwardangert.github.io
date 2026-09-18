@@ -8,6 +8,17 @@ pnpm lint           # markdownlint + Vale
 pnpm lint:vale      # Vale only, via scripts/vale.sh
 ```
 
+## Git workflow
+
+**Pushes to `main` are reserved for hotfixes.** Everything else, including a
+multi-file content pass like a heading-case migration or a docs audit's
+fixes, goes on a branch with a PR, even in a solo repo. A `.githooks/pre-push`
+hook (wired up via `git config core.hooksPath .githooks`, which is local
+config and needs re-running after a fresh clone) blocks a direct push to
+`main` and prints the override for a genuine hotfix. Don't set
+`ALLOW_MAIN_PUSH=1` or `--no-verify` past that hook without asking first,
+the same as any other hook.
+
 ## Writing
 
 - **Never use em dashes** in prose you write. Use a hyphen, a comma, or rewrite

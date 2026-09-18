@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Blocks direct pushes to main. Pushes to main are reserved for genuine
+# hotfixes; everything else goes through a branch and a PR.
+#
+# Genuine hotfix: re-run with ALLOW_MAIN_PUSH=1 git push, after telling
+# the person what you're doing and why it can't wait for a PR.
+set -euo pipefail
+
+remote="$1"
+protected_branch='main'
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/$protected_branch" ]; then
+    if [ "${ALLOW_MAIN_PUSH:-}" != "1" ]; then
+      echo "" >&2
+      echo "Blocked: direct push to '$protected_branch'." >&2
+      echo "Pushes to $protected_branch are reserved for hotfixes." >&2
+      echo "Push a branch and open a PR instead." >&2
+      echo "" >&2
+      echo "If this really is a hotfix: ALLOW_MAIN_PUSH=1 git push $remote $local_ref:$remote_ref" >&2
+      echo "" >&2
+      exit 1
+    fi
+  fi
+done
+
+exit 0
