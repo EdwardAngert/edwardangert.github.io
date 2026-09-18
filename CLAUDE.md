@@ -8,6 +8,17 @@ pnpm lint           # markdownlint + Vale
 pnpm lint:vale      # Vale only, via scripts/vale.sh
 ```
 
+## Git workflow
+
+**Pushes to `main` are reserved for hotfixes.** Everything else, including a
+multi-file content pass like a heading-case migration or a docs audit's
+fixes, goes on a branch with a PR, even in a solo repo. A `.githooks/pre-push`
+hook (wired up via `git config core.hooksPath .githooks`, which is local
+config and needs re-running after a fresh clone) blocks a direct push to
+`main` and prints the override for a genuine hotfix. Don't set
+`ALLOW_MAIN_PUSH=1` or `--no-verify` past that hook without asking first,
+the same as any other hook.
+
 ## Writing
 
 - **Never use em dashes** in prose you write. Use a hyphen, a comma, or rewrite
@@ -21,9 +32,15 @@ pnpm lint:vale      # Vale only, via scripts/vale.sh
   inline in the doc. No explanation offered means cut it.
 - Headings are **sentence case** ("Fix list health issues", not "Fix List
   Health Issues"). Capitalize only the first word and proper nouns/acronyms
-  (Pi-hole, DNS, UFW, Tailscale, Claude Code). `Google.Headings` is disabled
-  in `.vale.ini` for exactly this reason. This also covers sidebar labels in
-  `astro.config.mjs`, which should match.
+  (Pi-hole, DNS, UFW, Tailscale, Claude Code). This also covers sidebar
+  labels in `astro.config.mjs`, which should match.
+  - `Google.Headings` in `.vale.ini` checks for exactly this, but stays
+    disabled: its exceptions list is a small hardcoded set (Azure, Docker,
+    Kubernetes, ...) that doesn't know this site's own proper nouns and
+    acronyms, so it flags nearly every correctly-cased heading as wrong.
+    Confirmed by testing a scoped re-enable on the Pi-hole guide: 56 false
+    positives, zero real findings. Heading case is enforced by review, not
+    Vale.
 - One sentence per line in docs prose. Line length is not enforced
   (`MD013` is off) because one-sentence-per-line makes lines intentionally long.
 
