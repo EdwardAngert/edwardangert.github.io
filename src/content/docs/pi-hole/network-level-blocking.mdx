@@ -24,7 +24,7 @@ Network traffic itself does not flow through the Pi-hole.
 
 Now that you have your Pi-hole configured to block ads and other types of traffic you want to block, you can configure each device's network settings to use the Pi IP as its DNS server, or you can have your router send all DNS requests through the Pi-hole.
 
-## Configure Network-Wide Blocking
+## Configure network-wide blocking
 
 Configure your router's DHCP server to hand out the Pi-hole's IP as the DNS server and use Cloudflare as a backup.
 
@@ -38,7 +38,7 @@ In your router's DHCP settings, set:
 This looks different for each router brand.
 Look for **DHCP**, **LAN**, or **DNS** settings.
 
-### Devices Might Bypass Pi-hole in Favor of Secondary DNS
+### Devices might bypass Pi-hole in favor of secondary DNS
 
 Nothing in DNS requires a client to prefer the first server it was handed.
 
@@ -58,7 +58,7 @@ If you're chasing intermittent blocking, check this before anything else, and se
 The resolver behavior described here is drawn from how each operating system's resolver documents its own selection order, not from measurements on my network.
 The rest of this section is tested.
 
-### Set Up Network-Wide Pi-hole on a TP-Link Omada Controller
+### Set up network-wide Pi-hole on a TP-Link Omada controller
 
 These steps are Omada controller-specific, but the language might be similar on other hardware.
 
@@ -84,7 +84,7 @@ For a smart TV, that means a full power cycle from the menu or the old favorite:
 
 **Verify it's working**: On a device that has renewed its lease, open the Pi-hole query log and browse to a few sites - you should see the device's IP appear as a client.
 
-## Optional: Force Devices That Ignore Router DNS to Use the Pi-hole
+## Optional: force devices that ignore router DNS to use the Pi-hole
 
 <Verified date="2026-08" method="tested" />
 
@@ -96,7 +96,7 @@ Some smart devices like Chromecast and Samsung Smart TVs ignore the DNS server y
 
 **This can't be fixed from the Pi itself**.
 Network traffic doesn't flow through the Pi-hole (as stated above), so a device's DNS query to `8.8.8.8` never reaches the Pi to intercept in the first place.
-Catching it requires a rule on whatever box actually sits between your devices and the internet: your router.
+Catching it requires a rule on whatever box sits between your devices and the internet: your router.
 
 **Blocking the hardcoded address outright doesn't work either**.
 Chromecast in particular refuses to function at all if `8.8.8.8` is unreachable, rather than falling back to the DNS server it was assigned.

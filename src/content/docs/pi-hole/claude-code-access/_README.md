@@ -47,12 +47,12 @@ node scripts/check-location-coverage.mjs --all   # full backlog, no diff scoping
 Mark a block as deliberately exempt (rare - most things claiming "From the Pi"
 really do need the other branch) with a comment on the line immediately above it:
 
-```mdx
+````mdx
 {/* location-fixed: reason */}
 ```shell title="From the Pi"
 ...
 ```
-```
+````
 
 ## History: one-pagers were generated, then dropped, then revived as partials
 
@@ -122,7 +122,7 @@ in all five files until 2026-09-02, forking exactly the way this README warns
 about: a correction to the ACL mask explanation had to land in five places, and
 a wrong claim about `chmod` and the mask had already survived in all five
 because nothing tied them together. The block does not fork by identity or
-location - it uses generic `u:...:r` placeholders - so one partial covers every
+location: it uses generic `u:...:r` placeholders, so one partial covers every
 page. If a future edit needs it to differ per combination, split it the way
 `_grant-read-access-run-*` is split rather than re-inlining it.
 

@@ -32,7 +32,7 @@ This page combines the steps from [Give Claude Code Access to Pi-hole](/docs/pi-
 - Run Claude Code on their workstation
 - Connect to the Pi over SSH as a dedicated unprivileged account
 
-## Create the Agent User
+## Create the agent user
 
 <Verified date="2026-08" method="tested" />
 
@@ -46,7 +46,7 @@ Install Claude Code on your workstation using the [instructions for your platfor
 
 Nothing gets installed on the Pi.
 
-## Grant Read Access
+## Grant read access
 
 <Verified date="2026-08" method="tested" />
 
@@ -71,7 +71,7 @@ Every command in this section runs with `sudo` on the Pi, over SSH as `pi-hole-a
 
 <GrantExplanations />
 
-## Read Query History
+## Read query history
 
 <Verified date="2026-08" method="vendor-docs" />
 
@@ -98,7 +98,7 @@ The values are:
 
 The database lags live traffic by up to 60 seconds because FTL flushes its in-memory buffer on `database.DBinterval`, which defaults to `60`.
 
-## Verify the Boundaries
+## Verify the boundaries
 
 <Verified date="2026-08" method="tested" />
 
@@ -128,7 +128,7 @@ Add to `.claude/settings.json` in the project directory you run Claude Code from
 
 <ConfigureClaudeCodeWorkstationDedicated />
 
-## Give the Agent a Context File
+## Give the agent a context file
 
 Access alone isn't enough.
 An agent that doesn't know how your network is put together can search for the wrong thing and report a confident non-answer.

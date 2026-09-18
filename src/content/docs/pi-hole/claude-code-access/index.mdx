@@ -27,7 +27,7 @@ You can learn more about ACL in the [Red Hat documentation](https://docs.redhat.
 
 Skip to [Choose Your Setup](/docs/pi-hole/claude-code-access/#choose-your-setup) for the commands and configuration.
 
-## Should Claude Code Have Root or Use sudo?
+## Should Claude Code have root or use sudo?
 
 No.
 
@@ -54,7 +54,7 @@ By default, `sudo` caches that authentication for 15 minutes (5 minutes as of Ra
 If you type your `sudo` password in a terminal and then start `claude` in that same terminal, Claude Code's commands inherit the cached ticket.
 For the rest of that time window, every `sudo` command it runs succeeds without a password prompt.
 
-### If sudo Says a Password Is Required inside Claude Code
+### If sudo says a password is required inside Claude Code
 
 A command that needs `sudo` fails immediately, with the error below, instead of pausing to ask you for a password.
 
@@ -76,7 +76,7 @@ Neither of the two fixes that the error message suggests work from Claude Code (
 
 An askpass helper still has to produce your real password non-interactively, which means the password would need to live somewhere Claude Code's user account (current user) can read it, like a file, an environment variable, or a secrets store it shells out to.
 
-### If sudo Is Passwordless
+### If sudo is passwordless
 
 Raspberry Pi OS disabled default passwordless `sudo` with the 6.2 release in April 2026.
 
@@ -127,7 +127,7 @@ After you remove the file, `sudo` asks for that account's password.
 
 </Steps>
 
-## What ACL Grants Allow Claude Code to Do
+## What ACL grants allow Claude Code to do
 
 <Verified date="2026-08" method="vendor-docs" />
 
@@ -147,7 +147,7 @@ It cannot allow or deny a domain, update gravity, restart DNS, edit any configur
 Keep in mind that this is only effective if passwordless `sudo` is off.
 If the account still has passwordless `sudo`, all `sudo` commands will be allowed.
 
-### Run a Command Yourself with Claude Code's Shell Mode
+### Run a command yourself with Claude Code's shell mode
 
 <Verified date="2026-08" method="tested" />
 
@@ -172,7 +172,7 @@ The loop is: Claude diagnoses, gives you a command, you run it with `!`, and Cla
 
 If you would rather Claude Code apply list changes itself, see [Optional: Give Claude Code Write Access](/docs/pi-hole/claude-code-access/extend/#optional-give-claude-code-write-access).
 
-## What Pi-hole Files Does Claude Code Need Access to?
+## What Pi-hole files does Claude Code need access to?
 
 <Verified date="2026-08" method="vendor-docs" />
 
@@ -191,7 +191,7 @@ Two things need a grant: the query database, and the log files.
 | `/etc/pihole/pihole.toml`   | `0640` or `0644` | Holds password hashes in plain text                                                                     | No, [deliberately excluded](#why-piholetoml-is-excluded) |
 | `/etc/pihole/cli_pw`        | `0640`           | A readable copy would let `pihole allow`/`deny` open a write session                                    | No, [deliberately excluded](#why-cli_pw-is-excluded) |
 
-### Why pihole.toml Is Excluded
+### Why pihole.toml is excluded
 
 Don't change the mode for `pihole.toml`.
 
@@ -203,7 +203,7 @@ If you need a single value from it, read that value on its own:
 pihole-FTL --config webserver.api.app_sudo
 ```
 
-### Why cli_pw Is Excluded
+### Why cli_pw is excluded
 
 Don't grant access to `cli_pw`.
 
@@ -232,7 +232,7 @@ sudo pihole -up
 
 Left unreadable, the wait is for a password prompt on a terminal Claude Code doesn't have, the same wall as `sudo` above.
 
-## Choose Your Setup
+## Choose your setup
 
 Two decisions. Pick each once, and the rest of this page follows your choice.
 
@@ -331,7 +331,7 @@ The account has to be real at the process level, which works differently in each
 </TabItem>
 </Tabs>
 
-## In This Guide
+## In this guide
 
 Already know which combination you want? Each one has a complete,
 self-contained [one-pager](/docs/pi-hole/claude-code-access/one-pagers/)

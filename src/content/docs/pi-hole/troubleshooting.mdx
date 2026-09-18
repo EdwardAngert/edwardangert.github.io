@@ -17,7 +17,7 @@ import Verified from '../../../components/Verified.astro';
 Want Claude Code to run checks like these for you?
 [Give Claude Code Access to Pi-hole Logs and Diagnostics](/docs/pi-hole/claude-code-access/).
 
-## Enable/Disable Debug Logging
+## Enable/disable debug logging
 
 <Verified date="2026-08" method="tested" />
 
@@ -31,7 +31,7 @@ sudo systemctl restart pihole-FTL
 
 Change `true` to `false` when you're done troubleshooting.
 
-### How to Create and Share a Pi-hole Debug Log for Support
+### How to create and share a Pi-hole debug log for support
 
 <Verified date="2026-08" method="community" />
 
@@ -67,7 +67,7 @@ If your Pi-hole is configured to log specific URLs, this log contains that list 
 
 For more information about Pi-hole debugging, visit the [official Pi-hole forum](https://discourse.pi-hole.net/t/how-do-i-debug-my-pi-hole-installation/3104).
 
-## Troubleshoot Pi-hole Installation Issues
+## Troubleshoot Pi-hole installation issues
 
 ### SSH host key mismatch after rebuild
 
@@ -346,16 +346,16 @@ sudo pihole-FTL --config ntp.sync.active false && \
 sudo systemctl restart pihole-FTL
 ```
 
-## Blocklists and Allowlists
+## Blocklists and allowlists
 
-### Troubleshoot a Broken Service
+### Troubleshoot a broken service
 
 <Verified date="2026-08" method="tested" />
 
 If the broken service is Disney+, Hulu, Paramount+, YouTube, Netflix, Max, Apple TV+, Samsung Smart TVs, Amazon Fire TV, Roku, or Monday.com, check [Fix Streaming Services and Other Broken Sites](/docs/pi-hole/block-allow-lists/#fix-streaming-services-and-other-broken-sites) first - it has tested domain lists for each.
 Use the general method below for anything else.
 
-#### Step 1: Check if Pi-hole is the problem
+#### Step 1: check if Pi-hole is the problem
 
 <Steps>
 
@@ -368,7 +368,7 @@ Use the general method below for anything else.
 
 If it's still broken with Pi-hole disabled, the problem is elsewhere.
 
-#### Step 2: Find the blocked domain
+#### Step 2: find the blocked domain
 
 <Steps>
 
@@ -380,7 +380,7 @@ If it's still broken with Pi-hole disabled, the problem is elsewhere.
 
 </Steps>
 
-#### Step 3: Allowlist the domain
+#### Step 3: allowlist the domain
 
 <Steps>
 
@@ -393,7 +393,7 @@ If it's still broken with Pi-hole disabled, the problem is elsewhere.
 You may need to repeat this.
 Some services check multiple domains sequentially, so you might need to allowlist several before the service works.
 
-#### Step 4: If you can't find the domain
+#### Step 4: if you can't find the domain
 
 <Steps>
 
@@ -415,7 +415,7 @@ For services in this category, options include:
 - Accept that DNS-level blocking has limits for those specific services
 - Use a browser extension for web-based viewing
 
-### Custom Filtering Rules
+### Custom filtering rules
 
 <Verified date="2026-08" method="community" />
 
@@ -425,7 +425,7 @@ Add them via CLI or in the web interface under **Domains** > **Regex filter**.
 These rules run against every queried domain in real time, so keep the list reasonably short and test after adding.
 Regex rules can cause false positives that don't show up until something breaks.
 
-### Fix List Health Issues
+### Fix list health issues
 
 <Verified date="2026-08" method="community" />
 
@@ -485,7 +485,7 @@ If it's clean, the warning is stale.
 
 **Fix**: `sudo systemctl restart pihole-FTL` clears it.
 
-#### How to Update Deprecated HaGeZi URL Lists to Adblock Format
+#### How to update deprecated HaGeZi URL lists to Adblock format
 
 <Verified date="2026-08" method="tested" />
 
@@ -651,7 +651,7 @@ Without it, all traffic including the SSH connection routes through the exit nod
 
 </Steps>
 
-## Verify Pi-hole Is Working
+## Verify Pi-hole is working
 
 <Verified date="2026-08" method="tested" />
 

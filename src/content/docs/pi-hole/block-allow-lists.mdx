@@ -33,7 +33,7 @@ If you're just here to add lists, you can skip to these sections:
 - [Add Allowlists and Domains to Pi-hole](#add-allowlists-and-domains-to-pi-hole)
 - [Fix Streaming Services and Other Broken Sites](#fix-streaming-services-and-other-broken-sites)
 
-## How to Choose the Best Pi-hole Blocklist
+## How to choose the best Pi-hole blocklist
 
 The two most-recommended Pi-hole blocklists are [HaGeZi](https://github.com/hagezi/dns-blocklists) and [OISD](https://oisd.nl/).
 Both are well-maintained, low-false-positive options.
@@ -62,7 +62,7 @@ As of Pi-hole v6, Pi-hole uses the words `blocklist` and `allowlist` instead of 
 Some list maintainers still use some of the outdated language in their descriptions and in the list URLs.
 :::
 
-### Choose a HaGeZi Tier
+### Choose a HaGeZi tier
 
 - **HaGeZi Normal**
   - Balanced blocking with minimal false positives.
@@ -81,7 +81,7 @@ Some list maintainers still use some of the outdated language in their descripti
 For quick reference, the full tier progression is: Light > Normal > Pro > Pro++ > Ultimate.
 See [HaGeZi's README](https://github.com/hagezi/dns-blocklists) for descriptions of each.
 
-### Recommended Blocklists
+### Recommended blocklists
 
 If you enabled the default blocklist or previously used [The Firebog](https://firebog.net/), [StevenBlack/hosts](https://github.com/StevenBlack/hosts), or [1Hosts](https://github.com/badmojr/1Hosts), you can disable them in favor of the lists on this page.
 
@@ -172,7 +172,7 @@ Not listed above, but worth knowing about:
   - Blocks newly registered and algorithmically generated domains, a category that malware command-and-control infrastructure relies on.
     This can improve your security posture, but can lead to more false positives.
 
-## Add Blocklists to Pi-hole
+## Add blocklists to Pi-hole
 
 To add a list:
 
@@ -191,7 +191,7 @@ To add a list:
 
 </Steps>
 
-## Add Allowlists and Domains to Pi-hole
+## Add allowlists and domains to Pi-hole
 
 Pi-hole v6 offers two ways to allowlist:
 
@@ -200,7 +200,7 @@ Pi-hole v6 offers two ways to allowlist:
 - **Individual domain entries**: Add a single domain directly in **Domains** > **Allowlist** in the web interface.
   Best for one-off fixes when a specific service breaks.
 
-### Subscribe to a Referral Allowlist
+### Subscribe to a referral allowlist
 
 The HaGeZi Referral Allowlist is a maintained collection of domains that blocklists commonly block but that services legitimately need.
 Adding it as a subscription prevents a large category of false positives before they happen.
@@ -225,7 +225,7 @@ Adding it as a subscription prevents a large category of false positives before 
 
 </Steps>
 
-### Add an Individual Domain to the Allowlist
+### Add an individual domain to the allowlist
 
 Instruct Pi-hole to allow individual domains.
 
@@ -235,7 +235,7 @@ After you find the domain, select **Allow** to add the domain to the allowlist.
 
 See [Troubleshoot a Broken Service](/docs/pi-hole/troubleshooting/#troubleshoot-a-broken-service) for tips.
 
-### Fix Streaming Services and Other Broken Sites
+### Fix streaming services and other broken sites
 
 If a service stops working after you set up Pi-hole, the likely cause is a blocked domain.
 The sections below list known fixes for common services.
@@ -460,7 +460,7 @@ sudo pihole allowlist ei.monday.com
 It's likely marketing/referral tracking rather than something the app itself needs, so it wasn't allowlisted here.
 If you hit a different broken feature, check the query log before assuming you need it too.
 
-## Control Blocking Per Device with Groups
+## Control blocking per device with groups
 
 By default, every device on your network is part of the same `Default` group and follows that group's rules.
 Pi-hole's group system lets you change that per device so that you can assign a group to skip blocking entirely for problem devices, or to apply stricter rules for a specific device like a child's laptop.
@@ -469,7 +469,7 @@ All blocklists are assigned to the `Default` group, and every device is in that 
 
 A device can be added to multiple groups at the same time and follows the combined rules of all its groups.
 
-### Skip Pi-hole for a Specific Device
+### Skip Pi-hole for a specific device
 
 Useful for a device where blocking breaks functionality and you can't or would rather not troubleshoot it (smart TVs, streaming sticks, Paramount+, Roku).
 
@@ -489,7 +489,7 @@ Useful for a device where blocking breaks functionality and you can't or would r
 The device now resolves DNS without any filtering.
 All other devices are unaffected.
 
-### Block YouTube and Social Media for a Specific Device
+### Block YouTube and social media for a specific device
 
 Apply extra blocklists on top of the normal ones without affecting the rest of the network.
 This can be useful for a child's device or a school-issued laptop.

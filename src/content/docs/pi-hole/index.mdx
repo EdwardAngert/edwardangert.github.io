@@ -17,7 +17,7 @@ Pi-hole is a DNS-based ad blocker for your whole network.
 
 ![Pi-hole dashboard](./screenshots/pi-hole-dashboard.png)
 
-## What Pi-hole Does
+## What Pi-hole does
 
 When a device on your network tries to access something from the internet, it checks in with Pi-hole first.
 Pi-hole checks the address against a list you've configured, and if that resource isn't on the list, it allows the device to connect.
@@ -28,7 +28,7 @@ Unlike a browser extension, Pi-hole works on almost every device on your network
 It can also block known malware domains, phishing sites, and telemetry endpoints.
 Blocking ad server requests before they're made can also speed up page loads.
 
-### Pi-hole Limitations
+### Pi-hole limitations
 
 Pi-hole works at the DNS level ([DNS Reddit ELI5](https://www.reddit.com/r/explainlikeimfive/comments/fx4sgy/eli5_what_is_dns/fms3kk2/)).
 It sees the domain name but not the URL or content, so it can't distinguish between types of content on the same domain.
@@ -41,7 +41,7 @@ For most other services, you can [add service-specific rules to the allowlists](
 You can set up a Pi-hole to reduce the advertising noise of the internet.
 But if you're looking for a way to remove the essay before a recipe, this isn't it.
 
-## Why This Guide Exists
+## Why this guide exists
 
 Due to some hardware issues in the past, I've had to rebuild this setup several times, collecting steps from around the internet each time.
 This guide is a collection of my notes, organized into documentation to help other people set up or rebuild their Pi-hole.
@@ -84,7 +84,7 @@ If you identify any errors or areas for improvement, [submit a GitHub issue](htt
 - Familiarity with a terminal and the command line, or at least comfort following terminal commands.
   Most commands in this guide can be copied and pasted, and I try to explain the ones that can't be.
 
-## In This Guide
+## In this guide
 
 - [Set Up Raspberry Pi OS](/docs/pi-hole/install-configure/)
   - Flash the SD card, harden the OS with UFW and Fail2Ban, set a static IP.

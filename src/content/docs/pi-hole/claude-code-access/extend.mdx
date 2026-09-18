@@ -17,7 +17,7 @@ Apart from [Revoke Access](#revoke-access), everything on this page is optional.
 
 Start at [Give Claude Code Access to Pi-hole](/docs/pi-hole/claude-code-access/) if you haven't set up access yet.
 
-## Optional: Give Claude Code Write Access
+## Optional: give Claude Code write access
 
 <Verified date="2026-08" method="vendor-docs" />
 
@@ -137,7 +137,7 @@ It can remove lists as well as add them, and `pihole disable` turns off blocking
 
 </Steps>
 
-### The Limit of FTL for Access
+### The limit of FTL for access
 
 The credential cannot change configuration or import a Teleporter backup.
 FTL enforces both, unconditionally, with no setting to turn them off:
@@ -210,7 +210,7 @@ ssh -t pi-hole-admin 'sudo setfacl -x u:claude-agent /etc/pihole/cli_pw'
 </TabItem>
 </Tabs>
 
-## Optional: Run Diagnostics That Need Root
+## Optional: run diagnostics that need root
 
 <Verified date="2026-08" method="tested" />
 
@@ -467,7 +467,7 @@ Otherwise it will keep asking you to run diagnostics by hand.
 
 </details>
 
-## Revoke Access
+## Revoke access
 
 <Tabs syncKey="cc-location">
 <TabItem label="On the Pi">
@@ -598,7 +598,7 @@ Treat any named line here as unfinished work, annotation or not.
 The same annotation means something different when you are checking that a grant still *works*, which is covered under [Verify the Boundaries](/docs/pi-hole/claude-code-access/set-up/#verify-the-boundaries).
 :::
 
-## Alternative: The Pi-hole v6 API
+## Alternative: the Pi-hole v6 API
 
 <Verified date="2026-08" method="tested" />
 
@@ -740,7 +740,7 @@ Update to 6.7 or later if you haven't already.
 
 Generate a new application password to revoke active sessions, including your web interface login.
 
-## What the Agent Can Still See
+## What the agent can still see
 
 <Verified date="2026-08" method="vendor-docs" />
 

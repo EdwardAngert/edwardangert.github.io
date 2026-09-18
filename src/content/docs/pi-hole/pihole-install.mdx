@@ -88,7 +88,7 @@ If you installed Pi-hole on an existing device or skipped to this section, these
 
 </Steps>
 
-## Optional: Configure Unbound as Recursive DNS
+## Optional: configure unbound as recursive DNS
 
 [Unbound](https://docs.pi-hole.net/guides/dns/unbound/) is a recursive DNS resolver.
 Instead of forwarding DNS queries to Cloudflare or your ISP, unbound resolves queries by [walking the DNS tree](https://notes.kodekloud.com/docs/Demystifying-DNS/DNS-as-a-System/Walking-the-DNS-Tree/page) from the root servers.
@@ -195,7 +195,7 @@ sudo systemctl restart pihole-FTL
 
 :::
 
-## Optional: Monitor Pi-hole with Netdata
+## Optional: monitor Pi-hole with Netdata
 
 [Netdata](https://www.netdata.cloud/) is a lightweight real-time monitoring tool with a built-in Pi-hole integration.
 It shows query rate, cache hits, blocked domains, and FTL status alongside system metrics such as CPU, memory, temperature, and Fail2Ban statistics.

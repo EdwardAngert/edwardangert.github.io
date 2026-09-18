@@ -6,8 +6,8 @@ ssh pi-hole-admin "pihole-FTL sqlite3 --readonly /etc/pihole/pihole-FTL.db \
     ORDER BY timestamp DESC LIMIT 20;\""
 ```
 
-Nested double quotes around the SQL string get easy to get subtly wrong once you're wrapping an already-quoted command in `ssh host "..."`.
-A heredoc avoids the extra escaping layer entirely and matches the multi-line SQL formatting above verbatim:
+The nested double quotes here are easy to get subtly wrong.
+A heredoc avoids the extra escaping layer and matches the multi-line SQL formatting above verbatim, so it's the better default when you're calling this from your own machine rather than already logged in:
 
 ```shell "YOUR-DEVICE-IP" title="From your workstation"
 ssh pi-hole-admin bash -s <<'EOF'

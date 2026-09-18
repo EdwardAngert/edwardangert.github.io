@@ -19,13 +19,11 @@ pnpm lint:vale      # Vale only, via scripts/vale.sh
   in doc prose. If Claude uses one anyway, it owes the user a short
   explanation of why it was necessary there, in the conversation, not
   inline in the doc. No explanation offered means cut it.
-- Headings are **title case**. `Google.Headings` is disabled in `.vale.ini`
-  for exactly this reason.
-  - **Exception: symptom headings in troubleshooting pages stay sentence case**
-    ("Gravity fails to update", not "Gravity Fails to Update"). They are phrased
-    the way a reader describes the problem, which is also how the query arrives.
-    Don't normalize them to title case. Task and concept headings on those same
-    pages stay title case ("Fix List Health Issues").
+- Headings are **sentence case** ("Fix list health issues", not "Fix List
+  Health Issues"). Capitalize only the first word and proper nouns/acronyms
+  (Pi-hole, DNS, UFW, Tailscale, Claude Code). `Google.Headings` is disabled
+  in `.vale.ini` for exactly this reason. This also covers sidebar labels in
+  `astro.config.mjs`, which should match.
 - One sentence per line in docs prose. Line length is not enforced
   (`MD013` is off) because one-sentence-per-line makes lines intentionally long.
 

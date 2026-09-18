@@ -25,7 +25,7 @@ All of these sections are optional.
 You can use Claude Code to help diagnose Pi-hole issues.
 Go to [Give Claude Code Access to Pi-hole Logs and Diagnostics](/docs/pi-hole/claude-code-access/).
 
-## Optional: Require a Password for sudo Commands
+## Optional: require a password for sudo commands
 
 <Verified date="2026-08" method="tested" />
 
@@ -85,7 +85,7 @@ sudo pihole -up && \
 sudo pihole -g
 ```
 
-## Back Up Your Configuration
+## Back up your configuration
 
 Pi-hole's Teleporter exports your full configuration: blocklists, allowlists, custom domains, regex rules, DNS settings, and DHCP config.
 
@@ -104,7 +104,7 @@ Store the backup file somewhere other than the Pi, such as on your local compute
 Treat the file as sensitive.
 It includes your full configuration, so store it like any config backup that might hold credentials: never in a shared or public folder.
 
-## Advanced Pi-hole Configuration with pihole.toml
+## Advanced Pi-hole configuration with pihole.toml
 
 If you need to configure Pi-hole's DNS behavior outside the web interface, edit `/etc/pihole/pihole.toml` directly.
 
@@ -124,7 +124,7 @@ sudo cp /etc/pihole/pihole.toml /etc/pihole/pihole.toml.bak
 
 :::
 
-### Example: Change Upstream DNS
+### Example: change upstream DNS
 
 Change the addresses in the `[dns]` section of `pihole.toml`:
 
@@ -144,7 +144,7 @@ Or for Cloudflare directly:
 ...
 ```
 
-### Reference: Full pihole.toml
+### Reference: full pihole.toml
 
 This is the full `pihole.toml` from my setup, with comments stripped and the password hash redacted.
 Values marked `### CHANGED` were modified from the Pi-hole default.
@@ -156,19 +156,19 @@ Values marked `### CHANGED` were modified from the Pi-hole default.
 
 </details>
 
-## Offload Logs to a USB Drive
+## Offload logs to a USB drive
 
 <Verified date="2026-08" method="community" />
 
 The Pi-hole FTL database (`pihole-FTL.db`) grows continuously and can wear out an SD card over months.
 Move the database and log file to a USB drive to protect the SD card and extend its life.
 
-### What You Need
+### What you need
 
 - A USB flash drive
 - The Pi running with Pi-hole installed
 
-### Mount the USB Drive
+### Mount the USB drive
 
 <Steps>
 
@@ -252,7 +252,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
 </Steps>
 
-### Point Pi-hole to the USB Drive
+### Point Pi-hole to the USB drive
 
 <Steps>
 
@@ -319,7 +319,7 @@ Move the database and log file to a USB drive to protect the SD card and extend 
 
 </Steps>
 
-## Optional: Set Pi-hole Database Retention
+## Optional: set Pi-hole database retention
 
 <Verified date="2026-08" method="tested" />
 
