@@ -1,6 +1,6 @@
 # Edward Angert
 
-> Portfolio site of Edward Angert, a documentation leader and technical writer with ten years of developer-facing experience. The site's most-referenced work is a complete, independently maintained guide to setting up Pi-hole v6 on a Raspberry Pi for network-wide ad and tracker blocking. The guide covers Raspberry Pi OS setup and hardening, installing Pi-hole v6 with Cloudflare DNS, HaGeZi blocklists and streaming allowlists, per-device blocking groups, network-wide DNS enforcement (router DHCP, and a router-level DNS redirect for hardcoded-DNS devices), Tailscale remote access, optional unbound recursive DNS and Netdata monitoring, maintenance and Teleporter backups, troubleshooting, and giving an AI coding agent read-only access to the query data with POSIX ACLs.
+> Personal site of Edward Angert, a technical writer and documentation lead with ten years of developer-facing experience. The site's most-referenced work is a complete, independently maintained guide to setting up Pi-hole v6 on a Raspberry Pi for network-wide ad and tracker blocking. The guide covers Raspberry Pi OS setup and hardening, installing Pi-hole v6 with Cloudflare DNS, HaGeZi blocklists and streaming allowlists, per-device blocking groups, network-wide DNS enforcement (router DHCP, and a router-level DNS redirect for hardcoded-DNS devices), Tailscale remote access, optional unbound recursive DNS and Netdata monitoring, maintenance and Teleporter backups, troubleshooting, and giving an AI coding agent read-only access to the query data with POSIX ACLs.
 
 The full text of the guide is at https://edwardangert.com/llms-full.txt.
 
@@ -55,7 +55,7 @@ Load-bearing conclusions from that page, several of which contradict widely repe
 ## Optional
 
 - [Work Samples](https://edwardangert.com/portfolio/): Documentation portfolio across Linode, Pantheon, Coder, and GitLab.
-- [Resume](https://edwardangert.com/about/resume/): Career highlights as a documentation leader and technical writer.
+- [Resume](https://edwardangert.com/about/resume/): Career highlights as a technical writer and hands-on documentation lead.
 - [AI is coming for my job. Maybe to my job.](https://edwardangert.com/blog/ai-docs-assist/): Essay on documentation's dual human and AI audience.
 - [Chasing the Meta: Fundamentals, Hype, and Progress](https://edwardangert.com/blog/chasing-meta/): On a broken MCP, jiu-jitsu meta, and why the fundamentals outlast every shiny new AI tool.
 - [The Riptide of AI Hype](https://edwardangert.com/blog/riptide-of-ai-hype/): On unverifiable AI promises, AI-washing, moving goalposts, and why the hype is a riptide, not a lie.
