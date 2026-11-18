@@ -1,43 +1,64 @@
 ---
 title: "About Me"
-description: "Documentation leader and technical writer. Personal site, portfolio, and a few projects I built for fun."
+description: "Edward Angert's personal site: projects, writing, and documentation work."
 ---
 
 import ColumnList from '~/components/ColumnList.astro';
 
-Hello, this is Edward!
+Hello, this is Edward.
 
-This site is part portfolio, part personal.
-The portfolio shows documentation I've built and how I think about the work.
-The personal side has projects like my [Pi-hole setup](/docs/pi-hole/) and posts about documentation culture, AI workflows, and the ideas I'm exploring.
-
-At work, I'm a documentation leader who assesses what exists, identifies what's needed, and builds systems that work.
-I've been a technical writer for ten years, creating developer-focused documentation, information architecture, and scalable workflows across globally distributed teams.
-I transform fragmented documentation into coherent user journeys and establish docs-first processes that teams adopt and sustain.
+This is my personal site.
+It has projects I've built for my own home, like my [Pi-hole setup](/docs/pi-hole/).
+The [blog](/blog/) has posts about documentation culture, AI workflows, and the ideas I'm exploring.
 
 In general, I'm a perpetual tinkerer who learns by doing, whether it's setting up my home server, scripting workflows with Claude Code, or dismantling things to understand how they work.
 
-I help people share their knowledge by making it easier to contribute, find, and trust documentation.
-I love empowering users no matter where they sit in the audience--internal or external--through testing, transparency, and making things easy to understand (or at least easy to copy and paste).
-
-Connect on [LinkedIn](https://www.linkedin.com/in/edward-angert/) or set up a time to talk through [my cal.com link](https://cal.com/edwardangert).
-
-If you encounter an issue or typo, please select **Edit page** at the bottom of any page, or you can [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new).
-
-## Non-work Edward
-
-When I'm not doing documentation things, I'm:
+You can often find me:
 
 <ColumnList columns={2}>
 
-- Teaching my kid how to climb things safely
+- Teaching my kids how to climb things safely
 - Practicing Brazilian Jiu-Jitsu
-- Cycling
 - Bouldering
-- Roller skating
+- Cycling
+- Artistic quad roller skating (and teaching it)
 - Taking things apart
 - Finding ways to make things work
 - Exploring open source software
-- Learning how to make better use of AI tools in documentation workflows
+- Integrating AI and tech in helpful ways
+- Folding laundry
 
 </ColumnList>
+
+## At work
+
+I'm a technical writer and documentation lead, and I help people share their knowledge by making it easier to contribute, find, and trust documentation.
+I love empowering users no matter where they sit in the audience--internal or external--through testing, transparency, and making things easy to understand (or at least easy to copy and paste).
+Documentation isn't only for customers: it helps support and sales find answers, and it's a practice other teams can adopt to share what they know and make onboarding easier.
+The [resume](/about/resume/) has the highlights, and the [portfolio](/portfolio/) has samples of the work itself.
+
+## Get in touch
+
+Connect on [LinkedIn](https://www.linkedin.com/in/edward-angert/) or set up a time to talk through [my cal.com link](https://cal.com/edwardangert).
+
+## About this site
+
+This site runs on [Astro](https://astro.build/) and [Starlight](https://starlight.astro.build/), deployed to GitHub Pages, with the [starlight-blog](https://github.com/HiDeoo/starlight-blog) plugin and a [Catppuccin](https://catppuccin.com/) theme.
+I build the site with the help of Claude Code, and I verify and edit the documentation with the help of my Claude Code plugin, [Docs Assist](/portfolio/docs-assist-plugin/).
+
+The bigger modifications:
+
+- **Verification badges.**
+  Sections of the [Pi-hole guide](/docs/pi-hole/) show when they were last verified and how: tested, vendor docs, community, or inherited.
+- **Composed docs.**
+  The [Claude Code access guide](/docs/pi-hole/claude-code-access/) is assembled from shared partials, so the tabbed guide and its one-pagers come from the same source text.
+- **Files for AI tools.**
+  `llms.txt` indexes the site, and `llms-full.txt` has the full text of the Pi-hole guide.
+- **A link checker that runs on the built site.**
+  It confirms every internal link and anchor resolves in the published output, not only in the source.
+- **Linting.**
+  markdownlint with a custom rule, Vale for style, and a check that location-specific commands in the Pi-hole guide cover every setup.
+- **Breadcrumbs** built from the sidebar, with structured data for search engines.
+- **A click-to-zoom image lightbox**, hand-built because the existing Starlight plugin doesn't support Astro 7 yet.
+
+If you encounter an issue or typo, please select **Edit page** at the bottom of any page, or you can [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new).
