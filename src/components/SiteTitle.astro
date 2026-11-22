@@ -1,0 +1,49 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/components/SiteTitle.astro';
+
+// Replaces starlight-blog's SiteTitle override, which can only render the Blog
+// link. This renders the same link plus Docs, styled the same way. Docs points
+// at the Pi-hole guide because that is the whole Documentation sidebar group.
+const links = [
+  { label: 'Docs', href: '/docs/pi-hole/' },
+  { label: 'Blog', href: '/blog/' },
+];
+---
+
+<Default {...Astro.props}><slot /></Default>
+<nav aria-label="Main">
+  {links.map((l) => <a href={l.href}>{l.label}</a>)}
+</nav>
+
+<style>
+  nav {
+    border-inline-start: 1px solid var(--sl-color-gray-5);
+    display: none;
+    gap: 1rem;
+    margin-inline-start: 1rem;
+    min-inline-size: 0;
+    padding-inline-start: 1rem;
+  }
+
+  @media (min-width: 50rem) {
+    nav {
+      align-items: center;
+      display: flex;
+    }
+  }
+
+  a {
+    color: var(--sl-color-text-accent);
+    font-weight: 600;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>

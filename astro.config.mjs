@@ -44,6 +44,7 @@ export default defineConfig({
 			},
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
+				SiteTitle: './src/components/SiteTitle.astro',
 				Head: './src/components/Head.astro',
 			},
 			editLink: {
@@ -67,7 +68,7 @@ export default defineConfig({
 					light: { flavor: "latte", accent: "lavender" }
 				}),
 				starlightBlog({
-					navigation: "header-start",
+					navigation: "none",
 					metrics: {
 						readingTime: true,
 						words: 'total',
