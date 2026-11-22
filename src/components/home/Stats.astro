@@ -1,0 +1,69 @@
+---
+const stats = [
+  {
+    value: '453 claims',
+    label: 'checked by Docs Assist in one audit, catching 6 real doc/code drifts',
+    href: '/portfolio/docs-assist-plugin/',
+  },
+  {
+    value: 'Top 5',
+    label: "contributor to Coder's open-source repo within 90 days, as its first technical writer",
+    href: '/about/resume/',
+  },
+  {
+    value: '#1',
+    label: 'highest-traffic page on linode.com, after a rewrite of "Find Files in Linux"',
+    href: '/about/resume/',
+  },
+  {
+    value: 'Thousands',
+    label: 'of AI answers have cited my Pi-hole v6 guide (Clarity AI visibility tracking)',
+    href: '/docs/pi-hole/',
+  },
+];
+---
+
+<ul class="stats not-content">
+  {stats.map((s) => (
+    <li>
+      <a href={s.href}>
+        <strong>{s.value}</strong>
+        <span>{s.label}</span>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .stats {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 1rem;
+  }
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    height: 100%;
+    padding: 0.25rem 0 0.25rem 1rem;
+    border-inline-start: 4px solid var(--edward-highlight);
+    color: var(--sl-color-gray-2);
+    text-decoration: none;
+  }
+  a:hover strong,
+  a:focus-visible strong {
+    text-decoration: underline;
+  }
+  strong {
+    font-size: var(--sl-text-3xl);
+    line-height: 1.1;
+    color: var(--sl-color-white);
+  }
+  span {
+    font-size: var(--sl-text-sm);
+    line-height: 1.45;
+  }
+</style>

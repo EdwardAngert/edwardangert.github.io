@@ -1,0 +1,80 @@
+---
+import { getCollection } from 'astro:content';
+
+export interface Props {
+  count?: number;
+}
+
+const { count = 3 } = Astro.props;
+
+const posts = (await getCollection('docs', ({ id, data }) => id.startsWith('blog/') && !!data.date && !data.draft))
+  .sort((a, b) => b.data.date!.valueOf() - a.data.date!.valueOf())
+  .slice(0, count);
+
+const format = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+---
+
+<ul class="posts not-content">
+  {posts.map((post) => (
+    <li>
+      <a href={`/${post.id}/`}>
+        <time datetime={post.data.date!.toISOString()}>{format.format(post.data.date!)}</time>
+        <h3>{post.data.title}</h3>
+        {post.data.excerpt && <p>{post.data.excerpt}</p>}
+      </a>
+    </li>
+  ))}
+</ul>
+<p class="all"><a href="/blog/">All posts &rarr;</a></p>
+
+<style>
+  .posts {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 1rem;
+  }
+  .posts a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    height: 100%;
+    padding: 1.25rem;
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 0.75rem;
+    color: var(--sl-color-text);
+    text-decoration: none;
+    transition: border-color 0.15s;
+  }
+  .posts a:hover,
+  .posts a:focus-visible {
+    border-color: var(--sl-color-accent);
+  }
+  time {
+    font-size: var(--sl-text-xs);
+    color: var(--sl-color-gray-3);
+  }
+  h3 {
+    margin: 0;
+    font-size: var(--sl-text-h4);
+    line-height: 1.25;
+    color: var(--sl-color-white);
+  }
+  p {
+    margin: 0;
+    font-size: var(--sl-text-sm);
+    line-height: 1.55;
+    color: var(--sl-color-gray-2);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .all {
+    margin-top: 1rem;
+    font-weight: 600;
+  }
+</style>

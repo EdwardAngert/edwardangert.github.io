@@ -32,7 +32,7 @@ export default defineConfig({
 			// it does not move a badge.
 			lastUpdated: true,
 			tagline: 'Technical writer, team leader, relationship-builder',
-			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css'],
+			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css', './src/styles/theme.css', './src/styles/home.css'],
 			disable404Route: true,
 			expressiveCode: {
 				shiki: {
@@ -80,6 +80,7 @@ export default defineConfig({
 					label: 'About',
 					items: [
 						{ label: 'Resume', link: 'about/resume/' },
+						{ label: 'About this site', link: 'about/this-site/' },
 					],
 				},
 				{

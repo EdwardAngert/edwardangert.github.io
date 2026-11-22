@@ -1,0 +1,51 @@
+---
+// Order is deliberate: the laundry bookends the list.
+const activities = [
+  { icon: '🧺', text: 'Folding laundry' },
+  { icon: '🧗', text: 'Teaching my kids how to climb things safely' },
+  { icon: '🥋', text: 'Practicing Brazilian Jiu-Jitsu' },
+  { icon: '🪨', text: 'Bouldering' },
+  { icon: '🚴', text: 'Cycling' },
+  { icon: '🛼', text: 'Artistic quad roller skating (and teaching it)' },
+  { icon: '🔧', text: 'Taking things apart' },
+  { icon: '🔩', text: 'Finding ways to make things work' },
+  { icon: '🐧', text: 'Exploring open source software' },
+  { icon: '🤖', text: 'Integrating AI and tech in helpful ways' },
+  { icon: '💭', text: 'Thinking about the laundry I need to fold' },
+];
+---
+
+<ul class="activities not-content">
+  {activities.map((a) => (
+    <li>
+      <span class="icon" aria-hidden="true">{a.icon}</span>
+      <span>{a.text}</span>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .activities {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 0.75rem;
+  }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 0.75rem;
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-text);
+    line-height: 1.35;
+  }
+  .icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+</style>

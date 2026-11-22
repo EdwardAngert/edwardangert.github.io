@@ -1,67 +1,62 @@
 ---
-title: "About Me"
+title: "Technical writer and documentation lead"
 description: "Edward Angert's personal site: projects, writing, and documentation work."
+template: splash
+hero:
+  title: "Hi, I'm Edward."
+  tagline: "Technical writer and documentation lead. I build the system around the docs, so what people know keeps getting shared, found, and trusted."
+  image:
+    file: ../../assets/images/edward.jpg
+    alt: "Edward smiling in front of a wall of children's painted tiles, wearing a lemon-print shirt."
+  actions:
+    - text: See my work
+      link: "#work-samples"
+      icon: down-caret
+    - text: The Pi-hole guide
+      link: /docs/pi-hole/
+      variant: minimal
 ---
 
-import ColumnList from '~/components/ColumnList.astro';
+import Stats from '~/components/home/Stats.astro';
+import WorkGrid from '~/components/home/WorkGrid.astro';
+import LatestPosts from '~/components/home/LatestPosts.astro';
+import Activities from '~/components/home/Activities.astro';
 
-Hello, this is Edward.
+<Stats />
 
-This is my personal site.
-It has projects I've built for my own home, like my [Pi-hole setup](/docs/pi-hole/).
-The [blog](/blog/) has posts about documentation culture, AI workflows, and the ideas I'm exploring.
+## Work samples
 
-In general, I'm a perpetual tinkerer who learns by doing, whether it's setting up my home server, scripting workflows with Claude Code, or dismantling things to understand how they work.
+Documentation I've written, built, or fixed, and what my part was in each.
+The [portfolio](/portfolio/) has the rest.
 
-You can often find me:
+<WorkGrid featuredOnly />
 
-<ColumnList columns={2}>
+[All work samples &rarr;](/portfolio/)
 
-- Teaching my kids how to climb things safely
-- Practicing Brazilian Jiu-Jitsu
-- Bouldering
-- Cycling
-- Artistic quad roller skating (and teaching it)
-- Taking things apart
-- Finding ways to make things work
-- Exploring open source software
-- Integrating AI and tech in helpful ways
-- Folding laundry
+## Latest writing
 
-</ColumnList>
+Essays on documentation culture, AI workflows, and the fundamentals that outlast the hype.
+
+<LatestPosts count={3} />
 
 ## At work
 
-I'm a technical writer and documentation lead, and I help people share their knowledge by making it easier to contribute, find, and trust documentation.
+I help people share their knowledge by making it easier to contribute, find, and trust documentation.
 
 I love empowering users no matter where they sit in the audience--internal or external--through testing, transparency, and making things easy to understand (or at least easy to copy and paste).
 
 Documentation isn't only for customers: it helps support and sales find answers, and it's a practice other teams can adopt to share what they know and make onboarding easier.
 
-The [resume](/about/resume/) has the highlights, and the [portfolio](/portfolio/) has samples of the work itself.
+The [resume](/about/resume/) has the highlights.
+
+## You can often find me
+
+I'm a perpetual tinkerer who learns by doing, whether it's setting up my home server, scripting workflows with Claude Code, or dismantling things to understand how they work.
+
+<Activities />
 
 ## Get in touch
 
 Connect on [LinkedIn](https://www.linkedin.com/in/edward-angert/) or set up a time to talk through [my cal.com link](https://cal.com/edwardangert).
 
-## About this site
-
-This site runs on [Astro](https://astro.build/) and [Starlight](https://starlight.astro.build/), deployed to GitHub Pages, with the [starlight-blog](https://github.com/HiDeoo/starlight-blog) plugin and a [Catppuccin](https://catppuccin.com/) theme.
-I build the site with the help of Claude Code, and I verify and edit the documentation with the help of my Claude Code plugin, [Docs Assist](/portfolio/docs-assist-plugin/).
-
-The bigger modifications:
-
-- **Verification badges.**
-  Sections of the [Pi-hole guide](/docs/pi-hole/) show when they were last verified and how: tested, vendor docs, community, or inherited.
-- **Composed docs.**
-  The [Claude Code access guide](/docs/pi-hole/claude-code-access/) is assembled from shared partials, so the tabbed guide and its one-pagers come from the same source text.
-- **Files for AI tools.**
-  `llms.txt` indexes the site, and `llms-full.txt` has the full text of the Pi-hole guide.
-- **A link checker that runs on the built site.**
-  It confirms every internal link and anchor resolves in the published output, not only in the source.
-- **Linting.**
-  markdownlint with a custom rule, Vale for style, and a check that location-specific commands in the Pi-hole guide cover every setup.
-- **Breadcrumbs** built from the sidebar, with structured data for search engines.
-- **A click-to-zoom image lightbox**, hand-built because the existing Starlight plugin doesn't support Astro 7 yet.
-
-If you encounter an issue or typo, you can select **Edit page** at the bottom of any page, or [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new).
+To see how the site is built, read [about this site](/about/this-site/).
