@@ -6,8 +6,28 @@
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group identify setPersonProperties setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags resetGroups onFeatureFlags addFeatureFlagsHandler onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
   // Public project (ingest) token, safe to expose client-side.
   posthog.init('phc_uNHc6uouvr63MeScHM5RK83wRChPgm9uFRtkhSiuVTm5', {
+    cookieless_mode: "always",
     api_host: 'https://i.edwardangert.com',
     defaults: '2026-05-30'
+  });
+
+  // code_copied: the copy button on a code block, so the Pi-hole guide shows
+  // which commands people actually use. Sends the block's language and its
+  // first line (trimmed), not the whole block.
+  document.addEventListener('click', function(event) {
+    var button = event.target.closest('.expressive-code .copy button');
+    if (!button) return;
+
+    var code = button.getAttribute('data-code') || '';
+    // Expressive Code encodes line breaks in data-code as U+007F.
+    var firstLine = code.split(/[\n\u007f]/).map(function(line) { return line.trim(); })
+      .filter(Boolean)[0] || '';
+    var pre = button.closest('.expressive-code').querySelector('pre');
+
+    window.posthog?.capture('code_copied', {
+      language: pre ? pre.getAttribute('data-language') : null,
+      first_line: firstLine.slice(0, 120)
+    });
   });
 
   document.addEventListener('click', function(event) {
@@ -50,11 +70,15 @@
       return;
     }
 
-    // external_docs_link_clicked: external documentation sample links.
+    // external_docs_link_clicked: external documentation sample links, plus
+    // the upstream Pi-hole docs, forum, and repos the Pi-hole guide points to.
     // (linode.com / akamai.com dropped: neither is hyperlinked anywhere on the site.)
     if (
       href.includes('docs.gitlab.com') ||
-      href.includes('github.com/coder/coder')
+      href.includes('github.com/coder/coder') ||
+      href.includes('docs.pi-hole.net') ||
+      href.includes('discourse.pi-hole.net') ||
+      href.includes('github.com/pi-hole/')
     ) {
       window.posthog?.capture('external_docs_link_clicked', {
         link_url: href,
