@@ -1,0 +1,263 @@
+---
+// Floating "Was this page helpful?" thumbs, on documentation pages only.
+// The buttons are ours; the responses belong to the PostHog survey of the same
+// name (an "API" survey in the portfolio project), so they show up in the
+// Surveys results. Showing the thumbs sends `survey shown`, which is the
+// denominator for the response rate.
+// Thumbs up completes the survey. Thumbs down records the "No" as a partial
+// response, then asks "What's missing?" (optional) and completes it, either
+// with the text or when the reader skips. Every `survey sent` repeats the
+// earlier answers and shares one `$survey_submission_id`.
+// The page URL rides along automatically.
+// Nothing is stored in the browser, so the thumbs come back on the next page.
+---
+
+<style is:global>
+  .docs-feedback {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    background: var(--sl-color-bg-nav);
+    color: var(--sl-color-text);
+    font-size: var(--sl-text-sm);
+    box-shadow: var(--sl-shadow-md, 0 2px 8px rgb(0 0 0 / 0.25));
+    transition: opacity 0.4s ease, right 0.2s ease;
+  }
+  /* From 72rem Starlight shows "On this page" as a column on the right. Sit at
+     the top of the article, just left of it; the script below sets `right` to
+     follow the column when it collapses or expands. Narrower screens keep the
+     bottom-right corner. */
+  @media (min-width: 72rem) {
+    .docs-feedback {
+      top: calc(var(--sl-nav-height) + 1rem);
+      bottom: auto;
+    }
+  }
+  .docs-feedback[data-done='true'] {
+    padding: 0.5rem 0.9rem;
+  }
+  .docs-feedback[data-leaving='true'] {
+    opacity: 0;
+  }
+  /* The "What's missing?" step: a small card instead of the pill. */
+  .docs-feedback[data-step='followup'] {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    width: min(18rem, calc(100vw - 2rem));
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+  }
+  .docs-feedback__prompt {
+    font-weight: 600;
+  }
+  .docs-feedback textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.4rem;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-text);
+    font: inherit;
+    resize: vertical;
+  }
+  .docs-feedback textarea:focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 1px;
+  }
+  .docs-feedback__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  .docs-feedback .docs-feedback__action {
+    width: auto;
+    height: auto;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.4rem;
+    font: inherit;
+  }
+  .docs-feedback .docs-feedback__action[data-primary] {
+    border-color: var(--sl-color-accent);
+    background: var(--sl-color-accent);
+    color: var(--sl-color-black);
+  }
+  .docs-feedback__label {
+    margin-inline: 0.25rem;
+  }
+  .docs-feedback button {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .docs-feedback button:hover {
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
+  }
+  .docs-feedback button:focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+  .docs-feedback svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: currentColor;
+  }
+  .docs-feedback button[data-helpful='false'] svg {
+    transform: rotate(180deg);
+  }
+  @media (max-width: 50rem) {
+    .docs-feedback__label {
+      display: none;
+    }
+  }
+  @media print {
+    .docs-feedback {
+      display: none;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    // Documentation pages only: the Pi-hole guide and anything else under /docs/.
+    if (window.location.pathname.indexOf('/docs/') !== 0) return;
+
+    // IDs of the PostHog survey "Was this page helpful?" and its two questions
+    // (Yes/No, then the optional "What's missing?"). If the survey is ever
+    // recreated, update all three.
+    var SURVEY_ID = '01a20445-03ce-0000-3961-2ff5430c2452';
+    var Q_HELPFUL = { id: 'd0a27f00-7977-42f0-b613-d44e9649d510', question: 'Was this page helpful?' };
+    var Q_MISSING = { id: '0481647a-b2b4-4e6f-93fe-15ec398d74c2', question: "What's missing?" };
+
+    var THUMB =
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>';
+
+    function mount() {
+      var box = document.createElement('div');
+      box.className = 'docs-feedback';
+      box.setAttribute('role', 'group');
+      box.setAttribute('aria-label', 'Page feedback');
+      box.innerHTML =
+        '<span class="docs-feedback__label">Helpful?</span>' +
+        '<button type="button" data-helpful="true" aria-label="Yes, this page was helpful" title="Yes, helpful">' + THUMB + '</button>' +
+        '<button type="button" data-helpful="false" aria-label="No, this page was not helpful" title="No, not helpful">' + THUMB + '</button>';
+
+      // One submission id ties the partial and the final `survey sent` together.
+      var submissionId = window.crypto && crypto.randomUUID
+        ? crypto.randomUUID()
+        : String(Date.now()) + Math.random().toString(16).slice(2);
+
+      // Sends the whole submission so far (every event repeats earlier answers).
+      function send(answer, missing, completed) {
+        var props = {
+          $survey_id: SURVEY_ID,
+          $survey_questions: [
+            { id: Q_HELPFUL.id, question: Q_HELPFUL.question },
+            { id: Q_MISSING.id, question: Q_MISSING.question }
+          ],
+          $survey_submission_id: submissionId,
+          $survey_completed: completed,
+          $survey_response: answer
+        };
+        props['$survey_response_' + Q_HELPFUL.id] = answer;
+        if (missing) props['$survey_response_' + Q_MISSING.id] = missing;
+        window.posthog?.capture('survey sent', props);
+      }
+
+      function thanks() {
+        box.removeAttribute('data-step');
+        box.setAttribute('data-done', 'true');
+        box.setAttribute('role', 'status');
+        box.textContent = 'Thanks for the feedback.';
+        setTimeout(function () { box.setAttribute('data-leaving', 'true'); }, 2500);
+        setTimeout(function () { box.remove(); }, 3000);
+      }
+
+      // Thumbs down: the "No" is already recorded as a partial response; ask
+      // what was missing, and complete the survey with or without an answer.
+      function askWhatsMissing() {
+        box.setAttribute('data-step', 'followup');
+        box.setAttribute('role', 'group');
+        box.innerHTML =
+          '<label class="docs-feedback__prompt" for="docs-feedback-text">' + Q_MISSING.question + '</label>' +
+          '<textarea id="docs-feedback-text" rows="3" maxlength="500" placeholder="Optional"></textarea>' +
+          '<div class="docs-feedback__actions">' +
+          '<button type="button" class="docs-feedback__action" data-skip>Skip</button>' +
+          '<button type="button" class="docs-feedback__action" data-primary data-send>Send</button>' +
+          '</div>';
+        var field = box.querySelector('textarea');
+        field.focus();
+
+        function finish(withText) {
+          var text = withText ? field.value.trim() : '';
+          send('No', text, true);
+          thanks();
+        }
+        box.querySelector('[data-send]').addEventListener('click', function () { finish(true); });
+        box.querySelector('[data-skip]').addEventListener('click', function () { finish(false); });
+        field.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') finish(false);
+          if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) finish(true);
+        });
+      }
+
+      box.addEventListener('click', function (event) {
+        var button = event.target.closest('button[data-helpful]');
+        if (!button) return;
+
+        if (button.getAttribute('data-helpful') === 'true') {
+          send('Yes', '', true);
+          thanks();
+        } else {
+          send('No', '', false);
+          askWhatsMissing();
+        }
+      });
+
+      document.body.appendChild(box);
+      window.posthog?.capture('survey shown', { $survey_id: SURVEY_ID });
+
+      // Keep the pill just left of the "On this page" column. The column's
+      // width changes when it is collapsed (starlight-fullview-mode resizes it)
+      // and when the window resizes, so watch it. Below 72rem the column is not
+      // a column, so leave the stylesheet's corner position alone.
+      var wide = window.matchMedia('(min-width: 72rem)');
+      var column = document.querySelector('.right-sidebar-container');
+      function place() {
+        if (!wide.matches || !column) {
+          box.style.right = '';
+          return;
+        }
+        var gap = document.documentElement.clientWidth - column.getBoundingClientRect().left;
+        box.style.right = 'calc(' + gap + 'px + 1rem)';
+      }
+      place();
+      window.addEventListener('resize', place);
+      wide.addEventListener('change', place);
+      if (column && window.ResizeObserver) new ResizeObserver(place).observe(column);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mount);
+    } else {
+      mount();
+    }
+  })();
+</script>
