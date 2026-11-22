@@ -3,9 +3,10 @@ import type { Props } from '@astrojs/starlight/props';
 import Default from '@astrojs/starlight/components/SiteTitle.astro';
 
 // Replaces starlight-blog's SiteTitle override, which can only render the Blog
-// link. This renders the same link plus Docs, styled the same way. Docs points
+// link. This renders the same link plus Portfolio and Docs, styled the same way. Docs points
 // at the Pi-hole guide because that is the whole Documentation sidebar group.
 const links = [
+  { label: 'Portfolio', href: '/portfolio/' },
   { label: 'Docs', href: '/docs/pi-hole/' },
   { label: 'Blog', href: '/blog/' },
 ];
