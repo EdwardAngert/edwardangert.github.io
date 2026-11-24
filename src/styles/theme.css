@@ -20,7 +20,7 @@
 
 /* ---------- Dark ---------- */
 
-/* Dark option A: "Tile blue". Deep navy, sky-blue links. */
+/* "Tile blue". Deep navy, sky-blue links. */
 :root {
   --sl-color-white: #e8ebf7;
   --sl-color-gray-1: #c9cfe6;
@@ -36,24 +36,6 @@
   --sl-color-accent-high: #8fb4ff;
   --edward-highlight: #f2c94c;
 }
-
-/* Dark option B: "Lemon on ink". Warm charcoal, lemon-yellow links.
-:root {
-  --sl-color-white: #f3eee2;
-  --sl-color-gray-1: #d6cfbe;
-  --sl-color-gray-2: #b9b19c;
-  --sl-color-gray-3: #a0977f;
-  --sl-color-gray-4: #4a4336;
-  --sl-color-gray-5: #2b2720;
-  --sl-color-gray-6: #141210;
-  --sl-color-gray-7: #0d0c0a;
-  --sl-color-black: #1b1813;
-  --sl-color-accent-low: #3a2f08;
-  --sl-color-accent: #c99a14;
-  --sl-color-accent-high: #f2c94c;
-  --edward-highlight: #f2c94c;
-}
-*/
 
 /* ---------- Light ---------- */
 
