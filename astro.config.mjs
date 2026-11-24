@@ -31,7 +31,7 @@ export default defineConfig({
 			// content was last confirmed and how. Editing a typo moves this;
 			// it does not move a badge.
 			lastUpdated: true,
-			tagline: 'Technical writer, team leader, relationship-builder',
+			tagline: 'Technical writer, documentation lead, full-time Edward',
 			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css', './src/styles/theme.css', './src/styles/home.css'],
 			disable404Route: true,
 			expressiveCode: {
@@ -80,6 +80,7 @@ export default defineConfig({
 				{
 					label: 'About',
 					items: [
+						{ label: 'About Edward', link: 'about/' },
 						{ label: 'Resume', link: 'about/resume/' },
 						{ label: 'About this site', link: 'about/this-site/' },
 					],

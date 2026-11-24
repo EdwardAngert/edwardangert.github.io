@@ -13,11 +13,11 @@ export interface WorkSample {
 
 export const workSamples: WorkSample[] = [
   {
-    title: 'Pi-hole v6 documentation',
+    title: 'Pi-hole v6 setup guide',
     href: '/docs/pi-hole/',
     role: 'Built and maintained end to end',
     description:
-      'A Pi-hole v6 guide tested on my own network, with per-section verification badges and an llms.txt index for AI tools. AI answer engines have cited it thousands of times (Clarity AI visibility tracking). Comparing those citations with PostHog click data, I found that install and troubleshooting questions are answered inside AI tools, while the allowlist page draws about 95% of AI-referred visits.',
+      'A guide to running Pi-hole v6 on a Raspberry Pi, tested on my own network. Each section says when I last verified it and how, and an llms.txt index helps AI tools read it too.',
     featured: true,
   },
   {
@@ -25,42 +25,42 @@ export const workSamples: WorkSample[] = [
     href: '/portfolio/docs-assist-plugin/',
     role: 'Open-source tool I designed and built',
     description:
-      'A Claude Code plugin built for calibrated AI use: it coaches SMEs through writing docs and verifies claims against source rather than guessing. Exercised across four codebases, including a 453-claim audit that caught 6 real doc/code drifts.',
+      'A Claude Code plugin for using AI carefully. It coaches experts through writing docs and checks claims against the source instead of guessing. In one 453-claim audit, it caught six places where the docs and the code disagreed.',
     featured: true,
   },
   {
-    title: 'Coder quickstart documentation',
+    title: 'Coder quickstart',
     href: '/portfolio/coder-quickstart/',
     role: 'Quickstart and information architecture',
     description:
-      'Created a quickstart guide to unlock Coder for new users. Part of a broader information architecture effort to define user journeys and personas.',
+      'One of my first projects at Coder: a quickstart written from scratch, tested on a MacBook, a spare Raspberry Pi 4, and a Linode until it worked every time. It anchored a broader rework of the information architecture.',
   },
   {
     title: "Work on a contributor's PR in the docs repository",
     href: '/portfolio/contrib-pr/',
     role: 'Process documentation',
     description:
-      'Created clear steps for technical writers working with external contributors, solving a recurring problem that was blocking the team.',
+      'Steps for writers picking up an external contributor\'s pull request, written to fix a problem that kept blocking the team.',
   },
   {
-    title: 'GitLab: make a GitLab contribution',
+    title: 'Make a GitLab contribution',
     href: '/portfolio/gitlab-first-contribution/',
-    role: 'Tutorial overhaul',
+    role: 'Tutorial overhaul for GitLab',
     description:
-      "Overhauled GitLab's contributor tutorial after working with the contributor success team to identify pain points. Reorganized into sequential steps and added multiple contribution methods.",
+      "A rewrite of GitLab's first-contribution tutorial, built on what the contributor success team had heard from newcomers. It now runs in sequential steps and offers more than one way to contribute.",
   },
   {
     title: 'Configure WordPress to use a remote database',
     href: '/portfolio/linode-wp-remote-db/',
     role: 'Support outline to full guide',
     description:
-      "Took a support engineer's outline and turned it into a comprehensive guide through research and collaboration.",
+      "A support engineer handed me an outline. I researched it, worked through it with them, and turned it into a complete guide.",
   },
   {
     title: 'Site multizone failover diagram',
     href: '/portfolio/site-mz-failover-diagram/',
     role: 'Diagram, with the design team',
     description:
-      'Worked with the design team to create a visual solution for a complex technical concept that was hard to explain with just text.',
+      'A diagram made with the design team for an idea that was hard to explain in text alone.',
   },
 ];
