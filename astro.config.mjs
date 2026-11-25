@@ -26,6 +26,7 @@ export default defineConfig({
 		starlight({
 			title: 'Edward Angert',
 			favicon: '/favicon.ico',
+			head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } }],
 			// Page-level "last touched", derived from git. Distinct from the
 			// <Verified> badges, which are per-section claims about when the
 			// content was last confirmed and how. Editing a typo moves this;
