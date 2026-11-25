@@ -1,0 +1,22 @@
+/* Home page (splash template with a hero). */
+
+/* Wider than the 45rem docs column so the work grid can breathe. */
+:root[data-has-hero] {
+  --sl-content-width: 64rem;
+}
+
+/* Portrait: a rounded square with an offset highlight behind it. */
+[data-has-hero] .hero > img,
+[data-has-hero] .hero > .hero-html {
+  border-radius: 1.5rem;
+  box-shadow: 0.75rem 0.75rem 0 var(--edward-highlight);
+  max-width: min(100%, 22rem);
+  height: auto;
+  object-fit: cover;
+  aspect-ratio: 1;
+}
+
+/* Section headings on the home page get a little more air. */
+[data-has-hero] .sl-markdown-content h2 {
+  margin-top: 3.5rem;
+}

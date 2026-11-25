@@ -1,0 +1,25 @@
+---
+slug: about/this-site
+title: "About this site"
+description: "How edwardangert.com is built: Astro, Starlight, and the verification, linting, and AI-readability features added on top."
+---
+
+This site runs on [Astro](https://astro.build/) and [Starlight](https://starlight.astro.build/), deployed to GitHub Pages, with the [starlight-blog](https://github.com/HiDeoo/starlight-blog) plugin and a [Catppuccin](https://catppuccin.com/) theme.
+I build the site with the help of Claude Code, and I verify and edit the documentation with the help of my Claude Code plugin, [Docs Assist](/portfolio/docs-assist-plugin/).
+
+The bigger modifications:
+
+- **Verification badges.**
+  Sections of the [Pi-hole guide](/docs/pi-hole/) show when they were last verified and how: tested, vendor docs, community, or inherited.
+- **Composed docs.**
+  The [Claude Code access guide](/docs/pi-hole/claude-code-access/) is assembled from shared partials, so the tabbed guide and its one-pagers come from the same source text.
+- **Files for AI tools.**
+  `llms.txt` indexes the site, and `llms-full.txt` has the full text of the Pi-hole guide.
+- **A link checker that runs on the built site.**
+  It confirms every internal link and anchor resolves in the published output, not only in the source.
+- **Linting.**
+  markdownlint with a custom rule, Vale for style, and a check that location-specific commands in the Pi-hole guide cover every setup.
+- **Breadcrumbs** built from the sidebar, with structured data for search engines.
+- **A click-to-zoom image lightbox**, hand-built because the existing Starlight plugin doesn't support Astro 7 yet.
+
+If you encounter an issue or typo, you can select **Edit page** at the bottom of any page, or [submit a GitHub issue](https://github.com/EdwardAngert/edwardangert.github.io/issues/new).

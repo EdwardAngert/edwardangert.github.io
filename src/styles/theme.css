@@ -1,0 +1,75 @@
+/*
+ * Site palette, layered over the Catppuccin base (which still supplies the
+ * aside and code-block styling). Unlayered rules here win over Catppuccin's
+ * `@layer catppuccin` regardless of load order.
+ *
+ * Each mode has two options. Option A is active. To try Option B, comment out
+ * A's block and uncomment B's. CSS comments don't nest, so the notes sit
+ * outside the blocks.
+ *
+ * Every pair that carries text was checked against WCAG 2.2 contrast
+ * (4.5:1 for text, which is level AA). Lowest pair per option:
+ *   Dark A 6.1:1   Dark B 6.1:1   Light A 5.1:1   Light B 5.3:1
+ * `--edward-highlight` is decorative only (stat rules, hero backing). Never
+ * put text on it, or use it as text.
+ *
+ * Starlight maps accent roles differently per mode:
+ *   dark:  link text = accent-high, button fill = accent-high, button text = accent-low
+ *   light: link text = accent,      button fill = accent,      button text = bg
+ */
+
+/* ---------- Dark ---------- */
+
+/* "Tile blue". Deep navy, sky-blue links. */
+:root {
+  --sl-color-white: #e8ebf7;
+  --sl-color-gray-1: #c9cfe6;
+  --sl-color-gray-2: #aab2d1;
+  --sl-color-gray-3: #8f99bd;
+  --sl-color-gray-4: #39446a;
+  --sl-color-gray-5: #222a45;
+  --sl-color-gray-6: #0f1424;
+  --sl-color-gray-7: #0a0e1b;
+  --sl-color-black: #141a2e;
+  --sl-color-accent-low: #1b2a55;
+  --sl-color-accent: #4f7be0;
+  --sl-color-accent-high: #8fb4ff;
+  --edward-highlight: #f2c94c;
+}
+
+/* ---------- Light ---------- */
+
+/* Light option A: "Tile blue". Warm paper, ink text, cobalt links. */
+:root[data-theme='light'] {
+  --sl-color-white: #1d2233;
+  --sl-color-gray-1: #2f364d;
+  --sl-color-gray-2: #4a5270;
+  --sl-color-gray-3: #5b6483;
+  --sl-color-gray-4: #8d94ad;
+  --sl-color-gray-5: #cfd2dc;
+  --sl-color-gray-6: #e4e5ea;
+  --sl-color-gray-7: #f1efe8;
+  --sl-color-black: #fbfaf6;
+  --sl-color-accent-low: #dfe7fb;
+  --sl-color-accent: #2748b8;
+  --sl-color-accent-high: #1b3590;
+  --edward-highlight: #f6d24a;
+}
+
+/* Light option B: "Grass green". Warm paper, ink text, forest-green links.
+:root[data-theme='light'] {
+  --sl-color-white: #1f2a24;
+  --sl-color-gray-1: #2e3b33;
+  --sl-color-gray-2: #47554b;
+  --sl-color-gray-3: #586659;
+  --sl-color-gray-4: #8c978f;
+  --sl-color-gray-5: #d0d6d1;
+  --sl-color-gray-6: #e4e8e5;
+  --sl-color-gray-7: #f1efe8;
+  --sl-color-black: #fbfaf6;
+  --sl-color-accent-low: #dcefe3;
+  --sl-color-accent: #2b6747;
+  --sl-color-accent-high: #1d4a32;
+  --edward-highlight: #f6d24a;
+}
+*/

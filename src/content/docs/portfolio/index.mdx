@@ -1,23 +1,12 @@
 ---
 slug: portfolio
-title: "Work Samples"
-description: "Documentation samples across different organizations and project types"
+title: "Work samples"
+description: "Documentation I've written, built, or fixed, and what my part was in each, from a Pi-hole guide to a Claude Code plugin."
+tableOfContents: false
 ---
 
-import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+import WorkGrid from '~/components/home/WorkGrid.astro';
 
-<LinkCard title="Pi-hole v6 Documentation" href="/docs/pi-hole/" description="A Pi-hole v6 guide I built and maintain end to end, tested on my own network, with per-section verification badges and an llms.txt index for AI tools.<br />AI answer engines have cited it thousands of times (Clarity AI visibility tracking). Comparing those citations with PostHog click data, I found that install and troubleshooting questions are answered inside AI tools, while the allowlist page draws about 95% of AI-referred visits." />
+Documentation I've written, built, or fixed, and what my part was in each.
 
-<LinkCard title="Docs Assist: A Claude Code Plugin" href="/portfolio/docs-assist-plugin/" description="An open-source Claude Code plugin built for calibrated AI use: it coaches SMEs through writing docs and verifies claims against source rather than guessing. Exercised across four codebases, including a 453-claim audit that caught 6 real doc/code drifts." />
-
-<CardGrid>
-  <LinkCard title="Coder Quickstart Documentation" href="/portfolio/coder-quickstart/" description="Created quickstart guide to unlock Coder for new users. Part of a broader information architecture effort to define user journeys and personas." />
-
-  <LinkCard title="Work on a Contributor's PR in the Docs Repository" href="/portfolio/contrib-pr/" description="Created clear steps for technical writers working with external contributors, solving a recurring problem that was blocking the team." />
-
-  <LinkCard title="GitLab: Make a GitLab contribution" href="/portfolio/gitlab-first-contribution/" description="Overhauled GitLab's contributor tutorial after working with the contributor success team to identify pain points. Reorganized into sequential steps and added multiple contribution methods." />
-
-  <LinkCard title="Configure WordPress to use a Remote Database" href="/portfolio/linode-wp-remote-db/" description="Took a support engineer's outline and turned it into a comprehensive guide through research and collaboration." />
-
-  <LinkCard title="Site Multizone Failover Diagram" href="/portfolio/site-mz-failover-diagram/" description="Worked with the design team to create a visual solution for a complex technical concept that was hard to explain with just text." />
-</CardGrid>
+<WorkGrid />

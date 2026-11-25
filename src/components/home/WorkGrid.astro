@@ -1,0 +1,119 @@
+---
+import { workSamples } from '~/data/work';
+
+export interface Props {
+  /** Show only the featured samples, for the home page. */
+  featuredOnly?: boolean;
+}
+
+const { featuredOnly = false } = Astro.props;
+const samples = featuredOnly ? workSamples.filter((s) => s.featured) : workSamples;
+const featured = samples.filter((s) => s.featured);
+const rest = samples.filter((s) => !s.featured);
+---
+
+<div class="work-grid not-content">
+  {featured.length > 0 && (
+    <ul class="featured">
+      {featured.map((s) => (
+        <li>
+          <a href={s.href} class="tile feature">
+            <span class="role">{s.role}</span>
+            <h3>{s.title}</h3>
+            <p>{s.description}</p>
+            <span class="go" aria-hidden="true">Read the sample &rarr;</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+  {rest.length > 0 && (
+    <ul class="rest">
+      {rest.map((s) => (
+        <li>
+          <a href={s.href} class="tile">
+            <span class="role">{s.role}</span>
+            <h3>{s.title}</h3>
+            <p>{s.description}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
+<style>
+  .work-grid {
+    display: grid;
+    gap: 1rem;
+    margin-block: 1.5rem;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .featured {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  }
+  .rest {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  }
+  .tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1.25rem;
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 0.75rem;
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-text);
+    text-decoration: none;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .tile:hover,
+  .tile:focus-visible {
+    border-color: var(--sl-color-accent);
+    transform: translateY(-2px);
+  }
+  .feature {
+    padding: 1.5rem;
+    border-width: 2px;
+    border-color: var(--sl-color-accent);
+    background: var(--sl-color-accent-low);
+  }
+  .role {
+    font-size: var(--sl-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sl-color-text-accent);
+  }
+  h3 {
+    margin: 0;
+    font-size: var(--sl-text-h4);
+    line-height: 1.25;
+    color: var(--sl-color-white);
+  }
+  .feature h3 {
+    font-size: var(--sl-text-h3);
+  }
+  p {
+    margin: 0;
+    font-size: var(--sl-text-sm);
+    line-height: 1.55;
+    color: var(--sl-color-gray-2);
+  }
+  .feature p {
+    color: var(--sl-color-text);
+  }
+  .go {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    font-weight: 600;
+    color: var(--sl-color-text-accent);
+  }
+</style>

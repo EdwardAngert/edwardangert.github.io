@@ -26,13 +26,14 @@ export default defineConfig({
 		starlight({
 			title: 'Edward Angert',
 			favicon: '/favicon.ico',
+			head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } }],
 			// Page-level "last touched", derived from git. Distinct from the
 			// <Verified> badges, which are per-section claims about when the
 			// content was last confirmed and how. Editing a typo moves this;
 			// it does not move a badge.
 			lastUpdated: true,
-			tagline: 'Technical writer, team leader, relationship-builder',
-			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css'],
+			tagline: 'Technical writer, documentation lead, full-time Edward',
+			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css', './src/styles/theme.css', './src/styles/home.css'],
 			disable404Route: true,
 			expressiveCode: {
 				shiki: {
@@ -44,6 +45,7 @@ export default defineConfig({
 			},
 			components: {
 				PageTitle: './src/components/PageTitle.astro',
+				SiteTitle: './src/components/SiteTitle.astro',
 				Head: './src/components/Head.astro',
 			},
 			editLink: {
@@ -67,7 +69,7 @@ export default defineConfig({
 					light: { flavor: "latte", accent: "lavender" }
 				}),
 				starlightBlog({
-					navigation: "header-start",
+					navigation: "none",
 					metrics: {
 						readingTime: true,
 						words: 'total',
@@ -79,7 +81,9 @@ export default defineConfig({
 				{
 					label: 'About',
 					items: [
+						{ label: 'About Edward', link: 'about/' },
 						{ label: 'Resume', link: 'about/resume/' },
+						{ label: 'About this site', link: 'about/this-site/' },
 					],
 				},
 				{

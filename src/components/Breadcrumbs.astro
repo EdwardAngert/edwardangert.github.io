@@ -25,7 +25,7 @@ interface BreadcrumbItem {
  * collection knows about. `pnpm lint:links` fails if this goes stale, which
  * is the cheaper way to keep it honest.
  */
-const NON_PAGE_PATHS = new Set(['/docs', '/about']);
+const NON_PAGE_PATHS = new Set(['/docs']);
 
 /**
  * Section roots, which the sidebar cannot name usefully.
@@ -40,6 +40,7 @@ const NON_PAGE_PATHS = new Set(['/docs', '/about']);
  */
 const SEGMENT_OVERRIDES: Record<string, string> = {
   docs: 'Documentation',
+  about: 'About',
   'pi-hole': 'Pi-hole',
   portfolio: 'Portfolio',
   blog: 'Blog',
