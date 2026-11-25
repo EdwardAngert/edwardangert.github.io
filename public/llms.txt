@@ -54,7 +54,7 @@ Load-bearing conclusions from that page, several of which contradict widely repe
 
 ## Optional
 
-- [Work Samples](https://edwardangert.com/portfolio/): Documentation portfolio across Linode, Pantheon, Coder, and GitLab.
+- [Work samples](https://edwardangert.com/portfolio/): Documentation portfolio across Linode, Pantheon, Coder, and GitLab.
 - [About Edward](https://edwardangert.com/about/): How Edward started taking things apart, and how that became the way he works on documentation.
 - [Resume](https://edwardangert.com/about/resume/): Career highlights as a technical writer and documentation lead.
 - [AI is coming for my job. Maybe to my job.](https://edwardangert.com/blog/ai-docs-assist/): Essay on documentation's dual human and AI audience.
