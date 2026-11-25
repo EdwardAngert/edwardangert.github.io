@@ -2,6 +2,10 @@
 slug: about
 title: "What it means to be a full-time Edward."
 description: "A technical writer origin story filled with harrowing late nights of fixing technology that wasn't really broken to begin with."
+head:
+  # Narrower text and a tighter list, for this page only.
+  - tag: style
+    content: ".sl-container { max-width: 45rem !important; margin-inline: auto !important; } .column-list li { margin-top: 0 !important; } .column-list { margin-bottom: 2.5rem; }"
 ---
 
 import ColumnList from '~/components/ColumnList.astro';
@@ -37,7 +41,7 @@ At the time, I was the office assistant at a small non-profit, and that meant th
 
 Being a small non-profit, it also meant I:
 
-<ColumnList columns={2}>
+<ColumnList columns={2} gap="0.35rem 1.5rem">
 
 - Handled vendor relationships
 - Dealt with business insurance
@@ -56,9 +60,11 @@ I also developed a knowledge system that used tools the staff was already famili
 We didn't call it documentation or business process optimization, but effectively, that's what I was doing with my degree in professional communications and technical writing before I had the Technical Writer title.
 
 Growing up, I never had an answer for "what do I want to be when I grow up."
+
 And that's a good thing - because I had no idea what this future would look like; that I could make a career out of learning something inside out and having people share their expertise with me, and combining it with my love for teaching so that someone else could use that knowledge themselves.
 
 Growing up, my toys were always in various stages of disassembly.
+
 As an adult, I'll rearrange the kitchen drawers to put things we use most often in easier to reach places, and I've rehung doors and moved light switches because their flow felt awkward.
 
 That's the gist then, I guess.
