@@ -1,31 +1,5 @@
 /* Frosted Glass Effects */
 
-/* Base frosted glass mixin-style classes */
-.glass-light {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.glass-dark {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-/* Adaptive glass that works with both light and dark themes */
-.glass {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: color-mix(in srgb, var(--sl-color-bg) 80%, transparent);
-  border: 1px solid color-mix(in srgb, var(--sl-color-gray-5) 30%, transparent);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
 /* Sidebar frosted effect */
 [data-theme="light"] .sidebar-pane,
 [data-theme="dark"] .sidebar-pane {
@@ -35,9 +9,12 @@
   border-right: 1px solid color-mix(in srgb, var(--sl-color-gray-5) 30%, transparent) !important;
 }
 
-/* Header/Navigation glass effect */
-[data-theme="light"] .header,
-[data-theme="dark"] .header {
+/* Glass on the site header and on code block title bars. Both use .header;
+   so does a div inside the site header, which must not get a second layer. */
+[data-theme="light"] header.header,
+[data-theme="dark"] header.header,
+[data-theme="light"] figcaption.header,
+[data-theme="dark"] figcaption.header {
   background: color-mix(in srgb, var(--sl-color-bg-nav) 90%, transparent) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
@@ -64,32 +41,10 @@ code:not(pre code) {
   padding: 0.2em 0.4em !important;
 }
 
-/* Search modal glass effect */
-.sl-search dialog {
-  background: rgba(var(--sl-color-bg-rgb), 0.9) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(var(--sl-color-gray-5-rgb), 0.3);
-  border-radius: 16px;
-  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.2);
-}
-
-/* Table of Contents glass */
-.sl-toc {
-  background: rgba(var(--sl-color-bg-rgb), 0.8) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(var(--sl-color-gray-5-rgb), 0.2);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-}
-
 /* Breadcrumbs with subtle glass */
 .breadcrumbs {
-  background: rgba(var(--sl-color-bg-rgb), 0.7);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(var(--sl-color-gray-6-rgb), 0.2);
   border-radius: 8px;
   padding: 0.75rem 1rem;
   margin-bottom: 1.5rem;
@@ -113,35 +68,22 @@ code:not(pre code) {
   border-color: rgba(var(--sl-color-accent-rgb), 0.3);
 }
 
-/* Ensure good contrast for accessibility */
+/* Solid surfaces for visitors who ask for less transparency */
 @media (prefers-reduced-transparency: reduce) {
-  .glass,
-  .glass-light,
-  .glass-dark,
+  [data-theme] header.header,
+  [data-theme] .sidebar-pane {
+    background: var(--sl-color-bg-nav) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  [data-theme] .sidebar-pane {
+    background: var(--sl-color-bg-sidebar) !important;
+  }
+
   .glass-card {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     background: var(--sl-color-bg) !important;
-  }
-  
-  .sl-sidebar {
-    background: var(--sl-color-bg-sidebar) !important;
-    backdrop-filter: none !important;
-  }
-  
-  header.sl-nav {
-    background: var(--sl-color-bg-nav) !important;
-    backdrop-filter: none !important;
-  }
-}
-
-/* Mobile optimizations - reduce blur for performance */
-@media (max-width: 768px) {
-  .glass,
-  .glass-card,
-  .sl-sidebar,
-  header.sl-nav {
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
   }
 }

@@ -1,32 +1,22 @@
-/* Home page (splash template with a hero). */
+/*
+ * Home page (splash template with a hero). Widths used below:
+ *   50rem  Starlight puts the portrait beside the headline.
+ *   64rem  The portrait moves down to center against headline plus intro.
+ *   80rem  The portrait is near full size, leaving more slack for the intro.
+ */
 
-/* Wider than the 45rem docs column so the work grid can breathe. */
+/* --- Page column --- */
+
+/* Starlight and the header read this. The column itself is capped below. */
 :root[data-has-hero] {
   --sl-content-width: 64rem;
 }
 
-/* Portrait: a rounded square with an offset highlight behind it. */
-[data-has-hero] .hero > img,
-[data-has-hero] .hero > .hero-html {
-  border-radius: 1.5rem;
-  box-shadow: 0.75rem 0.75rem 0 var(--edward-highlight);
-  max-width: min(100%, 22rem);
-  height: auto;
-  object-fit: cover;
-  aspect-ratio: 1;
-}
-
-/* Less empty space above the headline than Starlight's default. */
-[data-has-hero] .hero {
-  padding-block-start: 2.5rem;
-}
-
-/* 22rem is the largest the portrait gets; it shrinks with the window. */
-@media (min-width: 50rem) {
-  [data-has-hero] .hero > img {
-    width: clamp(14rem, 27vw, 22rem);
-    justify-self: center;
-  }
+/* One centered column, so every section shares the same left and right edges.
+   The full-view plugin would otherwise stretch the page to the window. */
+[data-has-hero] .main-pane .sl-container {
+  max-width: 72rem;
+  margin-inline: auto;
 }
 
 /* Section headings on the home page get a little more air. */
@@ -34,15 +24,49 @@
   margin-top: 3.5rem;
 }
 
-/* The short introduction between the hero and the cards. */
+/* --- Hero --- */
+
 [data-has-hero] .hero {
-  padding-block-end: 1rem;
+  padding-block: 2.5rem 1rem;
 }
 
-[data-has-hero] .home-intro {
-  margin-inline: 0;
+/* Portrait: a rounded square with an offset highlight behind it.
+   22rem is the largest it gets. */
+[data-has-hero] .hero > img {
+  max-width: min(100%, 22rem);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 1.5rem;
+  box-shadow: 0.75rem 0.75rem 0 var(--edward-highlight);
 }
 
+@media (min-width: 50rem) {
+  /* Shrinks with the window. */
+  [data-has-hero] .hero > img {
+    width: clamp(14rem, 27vw, 22rem);
+    justify-self: center;
+  }
+}
+
+@media (min-width: 64rem) {
+  /* The headline is centered against the taller portrait, which leaves space
+     above it. Lift the whole hero so the spacing inside it doesn't change. */
+  [data-has-hero] .hero {
+    padding-block-start: 0;
+    margin-block-start: -2rem;
+  }
+
+  /* Line the portrait up with the right edge of the cards, and center it
+     against headline plus intro. The transform leaves layout alone. */
+  [data-has-hero] .hero > img {
+    justify-self: end;
+    margin-inline: 0 0.75rem;
+    transform: translateY(4.5rem);
+  }
+}
+
+/* --- Introduction, between the hero and the cards --- */
 
 [data-has-hero] .home-intro {
   max-width: 36rem;
@@ -52,68 +76,17 @@
   color: var(--sl-color-white);
 }
 
-/* The hero is centered below this width, so the introduction matches it. */
-@media (max-width: 49.99rem) {
-  [data-has-hero] .home-intro {
-    margin-inline: auto;
-    text-align: center;
-  }
-}
-
-/* Beside the portrait, the hero text column is shorter than the image, so
-   pull the introduction up into the space under the buttons. */
+/* The hero's text column is shorter than the portrait, so pull the
+   introduction up into the space under the buttons. */
 @media (min-width: 64rem) {
   [data-has-hero] .home-intro {
-    margin-block-start: -3rem;
     position: relative;
-  }
-}
-
-/* The introduction makes the left side taller than the hero, so move the
-   portrait down and in to center it against both. Layout is unaffected. */
-@media (min-width: 64rem) {
-  [data-has-hero] .hero > img,
-  [data-has-hero] .hero > .hero-html {
-    transform: translateY(4.5rem);
-  }
-}
-
-/* Only wide windows have room to move it left without covering the tagline. */
-@media (min-width: 72rem) {
-  [data-has-hero] .hero > img,
-  [data-has-hero] .hero > .hero-html {
-    transform: translate(-3rem, 4.5rem);
-  }
-}
-
-/* The headline is centered against the taller portrait, which leaves space
-   above it. Lift the whole hero so the spacing inside it doesn't change. */
-@media (min-width: 64rem) {
-  [data-has-hero] .hero {
-    padding-block-start: 0;
-    margin-block-start: -2rem;
-  }
-}
-
-/* With a smaller portrait there is less slack under the buttons. */
-@media (min-width: 64rem) and (max-width: 79.99rem) {
-  [data-has-hero] .home-intro {
     margin-block-start: -1rem;
   }
 }
 
-/* One centered column for the whole home page, so every section shares the
-   same left and right edges. The full-view plugin otherwise stretches it. */
-[data-has-hero] .main-pane .sl-container {
-  max-width: 72rem;
-  margin-inline: auto;
-}
-
-/* The portrait lines up with the right edge of the cards below it. */
-@media (min-width: 64rem) {
-  [data-has-hero] .hero > img {
-    justify-self: end;
-    margin-inline: 0 0.75rem;
-    transform: translateY(4.5rem);
+@media (min-width: 80rem) {
+  [data-has-hero] .home-intro {
+    margin-block-start: -3rem;
   }
 }
