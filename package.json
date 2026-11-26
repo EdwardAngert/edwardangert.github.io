@@ -15,18 +15,18 @@
     "lint": "pnpm lint:md && pnpm lint:vale && pnpm lint:location-coverage"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.41.4",
+    "@astrojs/starlight": "^0.43.1",
     "@catppuccin/starlight": "^2.1.0",
-    "@expressive-code/plugin-line-numbers": "^0.44.1",
-    "astro": "^7.1.4",
-    "sharp": "^0.35.3",
-    "starlight-blog": "^0.28.0",
+    "@expressive-code/plugin-line-numbers": "^0.44.4",
+    "astro": "^7.4.13",
+    "sharp": "^0.35.5",
+    "starlight-blog": "^0.30.2",
     "starlight-fullview-mode": "^0.2.6"
   },
   "devDependencies": {
     "github-slugger": "^2.0.0",
-    "markdownlint-cli2": "^0.23.2",
+    "markdownlint-cli2": "^0.24.2",
     "mdast-util-to-string": "^4.0.0",
-    "unist-util-visit": "^5.1.0"
+    "unist-util-visit": "^5.2.0"
   }
 }

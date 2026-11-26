@@ -36,3 +36,6 @@ pnpm-debug.log*
 # reports. Audit-trail value already lives in commit messages/PR
 # descriptions; these are working files, not shipped content.
 /.docs-assist/
+
+# Private working notes. Never shipped.
+/journal/
