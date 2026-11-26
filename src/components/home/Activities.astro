@@ -68,4 +68,14 @@ const activities = [
     font-size: 1.1rem;
     line-height: 1;
   }
+  /* A small lift, the same as the cards above. Pointer devices only, so a tap
+     doesn't leave one stuck in the raised state. */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    li {
+      transition: transform 0.15s;
+    }
+    li:hover {
+      transform: translateY(-2px);
+    }
+  }
 </style>

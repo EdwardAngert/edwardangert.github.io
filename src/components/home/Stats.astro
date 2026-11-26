@@ -55,4 +55,14 @@ const stats = [
     font-size: var(--sl-text-sm);
     line-height: 1.45;
   }
+  /* A small lift, like the work sample tiles. Pointer devices only, so a tap
+     doesn't leave a card stuck in the raised state. */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    li {
+      transition: transform 0.15s;
+    }
+    li:hover {
+      transform: translateY(-2px);
+    }
+  }
 </style>
