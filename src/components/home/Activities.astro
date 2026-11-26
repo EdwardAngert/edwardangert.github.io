@@ -3,14 +3,14 @@
 const activities = [
   { icon: '🧺', text: 'Folding laundry' },
   { icon: '🧗', text: 'Teaching my kids how to climb things safely' },
-  { icon: '🥋', text: 'Practicing Brazilian Jiu-Jitsu' },
-  { icon: '📷', text: 'Learning how to use my camera' },
+  { icon: '🥋', text: 'Brazilian Jiu-Jitsu' },
+  { icon: '📷', text: 'Learning photography' },
   { icon: '🪨', text: 'Bouldering' },
   { icon: '🚴', text: 'Cycling' },
-  { icon: '🛼', text: 'Artistic quad roller skating (and teaching it)' },
+  { icon: '🛼', text: 'Roller skating (and teaching it)' },
   { icon: '🔧', text: 'Taking things apart' },
   { icon: '🔩', text: 'Finding ways to make things work' },
-  { icon: '🐧', text: 'Exploring open source software' },
+  { icon: '🐧', text: 'Open source software' },
   { icon: '🤖', text: 'Integrating AI and tech in helpful ways' },
   { icon: '💭', text: 'Thinking about the laundry I need to fold' },
 ];
@@ -30,23 +30,52 @@ const activities = [
     list-style: none;
     margin: 1.5rem 0 0;
     padding: 0;
+    /* Twelve items, so every width divides evenly: 2x6, 3x4, then 4x3. */
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 0.5rem;
+  }
+  @media (min-width: 40rem) {
+    .activities {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .activities {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
   li {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
     border: 1px solid var(--sl-color-hairline-light);
     border-radius: 0.75rem;
     background: var(--sl-color-gray-6);
     color: var(--sl-color-text);
+    font-size: var(--sl-text-sm);
     line-height: 1.35;
   }
+  /* Light mode: a near-page fill with a visible edge, so these read as quiet
+     outlines and not as buttons. */
+  :global(:root[data-theme='light']) li {
+    background: var(--sl-color-black);
+    border-color: var(--sl-color-gray-5);
+  }
   .icon {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     line-height: 1;
+  }
+  /* A small lift, the same as the cards above. Pointer devices only, so a tap
+     doesn't leave one stuck in the raised state. */
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    li {
+      transition: transform 0.15s;
+    }
+    li:hover {
+      transform: translateY(-2px);
+    }
   }
 </style>

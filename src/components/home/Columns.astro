@@ -1,0 +1,28 @@
+---
+// Side by side on wide screens, stacked below 64rem. Holds <Column>s.
+---
+
+<div class="home-columns">
+  <slot />
+</div>
+
+<style>
+  .home-columns {
+    display: grid;
+    gap: 2rem 3rem;
+  }
+  @media (min-width: 64rem) {
+    .home-columns {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
+  /* Starlight spaces siblings from above, which would drop the second column. */
+  .home-columns > :global(*) {
+    margin-top: 0;
+  }
+  /* Smaller than the section's h2, so the two columns read as equals under it. */
+  .home-columns :global(h3) {
+    font-size: var(--sl-text-xl);
+  }
+</style>
