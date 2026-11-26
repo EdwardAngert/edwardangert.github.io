@@ -38,7 +38,7 @@ export default defineConfig({
 			// it does not move a badge.
 			lastUpdated: true,
 			tagline: 'Technical writer, documentation lead, full-time Edward',
-			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css', './src/styles/theme.css', './src/styles/home.css'],
+			customCss: ['./src/styles/tables.css', './src/styles/frosted-glass.css', './src/styles/images.css', './src/styles/theme.css', './src/styles/home.css', './src/styles/island-header.css'],
 			disable404Route: true,
 			expressiveCode: {
 				shiki: {
