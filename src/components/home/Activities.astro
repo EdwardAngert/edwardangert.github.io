@@ -58,6 +58,12 @@ const activities = [
     font-size: var(--sl-text-sm);
     line-height: 1.35;
   }
+  /* Light mode: a near-page fill with a visible edge, so these read as quiet
+     outlines and not as buttons. */
+  :global(:root[data-theme='light']) li {
+    background: var(--sl-color-black);
+    border-color: var(--sl-color-gray-5);
+  }
   .icon {
     font-size: 1.1rem;
     line-height: 1;

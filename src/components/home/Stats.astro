@@ -1,26 +1,21 @@
 ---
 // Not numbers: the things I'd want a stranger to know first.
-// Each one links to the part of the About page that explains it.
 const stats = [
   {
     value: 'Everyone',
     label: 'has something to share.',
-    href: '/about/#hello-this-is-edward',
   },
   {
     value: 'Written down',
     label: 'and findable is better than perfect.',
-    href: '/about/#hello-this-is-edward',
   },
   {
     value: 'Ship it',
     label: 'Get good stuff out, then make it better, then make it better.',
-    href: '/about/',
   },
   {
     value: 'Every detail.',
     label: "Tell me the long version of your favorite story.",
-    href: '/about/#how-i-work',
   },
 ];
 ---
@@ -28,10 +23,8 @@ const stats = [
 <ul class="stats not-content">
   {stats.map((s) => (
     <li>
-      <a href={s.href}>
-        <strong>{s.value}</strong>
-        <span>{s.label}</span>
-      </a>
+      <strong>{s.value}</strong>
+      <span>{s.label}</span>
     </li>
   ))}
 </ul>
@@ -45,19 +38,13 @@ const stats = [
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
     gap: 1rem;
   }
-  a {
+  li {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    height: 100%;
     padding: 0.25rem 0 0.25rem 1rem;
     border-inline-start: 4px solid var(--edward-highlight);
     color: var(--sl-color-gray-2);
-    text-decoration: none;
-  }
-  a:hover strong,
-  a:focus-visible strong {
-    text-decoration: underline;
   }
   strong {
     font-size: var(--sl-text-3xl);
