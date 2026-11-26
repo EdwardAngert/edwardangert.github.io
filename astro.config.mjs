@@ -52,6 +52,7 @@ export default defineConfig({
 				PageTitle: './src/components/PageTitle.astro',
 				SiteTitle: './src/components/SiteTitle.astro',
 				Head: './src/components/Head.astro',
+				Hero: './src/components/Hero.astro',
 			},
 			editLink: {
 				baseUrl: 'https://github.com/EdwardAngert/edwardangert.github.io/edit/main/',

@@ -17,21 +17,87 @@ hero:
       icon: right-arrow
 ---
 
+import Columns from '~/components/home/Columns.astro';
+import Column from '~/components/home/Column.astro';
+import Intro from '~/components/home/Intro.astro';
 import Stats from '~/components/home/Stats.astro';
 import WorkGrid from '~/components/home/WorkGrid.astro';
 import LatestPosts from '~/components/home/LatestPosts.astro';
 import Activities from '~/components/home/Activities.astro';
 
+<Intro>
+
+I find ways to make things better wherever I can.
+
+Whether it's a thing or information, I make it intuitive.
+
+I've rehung doors, moved light switches, and rearranged kitchen drawers to put things closer to where we need them.
+
+This too is documentation.
+
+</Intro>
+
 <Stats />
+
+## You can often find me
+
+<Activities />
+
+How did I get here?
+Check out my technical writer origin story on the [About Edward](/about/) page.
+
+## At work
+
+<Columns>
+<Column>
+
+### Transactive memory, you know?
+
+When your go-to person wins the lottery tonight and never shows up to work again, who knows how to get the copy machine fixed?
+
+What platforms do new hires need access to?\
+Has anyone confirmed that these steps still work?
+
+I make documentation that you can find and follow.
+
+Everyone is a contributor, and everyone is a stakeholder.
+
+Done well, documentation makes everything about the process and the product feel better and smoother.
+
+</Column>
+<Column>
+
+### Documentation, broadly construed
+
+Documentation isn't just that stuff you throw out when you get something new.
+
+It's tire pressure numbers inside the driver's side door.\
+It's the list of dishwasher-safe parts on the side of my humidifier's tank.
+
+That's exactly where they belong.
+
+- Button text and interface labels.
+- Scope-of-support and MSA-type documents.
+- The email that tells a new hire when to start, where to sit, and what the bathroom code is.
+- FAQs, offboarding checklists, and the masking tape and Sharpie on a cabinet shelf that says which containers go there.
+
+All documentation.
+
+</Column>
+</Columns>
 
 ## Work samples
 
 Documentation I've written, built, or fixed, and what my part was in each.
-The [portfolio](/portfolio/) page has the rest.
 
 <WorkGrid featuredOnly />
 
-[All work samples &rarr;](/portfolio/)
+For more, go to the [portfolio &rarr;](/portfolio/).
+
+### Hiring?
+
+Check out the [resume highlights](/about/resume/).
+And unless you're sending spam, email me at ea@ followed by this website's address.
 
 ## Latest writing
 
@@ -39,38 +105,12 @@ Essays on documentation culture, AI workflows, and how fundamentals outlast hype
 
 <LatestPosts count={3} />
 
-## At work
-
-I make documentation that you can find and follow.
-
-I also consider a lot more things documentation than you might think:
-
-- Button text and interface labels.
-- Scope-of-support and MSA-type documents.
-- The email that tells a new hire when to start, where to sit, and what the bathroom code is.
-- Offboarding checklists, FAQs, and the masking tape and Sharpie on a cabinet shelf that says which containers go there.
-
-Everyone is a contributor.
-
-Drafts should be imperfect, and written down and findable is better than polished.
-
-It might never be perfect, but we'll always iterate on it.
-
-The [resume](/about/resume/) page has some career highlights.
-
-## You can often find me
-
-I'm a perpetual tinkerer who learns by doing, whether it's setting up my home server, scripting workflows with Claude Code, or dismantling things to understand how they work.
-
-<Activities />
-
-I've been taking things apart for a long time.
-Check out my origin story on the [About Edward](/about/) page.
-
 ## Get in touch
 
 Say hi on [LinkedIn](https://www.linkedin.com/in/edward-angert/) or find a time on [my calendar](https://cal.com/edwardangert).
-I want to know every detail about your favorite hobby.
+
+Tell me something about a hobby you've picked up and how you're learning it.
+Learning about it is one of my favorite hobbies.
 
 To see how the site is built, read [about this site](/about/this-site/).
 
